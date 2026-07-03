@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: "rocci: distribution-free simultaneous confidence bands for ROC curves"
+message: >-
+  If you use this software, please cite it using the metadata from this file.
+  A method paper reference will be added here once it has a DOI.
+type: software
+authors:
+  - family-names: Delaney-Busch
+    given-names: N.
+    email: ndelaneybusch@gmail.com
+repository-code: "https://github.com/ndelaneybusch/rocci"
+license: MIT
+keywords:
+  - ROC curve
+  - confidence band
+  - studentized bootstrap
