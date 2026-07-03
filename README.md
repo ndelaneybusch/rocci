@@ -11,32 +11,36 @@
 
 **Distribution-free simultaneous confidence bands for ROC curves.**
 
-`rocci` implements the studentized bootstrap envelope method: a simultaneous
-confidence band for the true population ROC curve that is calibrated across
-score distributions, honest at the extremes (exact Wilson and Beta
-order-statistic floors), and fast (pure-Rust bootstrap kernel with a NumPy
-fallback).
+`rocci` is a simple interface to easily add uncertainty estimates to your ROC
+curve that are very likely to be correct in nearly all use cases. It draws a
+simultaneous confidence band, which maintains the specified confidence of
+capturing the _entire_ true (population) ROC.
+
+`rocci` is designed to:
+- __just work__. It should do the right thing off the shelf for nearly any data
+  set.
+- __drop in to your workflow__. It natively integrates with sklearn, torch,
+  statsmodels, PyMC/arviz, and pandas/polars data.
+- __be fast__. Core operations are implemented in rust for speed (invisible to
+  the user).
+- __have a lightweight footprint__. Minimal runtime dependencies (just numpy and
+  scipy).
+- __support an open ecosystem__. Permissive MIT license, easy extensibility.
+
+By default, `rocci` uses a distribution-free method that provides informative
+bands without burdensome assumptions about the data. It maintains nominal
+coverage in a huge variety of contexts and the rare violations tend to be small
+misses. If you are comfortable adding a normality assumption to get tighter
+bands, `rocci` yields a "Working-Hotelling" band, but also carefully checks the
+normality assumption and warns you when it looks dicey.
 
 ```python
-import rocci
+from rocci import roc_band
 
-band = rocci.roc_band(y_true, y_score)   # lands in milestone M3
+band = roc_band(y_true, y_score)   # lands in milestone M3
 band.plot()
 print(band.summary())
 ```
-
-> **Status**: pre-release. The statistical core (empirical ROC, floors,
-> envelope assembly, golden-master equivalence to the validated paper
-> implementation) and the Rust bootstrap kernel are complete; the public
-> `roc_band` API, Working–Hotelling path, plotting, and docs site are in
-> progress. See `CHANGELOG.md`.
-
-**When to use this**: whenever you would draw an ROC curve from a finite
-sample and want the uncertainty of the *whole curve* — not a pointwise CI at
-one operating point, and not a parametric band that silently fails when
-scores aren't binormal. The band is invariant to monotone transforms of the
-scores (logits vs probabilities give identical bands) and remains valid
-under heavy ties.
 
 Docs (once published): <https://ndelaneybusch.github.io/rocci> · Contributing:
 [CONTRIBUTING.md](CONTRIBUTING.md)
