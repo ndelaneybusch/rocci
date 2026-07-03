@@ -251,7 +251,7 @@ fn bootstrap_tpr_matrix<'py>(
     let ks = k_indices.as_slice()?.to_vec();
     let n_grid = ks.len();
     let data = py
-        .allow_threads(|| bootstrap_tpr_matrix_vec(&neg, &pos, &ks, n_boot, seed, n_threads))
+        .detach(|| bootstrap_tpr_matrix_vec(&neg, &pos, &ks, n_boot, seed, n_threads))
         .map_err(PyValueError::new_err)?;
     let arr = Array2::from_shape_vec((n_boot, n_grid), data)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
