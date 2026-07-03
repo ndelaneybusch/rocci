@@ -6,7 +6,7 @@ message: >-
 type: software
 authors:
   - family-names: Delaney-Busch
-    given-names: N.
+    given-names: Nathaniel
     email: ndelaneybusch@gmail.com
 repository-code: "https://github.com/ndelaneybusch/rocci"
 license: MIT

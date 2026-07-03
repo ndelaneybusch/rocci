@@ -789,7 +789,7 @@ User guide
 ├── Which band should I use?    # condensed paper §1–3: WH failure modes, KS vacuity, envelope;
 │                               # incl. the multiclass asymmetry (envelope composes via OvR+Bonferroni,
 │                               # WH anti-composes: rest-class mixtures are its failure mode)
-├── Feeding rocci your scores   # ingestion guide: sklearn, torch logits, statsmodels, PyMC/arviz, pandas/polars
+├── Using rocci with your data  # ingestion guide: sklearn, torch logits, statsmodels, PyMC/arviz, pandas/polars
 ├── Reading the band            # band semantics: simultaneous vs pointwise, vacuous region, floors
 ├── Diagnostics                 # floor attribution plots, normality report, worked "bad WH" example
 └── Performance                 # backend model, n_threads, expected timings table (§9)
@@ -798,9 +798,9 @@ Method
 └── Theoretical behavior        # condensed from the paper's theory report (content source only)
 Vignettes                       # §13.3, executed notebooks
 API reference                   # mkdocstrings: roc_band, roc_band_ovr, from_estimator, RocBand, warnings
-FAQ                             # logits vs probabilities; why no 50% bands; why lower band is 0 at tiny FPR;
+FAQ                             # logits vs probabilities; why lower band is 0 at tiny FPR;
                                 # ties/discrete scores (safe: conservative, tested); multiclass (why roc_band
-                                # fails, what roc_band_ovr guarantees); reproducibility across backends
+                                # fails, what roc_band_ovr guarantees)
 Changelog
 Contributing
 ```
@@ -989,11 +989,11 @@ release cannot ship half-done or inconsistent.
 ## 15. Build order (milestones)
 
 1. **M0 — Skeleton**: repo, maturin build, CI green on hello-world kernel,
-  wheel matrix proven (this is the riskiest infrastructure; front-load it).
+  wheel matrix proven (this is the riskiest infrastructure; front-load it). DONE.
 2. **M1 — Statistical core**: grids + empirical ROC, floors, envelope assembly
-  in NumPy against golden masters (§5.7) using a temporary NumPy kernel.
+  in NumPy against golden masters (§5.7) using a temporary NumPy kernel. DONE.
 3. **M2 — Rust kernel**: port the profiled prototype into PyO3, oracle +
-  determinism tests, fallback parity, backend selection.
+  determinism tests, fallback parity, backend selection. DONE
 4. **M3 — API + ingestion**: `roc_band`, `RocBand`, `from_estimator`,
   warnings, ingestion matrix tests.
 5. **M4 — WH path + diagnostics**: §6 + normality machinery.

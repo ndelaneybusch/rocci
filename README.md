@@ -37,10 +37,10 @@ normality assumption and warns you when it looks dicey.
 ```python
 from rocci import roc_band
 
-band = roc_band(y_true, y_score)   # lands in milestone M3
+band = roc_band(y_true, y_score)
 band.plot()
 print(band.summary())
 ```
 
-Docs (once published): <https://ndelaneybusch.github.io/rocci> · Contributing:
+Docs: <https://ndelaneybusch.github.io/rocci> · Contributing:
 [CONTRIBUTING.md](CONTRIBUTING.md)
