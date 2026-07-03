@@ -26,3 +26,21 @@ def binormal_scores(
         neg = np.round(neg / tie_step) * tie_step
         pos = np.round(pos / tie_step) * tie_step
     return neg, pos
+
+
+def binormal_dataset(
+    n_neg: int,
+    n_pos: int,
+    auc: float = 0.8,
+    seed: int = 0,
+    tie_step: float | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return ``(y_true, y_score)`` for the public API, from ``binormal_scores``.
+
+    Negatives are labeled 0, positives 1; the two are concatenated into the
+    flat ``(y_true, y_score)`` pair that ``roc_band`` ingests.
+    """
+    neg, pos = binormal_scores(n_neg, n_pos, auc=auc, seed=seed, tie_step=tie_step)
+    y_true = np.concatenate([np.zeros(n_neg, dtype=int), np.ones(n_pos, dtype=int)])
+    y_score = np.concatenate([neg, pos])
+    return y_true, y_score
