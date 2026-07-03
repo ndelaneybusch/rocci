@@ -1,0 +1,110 @@
+"""Property-based invariants of the assembled band (spec §11.8, M1 slice).
+
+Risks mitigated: invariants that hold on cherry-picked fixtures but break
+on adversarial score distributions (ties, tiny classes, skew), and loss of
+the envelope's rank invariance — the paper's key selling point.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+from rocci.backend._fallback import bootstrap_tpr_matrix_numpy
+from rocci.band.envelope import ATTR_PINNED, assemble_envelope_band
+from rocci.band.floors import beta_floor_vacuous_below
+from rocci.band.grids import grid_k_indices, make_grid
+
+
+@st.composite
+def score_samples(draw):
+    n_neg = draw(st.integers(min_value=5, max_value=50))
+    n_pos = draw(st.integers(min_value=5, max_value=50))
+    seed = draw(st.integers(min_value=0, max_value=2**31))
+    dist = draw(st.sampled_from(["normal", "uniform", "lognormal", "ties"]))
+    rng = np.random.default_rng(seed)
+    shift = draw(st.floats(min_value=0.0, max_value=3.0))
+    if dist == "normal":
+        neg, pos = rng.normal(0, 1, n_neg), rng.normal(shift, 1, n_pos)
+    elif dist == "uniform":
+        neg, pos = rng.uniform(0, 1, n_neg), rng.uniform(0, 1, n_pos) + shift / 3
+    elif dist == "lognormal":
+        neg, pos = rng.lognormal(0, 1, n_neg), rng.lognormal(shift / 3, 1, n_pos)
+    else:
+        neg = np.round(rng.normal(0, 1, n_neg), 1)
+        pos = np.round(rng.normal(shift, 1, n_pos), 1)
+    return np.sort(neg), np.sort(pos), seed
+
+
+@given(score_samples(), st.sampled_from([0.05, 0.1]))
+@settings(max_examples=25, deadline=None)
+def test_band_invariants(sample, alpha):
+    neg, pos, seed = sample
+    grid = make_grid(len(neg))
+    boot = bootstrap_tpr_matrix_numpy(
+        neg, pos, grid_k_indices(grid, len(neg)), n_boot=150, seed=seed
+    )
+    band = assemble_envelope_band(boot, grid, neg, pos, alpha)
+
+    assert (band.lower >= 0).all() and (band.upper <= 1).all()
+    assert (band.lower <= band.upper + 1e-12).all()
+    assert (np.diff(band.lower) >= -1e-12).all(), "lower band not monotone"
+    assert (np.diff(band.upper) >= -1e-12).all(), "upper band not monotone"
+    assert band.lower[0] == 0.0
+    assert band.upper[-1] == 1.0
+    assert band.attribution[0] == ATTR_PINNED
+
+    q1 = beta_floor_vacuous_below(len(neg), alpha)
+    in_vacuous = (grid > 0) & (grid < q1)
+    assert (band.lower[in_vacuous] == 0.0).all(), "vacuous region must be 0"
+
+
+@given(
+    st.integers(min_value=0, max_value=2**31),
+    st.sampled_from([0.5, 2.0, 8.0, 1024.0]),
+)
+@settings(max_examples=10, deadline=None)
+def test_envelope_band_is_rank_invariant(seed, scale):
+    # dyadic scaling is an exact strictly-monotone transform in floating
+    # point, so the band must be bit-identical at the same seed
+    rng = np.random.default_rng(seed)
+    neg = np.sort(rng.normal(0, 1, 40))
+    pos = np.sort(rng.normal(1, 1, 40))
+    grid = make_grid(40)
+    k = grid_k_indices(grid, 40)
+
+    boot_a = bootstrap_tpr_matrix_numpy(neg, pos, k, n_boot=200, seed=seed)
+    band_a = assemble_envelope_band(boot_a, grid, neg, pos, 0.05)
+    boot_b = bootstrap_tpr_matrix_numpy(neg * scale, pos * scale, k, 200, seed=seed)
+    band_b = assemble_envelope_band(boot_b, grid, neg * scale, pos * scale, 0.05)
+
+    np.testing.assert_array_equal(band_a.lower, band_b.lower)
+    np.testing.assert_array_equal(band_a.upper, band_b.upper)
+    np.testing.assert_array_equal(band_a.attribution, band_b.attribution)
+
+
+def test_wide_alpha_rejects_nothing_weird():
+    # alpha=0.5: retention keeps only half the curves; band still valid
+    rng = np.random.default_rng(0)
+    neg = np.sort(rng.normal(0, 1, 30))
+    pos = np.sort(rng.normal(1, 1, 30))
+    grid = make_grid(30)
+    boot = bootstrap_tpr_matrix_numpy(neg, pos, grid_k_indices(grid, 30), 100, seed=1)
+    band = assemble_envelope_band(boot, grid, neg, pos, 0.5)
+    assert (band.lower <= band.upper + 1e-12).all()
+
+
+@pytest.mark.parametrize("n_boot", [100, 250])
+def test_envelope_arm_contained_in_boot_range(n_boot):
+    # the retained-curve envelope can never escape the pointwise range of
+    # the full bootstrap matrix
+    rng = np.random.default_rng(3)
+    neg = np.sort(rng.normal(0, 1, 40))
+    pos = np.sort(rng.normal(1, 1, 40))
+    grid = make_grid(40)
+    boot = bootstrap_tpr_matrix_numpy(neg, pos, grid_k_indices(grid, 40), n_boot, 4)
+    band = assemble_envelope_band(boot, grid, neg, pos, 0.05)
+    assert (band.lower_env >= boot.min(axis=0) - 1e-12).all()
+    assert (band.upper_env <= boot.max(axis=0) + 1e-12).all()
