@@ -31,9 +31,7 @@ FloatArray = NDArray[np.float64]
 J_MAX = 25
 
 
-def wilson_bounds(
-    p: FloatArray, n: int, z: float
-) -> tuple[FloatArray, FloatArray]:
+def wilson_bounds(p: FloatArray, n: int, z: float) -> tuple[FloatArray, FloatArray]:
     """Two-sided Wilson interval, clipped to [0, 1] (appendix A4).
 
     Args:
@@ -219,8 +217,14 @@ def rectangle_floor(
         >>> hi_env = np.full(9, 0.6)
         >>> wv = wilson_halfwidth_sq(np.full(9, 0.6), 40, 1.96) / 1.96**2
         >>> lo, hi = rectangle_floor(
-        ...     lo_env, hi_env, var_raw=np.zeros(9), wilson_var=wv,
-        ...     neg=neg, pos=pos, grid=grid, alpha=0.05,
+        ...     lo_env,
+        ...     hi_env,
+        ...     var_raw=np.zeros(9),
+        ...     wilson_var=wv,
+        ...     neg=neg,
+        ...     pos=pos,
+        ...     grid=grid,
+        ...     alpha=0.05,
         ... )
         >>> bool((lo <= lo_env).all() and (hi >= hi_env).all())  # only widens
         True

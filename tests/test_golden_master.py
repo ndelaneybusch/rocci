@@ -54,11 +54,15 @@ class TestGoldenMasters:
             float(fx["alpha"]),
         )
         np.testing.assert_allclose(
-            band.lower, fx["lower"].astype(np.float64), atol=ATOL,
+            band.lower,
+            fx["lower"].astype(np.float64),
+            atol=ATOL,
             err_msg="lower band diverged from the validated implementation",
         )
         np.testing.assert_allclose(
-            band.upper, fx["upper"].astype(np.float64), atol=ATOL,
+            band.upper,
+            fx["upper"].astype(np.float64),
+            atol=ATOL,
             err_msg="upper band diverged from the validated implementation",
         )
 
@@ -96,8 +100,14 @@ class TestGoldenMasters:
             boot, tpr_hat, alpha, len(neg), len(pos)
         )
         lo, hi = rectangle_floor(
-            lo_env, hi_env, var_raw=var_raw, wilson_var=wilson_var,
-            neg=neg, pos=pos, grid=grid, alpha=alpha,
+            lo_env,
+            hi_env,
+            var_raw=var_raw,
+            wilson_var=wilson_var,
+            neg=neg,
+            pos=pos,
+            grid=grid,
+            alpha=alpha,
         )
         lo, hi = lo.copy(), hi.copy()
         lo[0] = 0.0

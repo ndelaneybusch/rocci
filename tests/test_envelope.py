@@ -42,7 +42,9 @@ class TestStudentizedEnvelope:
         # ROC: with alpha=0.3, ceil(0.7*10)=7 closest survive; the envelope
         # is exactly their min/max
         tpr_hat = np.full(4, 0.5)
-        offsets = np.array([0.00, 0.01, -0.02, 0.03, -0.04, 0.05, -0.06, 0.07, -0.5, 0.4])
+        offsets = np.array(
+            [0.00, 0.01, -0.02, 0.03, -0.04, 0.05, -0.06, 0.07, -0.5, 0.4]
+        )
         boot = 0.5 + np.tile(offsets[:, None], (1, 4))
         lo, hi, _, _ = studentized_envelope(boot, tpr_hat, 0.3, 50, 50)
         assert lo[0] == pytest.approx(0.5 - 0.06)
@@ -64,7 +66,7 @@ class TestStudentizedEnvelope:
         tpr_hat = np.array([0.5, 0.5])
         boot = np.full((20, 2), 0.5)
         boot[0, 0] += 1e-9  # numerical noise, below eps
-        lo, hi, var_raw, wilson_var = studentized_envelope(boot, tpr_hat, 0.05, 50, 0)
+        lo, hi, _var_raw, wilson_var = studentized_envelope(boot, tpr_hat, 0.05, 50, 0)
         assert (wilson_var == 0).all()
         assert lo[0] <= 0.5 <= hi[0]
 
@@ -74,7 +76,7 @@ class TestStudentizedEnvelope:
         # eps = 1/(50+0) = 0.02; a 0.03 deviation in a 100-row column keeps
         # the column sd (~0.003) under eps, forcing the eps-branch scoring
         boot[0, 0] = 0.53
-        lo, hi, _, _ = studentized_envelope(boot, tpr_hat, 0.05, 50, 0)
+        _lo, hi, _, _ = studentized_envelope(boot, tpr_hat, 0.05, 50, 0)
         # that replicate scores 0.03/eps = 1.5 > 0 and is trimmed
         assert hi[0] == pytest.approx(0.5)
 
@@ -83,7 +85,8 @@ class TestStudentizedEnvelope:
         rng = np.random.default_rng(0)
         boot = np.clip(0.5 + rng.normal(0, 0.4, (300, 3)), -0.2, 1.2)
         lo, hi, _, _ = studentized_envelope(boot, tpr_hat, 0.05, 20, 20)
-        assert (lo >= 0).all() and (hi <= 1).all()
+        assert (lo >= 0).all()
+        assert (hi <= 1).all()
 
 
 class TestAssembly:
@@ -103,7 +106,10 @@ class TestAssembly:
         band, *_ = build_band(n_neg=100, n_pos=100, auc=0.95, seed=2)
         attr = band.attribution
         assert set(np.unique(attr)) <= {
-            ATTR_BOOTSTRAP, ATTR_BETA_FLOOR, ATTR_WILSON_FLOOR, ATTR_PINNED,
+            ATTR_BOOTSTRAP,
+            ATTR_BETA_FLOOR,
+            ATTR_WILSON_FLOOR,
+            ATTR_PINNED,
         }
         tol = 1e-12
         beta_pts = attr == ATTR_BETA_FLOOR
@@ -133,7 +139,7 @@ class TestAssembly:
     def test_band_result_is_frozen(self):
         band, *_ = build_band(seed=6)
         with pytest.raises(AttributeError):
-            band.alpha = 0.5  # ty: ignore[invalid-assignment]
+            band.alpha = 0.5
 
     def test_heavy_ties_still_assemble(self):
         band, *_ = build_band(seed=7, tie_step=0.25)

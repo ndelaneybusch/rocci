@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -26,7 +27,9 @@ FloatArray = NDArray[np.float64]
 
 # np.trapz was removed in favor of np.trapezoid in NumPy 2.0; support both
 # because the runtime floor is numpy>=1.24.
-_trapezoid = getattr(np, "trapezoid", None) or np.trapz  # noqa: NPY201
+_trapezoid: Any = getattr(np, "trapezoid", getattr(np, "trapz", None))
+if _trapezoid is None:  # pragma: no cover — unreachable on numpy >= 1.24
+    raise ImportError("numpy provides neither trapezoid nor trapz")
 
 #: Attribution codes for the lower band (spec §3.4).
 ATTR_BOOTSTRAP, ATTR_BETA_FLOOR, ATTR_WILSON_FLOOR, ATTR_PINNED = 0, 1, 2, 3
@@ -67,11 +70,7 @@ class EnvelopeBand:
 
 
 def studentized_envelope(
-    boot_tpr: FloatArray,
-    tpr_hat: FloatArray,
-    alpha: float,
-    n_neg: int,
-    n_pos: int,
+    boot_tpr: FloatArray, tpr_hat: FloatArray, alpha: float, n_neg: int, n_pos: int
 ) -> tuple[FloatArray, FloatArray, FloatArray, FloatArray]:
     """Studentization, KS retention, and pointwise envelope (appendix A6).
 

@@ -48,7 +48,8 @@ def test_band_invariants(sample, alpha):
     )
     band = assemble_envelope_band(boot, grid, neg, pos, alpha)
 
-    assert (band.lower >= 0).all() and (band.upper <= 1).all()
+    assert (band.lower >= 0).all()
+    assert (band.upper <= 1).all()
     assert (band.lower <= band.upper + 1e-12).all()
     assert (np.diff(band.lower) >= -1e-12).all(), "lower band not monotone"
     assert (np.diff(band.upper) >= -1e-12).all(), "upper band not monotone"
@@ -62,8 +63,7 @@ def test_band_invariants(sample, alpha):
 
 
 @given(
-    st.integers(min_value=0, max_value=2**31),
-    st.sampled_from([0.5, 2.0, 8.0, 1024.0]),
+    st.integers(min_value=0, max_value=2**31), st.sampled_from([0.5, 2.0, 8.0, 1024.0])
 )
 @settings(max_examples=10, deadline=None)
 def test_envelope_band_is_rank_invariant(seed, scale):

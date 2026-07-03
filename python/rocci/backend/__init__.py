@@ -26,14 +26,15 @@ __all__ = ["BACKEND", "bootstrap_tpr_matrix"]
 
 BACKEND: Literal["rust", "numpy"]
 
+_rust_kernel = None
 _env = os.environ.get("ROCCI_BACKEND")
 if _env == "numpy":
     # Explicit override: intentional, so no FallbackBackendWarning.
-    _core = None
     BACKEND = "numpy"
 elif _env == "rust":
     from rocci import _core  # raises ImportError loudly if the core is missing
 
+    _rust_kernel = _core.bootstrap_tpr_matrix
     BACKEND = "rust"
 elif _env is not None:
     raise RocciError(
@@ -44,9 +45,9 @@ else:
     try:
         from rocci import _core  # Rust
 
+        _rust_kernel = _core.bootstrap_tpr_matrix
         BACKEND = "rust"
     except ImportError:
-        _core = None
         BACKEND = "numpy"
         warnings.warn(
             "rocci's compiled Rust core is unavailable; using the pure-NumPy "
@@ -123,8 +124,8 @@ def bootstrap_tpr_matrix(
             f"got max {int(k_indices.max())}"
         )
 
-    if BACKEND == "rust":
-        return _core.bootstrap_tpr_matrix(  # ty: ignore[possibly-unbound-attribute]
+    if _rust_kernel is not None:
+        return _rust_kernel(
             neg_sorted,
             pos_sorted,
             k_indices,

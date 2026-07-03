@@ -35,16 +35,15 @@ from pathlib import Path
 
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
 
-import numpy as np  # noqa: E402
-import scipy  # noqa: E402
-import torch  # noqa: E402
-from scipy.stats import norm  # noqa: E402
-
-from studroc_paper.methods.envelope_boot import (  # noqa: E402
+import numpy as np
+import scipy
+import torch
+from scipy.stats import norm
+from studroc_paper.methods.envelope_boot import (
     envelope_band_suite,
     envelope_bootstrap_band,
 )
-from studroc_paper.sampling.bootstrap_grid import generate_bootstrap_grid  # noqa: E402
+from studroc_paper.sampling.bootstrap_grid import generate_bootstrap_grid
 
 ALPHA = 0.05
 N_BOOT = 2000
@@ -127,8 +126,10 @@ def record(name, spec, out_dir):
         pre_floor_upper=pf_upper.astype(np.float32),
     )
     digest = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
-    print(f"{name}: n=({n_neg},{n_pos}) auc={auc} K={grid_size} "
-          f"ties={tie_step} seed={seed} -> {path.name} sha256:{digest}")
+    print(
+        f"{name}: n=({n_neg},{n_pos}) auc={auc} K={grid_size} "
+        f"ties={tie_step} seed={seed} -> {path.name} sha256:{digest}"
+    )
     return name, spec, digest
 
 
@@ -139,7 +140,9 @@ def paper_git_sha():
     try:
         return subprocess.run(
             ["git", "-C", str(repo), "rev-parse", "HEAD"],
-            capture_output=True, text=True, check=True,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.strip()
     except Exception:
         return "unknown"
@@ -163,7 +166,7 @@ def main():
         "5.7 equivalence test. **Never regenerate them to match new code.**",
         "",
         f"- Recorded: {date.today().isoformat()}",
-        f"- Recorder: `scripts/record_golden_masters.py` (rocci repo)",
+        "- Recorder: `scripts/record_golden_masters.py` (rocci repo)",
         f"- studroc_paper commit: `{paper_git_sha()}`",
         f"- Environment: python {platform.python_version()}, "
         f"torch {torch.__version__}, numpy {np.__version__}, "
@@ -174,7 +177,9 @@ def main():
         "|---|---|---|---|---|---|---|---|",
     ]
     for name, (n0, n1, auc, k, ties, seed), digest in rows:
-        lines.append(f"| {name} | {n0} | {n1} | {auc} | {k} | {ties} | {seed} | `{digest}` |")
+        lines.append(
+            f"| {name} | {n0} | {n1} | {auc} | {k} | {ties} | {seed} | `{digest}` |"
+        )
     lines += [
         "",
         "Grid sizes use K-1 = power of two (dyadic grid points) except the",

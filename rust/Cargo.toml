@@ -27,6 +27,7 @@ undocumented_unsafe_blocks = "deny"
 # Documented allow-list (kept short):
 cast_precision_loss = "allow"   # u64/usize -> f64 for TPR fractions is intentional
 cast_possible_truncation = "allow" # Lemire bounded sampling truncates by design
+inline_always = "allow"         # hot RNG path, part of the validated A2 kernel
 module_name_repetitions = "allow"
 must_use_candidate = "allow"
 missing_panics_doc = "allow"    # PyO3 entry point documents errors via PyResult

@@ -37,8 +37,7 @@ class TestSelection:
 
     def test_env_override_numpy(self):
         proc = run_python(
-            "from rocci.backend import BACKEND; print(BACKEND)",
-            ROCCI_BACKEND="numpy",
+            "from rocci.backend import BACKEND; print(BACKEND)", ROCCI_BACKEND="numpy"
         )
         assert proc.returncode == 0, proc.stderr
         assert proc.stdout.strip() == "numpy"
@@ -69,7 +68,7 @@ class TestValidation:
         return neg, pos, k
 
     def test_empty_class_raises_with_fix(self):
-        neg, pos, k = self._args()
+        _, pos, k = self._args()
         with pytest.raises(RocciError, match="non-empty"):
             bootstrap_tpr_matrix(np.array([]), pos, k, 10, 0)
 

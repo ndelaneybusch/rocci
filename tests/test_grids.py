@@ -62,8 +62,7 @@ class TestEmpiricalRoc:
         neg, pos = binormal_scores(n_neg, n_pos, seed=42, tie_step=tie_step)
         grid = make_grid(n_neg)
         np.testing.assert_array_equal(
-            empirical_roc_on_grid(neg, pos, grid),
-            roc_on_grid_reference(neg, pos, grid),
+            empirical_roc_on_grid(neg, pos, grid), roc_on_grid_reference(neg, pos, grid)
         )
 
     def test_all_tied_scores_single_step(self):
@@ -72,9 +71,7 @@ class TestEmpiricalRoc:
         pos = np.zeros(10)
         grid = np.linspace(0, 1, 5)
         out = empirical_roc_on_grid(neg, pos, grid)
-        np.testing.assert_array_equal(
-            out, roc_on_grid_reference(neg, pos, grid)
-        )
+        np.testing.assert_array_equal(out, roc_on_grid_reference(neg, pos, grid))
 
     def test_infinite_scores_are_legal(self):
         neg = np.array([-np.inf, 0.0, 1.0])
@@ -82,9 +79,7 @@ class TestEmpiricalRoc:
         grid = np.linspace(0, 1, 7)
         out = empirical_roc_on_grid(neg, pos, grid)
         assert np.isfinite(out).all()
-        np.testing.assert_array_equal(
-            out, roc_on_grid_reference(neg, pos, grid)
-        )
+        np.testing.assert_array_equal(out, roc_on_grid_reference(neg, pos, grid))
 
     def test_perfect_separation_hits_corner(self):
         # smallest reachable nonzero FPR with 2 negatives is 0.5; TPR is 1
@@ -139,7 +134,7 @@ class TestKIndices:
         k = grid_k_indices(grid, 997)
         assert (np.diff(k.astype(np.int64)) >= 0).all()
         assert k[0] == 0
-        assert k.max() == 997
+        assert int(k[-1]) == 997  # ascending, so the last entry is the max
 
     def test_dtype_is_uint64(self):
         assert grid_k_indices(make_grid(10), 10).dtype == np.uint64

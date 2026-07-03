@@ -92,7 +92,8 @@ class TestWilsonRectangleBand:
     def test_bounds_ordered_and_in_unit_interval(self):
         neg, pos = binormal_scores(50, 500, seed=4)
         lo, hi = wilson_rectangle_band(neg, pos, make_grid(50), alpha=0.05)
-        assert (lo >= 0).all() and (hi <= 1).all()
+        assert (lo >= 0).all()
+        assert (hi <= 1).all()
         assert (lo <= hi + 1e-12).all()
 
 
@@ -109,10 +110,14 @@ class TestRectangleFloorGate:
         neg, pos, grid, tpr, wilson_var = self._setup()
         lo_env, hi_env = tpr - 0.1, tpr + 0.1
         lo, hi = rectangle_floor(
-            lo_env, hi_env,
+            lo_env,
+            hi_env,
             var_raw=wilson_var * 2.0,  # everywhere above the Wilson floor
             wilson_var=wilson_var,
-            neg=neg, pos=pos, grid=grid, alpha=0.05,
+            neg=neg,
+            pos=pos,
+            grid=grid,
+            alpha=0.05,
         )
         np.testing.assert_array_equal(lo, lo_env)
         np.testing.assert_array_equal(hi, hi_env)
@@ -122,10 +127,14 @@ class TestRectangleFloorGate:
         lo_env = np.clip(tpr - 0.02, 0, 1)
         hi_env = np.clip(tpr + 0.02, 0, 1)
         lo, hi = rectangle_floor(
-            lo_env, hi_env,
+            lo_env,
+            hi_env,
             var_raw=np.zeros_like(grid),  # fully collapsed everywhere
             wilson_var=wilson_var,
-            neg=neg, pos=pos, grid=grid, alpha=0.05,
+            neg=neg,
+            pos=pos,
+            grid=grid,
+            alpha=0.05,
         )
         assert (lo <= lo_env + 1e-12).all()
         assert (hi >= hi_env - 1e-12).all()
@@ -138,8 +147,14 @@ class TestRectangleFloorGate:
         var_raw = wilson_var.copy()
         var_raw[::3] = 0.0  # collapse a scattered subset of points
         lo, hi = rectangle_floor(
-            lo_env, hi_env, var_raw=var_raw, wilson_var=wilson_var,
-            neg=neg, pos=pos, grid=grid, alpha=0.05,
+            lo_env,
+            hi_env,
+            var_raw=var_raw,
+            wilson_var=wilson_var,
+            neg=neg,
+            pos=pos,
+            grid=grid,
+            alpha=0.05,
         )
         assert (np.diff(lo) >= -1e-12).all()
         assert (np.diff(hi) >= -1e-12).all()
@@ -152,8 +167,14 @@ class TestRectangleFloorGate:
         j = 30  # single collapsed interior point
         var_raw[j] = 0.0
         lo, hi = rectangle_floor(
-            lo_env, hi_env, var_raw=var_raw, wilson_var=wilson_var,
-            neg=neg, pos=pos, grid=grid, alpha=0.05,
+            lo_env,
+            hi_env,
+            var_raw=var_raw,
+            wilson_var=wilson_var,
+            neg=neg,
+            pos=pos,
+            grid=grid,
+            alpha=0.05,
         )
         # floor widens at j; the monotonicity pass may propagate the lower
         # bound leftward and the upper bound rightward, but never the reverse
@@ -209,7 +230,8 @@ class TestBetaOrderstatFloor:
         neg, pos = binormal_scores(150, 150, seed=12, tie_step=0.5)
         grid = make_grid(150)
         floored = beta_orderstat_floor(grid, np.ones_like(grid), neg, pos, 0.05)
-        assert (floored >= 0).all() and (floored <= 1).all()
+        assert (floored >= 0).all()
+        assert (floored <= 1).all()
 
     def test_vacuous_below_matches_beta_quantile(self):
         expected = beta_dist.ppf(1 - 0.05 / (2 * J_MAX), 1, 80)

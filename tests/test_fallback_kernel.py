@@ -29,8 +29,7 @@ def oracle_bootstrap(neg_sorted, pos_sorted, k_indices, n_boot, seed):
         m = min(batch, n_boot - start)
         cnt_neg = rng.multinomial(n0, np.full(n0, 1 / n0), size=m)
         cnt_pos = rng.multinomial(n1, np.full(n1, 1 / n1), size=m)
-        for b in range(m):
-            rows.append((cnt_neg[b], cnt_pos[b]))
+        rows.extend(zip(cnt_neg, cnt_pos, strict=True))
     for r, (cn, cp) in enumerate(rows):
         neg_resamp_desc = np.repeat(neg_sorted, cn)[::-1]
         pos_resamp = np.repeat(pos_sorted, cp)
