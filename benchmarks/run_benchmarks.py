@@ -1,14 +1,14 @@
-"""Perf gates (spec §9), measured with plain time.perf_counter.
+"""Performance gates measured with time.perf_counter.
 
-Until the public `roc_band` API lands (M3), "end-to-end" means the full
-statistical pipeline it will wrap: split + sort + grid + kernel + assembly.
+"End-to-end" means the full statistical pipeline: split + sort + grid +
+kernel + assembly.
 
 Release gates (12-core desktop class, defaults n_boot=2000, K=512):
   n=10k  < 100 ms | n=100k < 500 ms | n=1M < 3 s
   non-bootstrap overhead at n=100k < 50 ms
 
 Exit code 1 on any breach with --strict (used by release-prep; the per-PR
-CI perf job measures relative-to-main instead, spec §14.2).
+CI perf job measures relative-to-main instead).
 """
 
 from __future__ import annotations

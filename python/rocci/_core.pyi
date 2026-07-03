@@ -1,4 +1,7 @@
-"""Type stub for the compiled Rust core (rust/src/lib.rs, spec §8.1)."""
+"""Type stub for the compiled Rust bootstrap kernel.
+
+Provides vectorized bootstrap resampling operations for ROC curve analysis.
+"""
 
 import numpy as np
 from numpy.typing import NDArray

@@ -1,8 +1,8 @@
-"""Pure-NumPy bootstrap TPR kernel (appendix A3).
+"""Pure-NumPy bootstrap TPR kernel.
 
-Same statistical semantics as the Rust kernel (A2) with a different RNG
-stream; cross-backend agreement is distributional, not bit-wise (spec
-§8.4). Vectorized over batches of replicates; only two O(K log n)
+Provides identical statistical semantics to the Rust kernel but with a
+different RNG stream; cross-backend agreement is distributional, not
+bit-wise. Vectorized over batches of replicates; only two O(K log n)
 ``searchsorted`` calls per replicate row run in Python-level loops.
 """
 
@@ -21,18 +21,18 @@ def bootstrap_tpr_matrix_numpy(
     n_boot: int,
     seed: int,
 ) -> FloatArray:
-    """Bootstrap TPR matrix via multinomial count tallies (appendix A3).
+    """Bootstrap TPR matrix via multinomial count tallies.
 
     Per replicate: resample both classes with replacement; the TPR at grid
     point ``t`` is the fraction of resampled positives strictly greater
     than the resampled negatives' order statistic at descending 0-based
-    index ``k_t`` (A14), where ``k_t = n0`` denotes a -inf sentinel
+    index ``k_t``. When ``k_t = n0``, it acts as a -inf sentinel
     (TPR = 1).
 
     Args:
         neg_sorted: Negative scores, ascending.
         pos_sorted: Positive scores, ascending.
-        k_indices: Ascending order-statistic indices in ``[0, n0]`` (A14).
+        k_indices: Ascending order-statistic indices in ``[0, n0]``.
         n_boot: Number of bootstrap replicates.
         seed: Seed for ``np.random.default_rng``.
 

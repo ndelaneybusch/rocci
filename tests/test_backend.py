@@ -1,4 +1,4 @@
-"""Backend selection (§8.3), validation, determinism, and env override.
+"""Backend selection, validation, determinism, and env override.
 
 Risk mitigated: silent misrouting (wrong kernel, ignored override), and
 input contracts failing without an actionable message.

@@ -1,12 +1,12 @@
-"""Golden-master equivalence (spec §5.7) — the highest-value suite.
+"""Golden-master equivalence — the highest-value suite.
 
 Given identical ``(boot_tpr_matrix, fpr_grid, y_true, y_score, alpha)``
-fixtures recorded from the validated ``studroc_paper`` implementation, the
-rocci assembly (§5.3-5.6, appendix A4-A9) must reproduce the recorded band
-outputs within ``atol=1e-6`` (float32 fixtures widened to float64).
+fixtures, the rocci assembly must reproduce the recorded band outputs
+within ``atol=1e-6`` (float32 fixtures widened to float64).
 
-Precedence rule: if this test disagrees with the spec appendix, the
-fixture wins — never regenerate fixtures to match new code.
+Precedence rule: if this test disagrees with the implementation, the
+committed golden-master fixture wins — never regenerate fixtures to match
+new code.
 """
 
 from __future__ import annotations
@@ -38,8 +38,7 @@ def split_classes(fx):
 
 @pytest.mark.skipif(
     not FIXTURES,
-    reason="golden-master fixtures not recorded yet — run `just fixtures` "
-    "with a studroc_paper checkout",
+    reason="golden-master fixtures not recorded yet",
 )
 class TestGoldenMasters:
     @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.stem)
@@ -68,7 +67,7 @@ class TestGoldenMasters:
 
     @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.stem)
     def test_pre_floor_arm_matches(self, path):
-        # isolates A6 (studentization + retention + envelope) from the floors
+        # isolates studentization + retention + envelope before floor application
         fx = load(path)
         if "pre_floor_lower" not in fx:
             pytest.skip("fixture lacks pre-floor arm")
@@ -80,14 +79,14 @@ class TestGoldenMasters:
             boot, tpr_hat, float(fx["alpha"]), len(neg), len(pos)
         )
         lo, hi = lo.copy(), hi.copy()
-        lo[0] = 0.0  # the paper suite pins endpoints on every variant
+        lo[0] = 0.0  # endpoints are pinned on every variant
         hi[-1] = 1.0
         np.testing.assert_allclose(lo, fx["pre_floor_lower"], atol=ATOL)
         np.testing.assert_allclose(hi, fx["pre_floor_upper"], atol=ATOL)
 
     @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.stem)
     def test_rectangle_floored_arm_matches(self, path):
-        # isolates A6 + A7 (variance-ratio gated Wilson rectangle floor)
+        # isolates envelope with variance-ratio gated Wilson rectangle floor
         fx = load(path)
         if "no_beta_lower" not in fx:
             pytest.skip("fixture lacks no-beta-floor arm")

@@ -1,12 +1,12 @@
-"""Bootstrap kernel backend selection (spec §8.3).
+"""Bootstrap kernel backend selection.
 
 The Rust core (``rocci._core``) is used when importable; otherwise the
 pure-NumPy fallback keeps the package functional everywhere, with a
 :class:`~rocci._warnings.FallbackBackendWarning` emitted once per process.
 
-``ROCCI_BACKEND={rust,numpy}`` overrides selection for testing/debugging
-only (documented in CONTRIBUTING, not in user docs). There is no other
-routing — performance is invisible to users.
+``ROCCI_BACKEND={rust,numpy}`` overrides automatic selection (for
+testing/debugging). There is no other routing — performance selection is
+transparent to users.
 """
 
 from __future__ import annotations
@@ -69,10 +69,10 @@ def bootstrap_tpr_matrix(
 ) -> NDArray[np.float64]:
     """Compute the bootstrap TPR matrix on the active backend.
 
-    Same seed + same backend + same version -> bit-identical output
+    Same seed + same backend + same version yields bit-identical output
     (independent of ``n_threads`` on the Rust backend). Rust and NumPy
-    backends produce different RNG streams and agree statistically, not
-    bit-wise (spec §8.4).
+    backends use different RNG streams and agree statistically, not
+    bit-wise.
 
     Args:
         neg_sorted: Negative scores, ascending, finite-or-inf float64.

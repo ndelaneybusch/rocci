@@ -1,20 +1,20 @@
-"""Record golden-master fixtures from the validated studroc_paper implementation.
+"""Record golden-master fixtures using the reference studroc_paper implementation.
 
-Run with the *paper repo's* environment, never rocci's:
+Run with the paper repo's environment, never rocci's:
 
     ../studroc_paper/.venv/Scripts/python.exe scripts/record_golden_masters.py \
         --out tests/fixtures/golden
 
 Records, per cell: the inputs (boot_tpr_matrix, fpr_grid, y_true, y_score,
-alpha) and the paper implementation's outputs for three arms —
-"envelope" (full method), "envelope_no_beta_floor" (A6+A7), and
-"envelope_pre_floor" (A6 only). rocci's assembly must reproduce all of them
-within atol=1e-6 (spec 5.7).
+alpha) and the reference implementation's outputs for three arms—
+"envelope" (full method), "envelope_no_beta_floor" (no beta floor), and
+"envelope_pre_floor" (pre-floor only). rocci's assembly must reproduce all
+of them within atol=1e-6.
 
 Design notes (why these grids):
-- The paper computes in float32; rocci computes in float64. Step-function
-  lookups (empirical ROC at grid points) are only reproducible across
-  precisions if no grid point straddles an ROC vertex between the two
+- The reference implementation computes in float32; rocci computes in float64.
+  Step-function lookups (empirical ROC at grid points) are only reproducible
+  across precisions if no grid point straddles an ROC vertex between the two
   precisions. Grid sizes are chosen so K-1 is a power of two (grid points
   are dyadic, hence exact in both float32 and float64, and every
   grid/vertex collision point is itself dyadic), except the n=10k cell
@@ -160,10 +160,10 @@ def main():
     lines = [
         "# Golden-master provenance",
         "",
-        "Recorded outputs of the validated `studroc_paper` implementation",
+        "Recorded outputs of the reference `studroc_paper` implementation",
         "(`envelope_bootstrap_band(boundary_method='wilson')` and",
-        "`envelope_band_suite`). These fixtures are the arbiters of the spec",
-        "5.7 equivalence test. **Never regenerate them to match new code.**",
+        "`envelope_band_suite`). These fixtures are the arbiters of the",
+        "equivalence test. **Never regenerate them to match new code.**",
         "",
         f"- Recorded: {date.today().isoformat()}",
         "- Recorder: `scripts/record_golden_masters.py` (rocci repo)",

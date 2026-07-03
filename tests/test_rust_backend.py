@@ -1,4 +1,4 @@
-"""Rust backend contract: determinism (§8.1) and cross-backend agreement (§8.4).
+"""Rust backend contract: determinism and cross-backend agreement.
 
 Risks mitigated: RNG streams accidentally depending on thread scheduling
 (silently breaking reproducibility), and the two kernels drifting apart
@@ -55,9 +55,8 @@ class TestDeterminism:
 
 @pytest.mark.slow
 class TestCrossBackendAgreement:
-    """Spec §8.4: distributional agreement at B=8000, exactly as the
-    profiling sanity check did — max pointwise mean-difference z < 6 and
-    interior std ratios within [0.9, 1.1]."""
+    """Verify distributional agreement between backends at B=8000:
+    max pointwise mean-difference z < 6 and interior std ratios within [0.9, 1.1]."""
 
     def test_distributional_agreement(self):
         n = 200

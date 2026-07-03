@@ -1,9 +1,9 @@
-"""FPR grid rule, empirical ROC (appendix A1), and grid index mapping (A14).
+"""FPR grid rule, empirical ROC, and grid index mapping.
 
 The empirical ROC uses right-continuous step interpolation with
 ``>=``-threshold tie semantics on both classes; every routine that
 evaluates a step function at query points shares the same
-``searchsorted(side="right") - 1`` lookup (A13).
+``searchsorted(side="right") - 1`` lookup logic.
 """
 
 from __future__ import annotations
@@ -55,12 +55,12 @@ def make_grid(n_neg: int, grid_size: int | None = None) -> FloatArray:
 def empirical_roc_vertices(
     neg: FloatArray, pos: FloatArray
 ) -> tuple[FloatArray, FloatArray]:
-    """Compute the full empirical ROC vertex list (appendix A1, first half).
+    """Compute the full empirical ROC vertex list.
 
     Every negative score is a threshold (``>=`` semantics on both classes),
     with ``(0, 0)`` and ``(1, 1)`` prepended/appended. The vertex list is
-    the input to grid interpolation, to the AUC point estimate (A10), and
-    to ``RocBand.at()`` (A13).
+    the input to grid interpolation, to AUC computation, and to ``RocBand``
+    evaluation.
 
     Args:
         neg: Negative-class scores, any order.
@@ -95,7 +95,7 @@ def empirical_roc_vertices(
 
 
 def step_lookup(x_v: FloatArray, y_v: FloatArray, query: FloatArray) -> FloatArray:
-    """Evaluate a right-continuous step function at query points (A13).
+    """Evaluate a right-continuous step function at query points.
 
     Args:
         x_v: Step x-coordinates, non-decreasing.
@@ -120,10 +120,9 @@ def step_lookup(x_v: FloatArray, y_v: FloatArray, query: FloatArray) -> FloatArr
 def empirical_roc_on_grid(
     neg: FloatArray, pos: FloatArray, grid: FloatArray
 ) -> FloatArray:
-    """TPR of the empirical ROC evaluated at each grid FPR (appendix A1).
+    """TPR of the empirical ROC evaluated at each grid FPR.
 
-    O(n log n) — same vertex multiset and step convention as the paper
-    repo's O(n^2) broadcast; duplicated FPR vertices resolve to the largest
+    Runs in O(n log n) time; duplicated FPR vertices resolve to the largest
     TPR at that FPR via the ``side="right"`` lookup.
 
     Args:
@@ -147,11 +146,11 @@ def empirical_roc_on_grid(
 
 
 def grid_k_indices(grid: FloatArray, n_neg: int) -> NDArray[np.uint64]:
-    """Map FPR grid points to negative order-statistic indices (appendix A14).
+    """Map FPR grid points to negative order-statistic indices.
 
-    ``k = n_neg`` (which occurs only at ``t = 1.0``) is the -inf sentinel:
-    TPR = 1 for that replicate/point. The result is non-decreasing because
-    the grid is.
+    ``k = n_neg`` (which occurs only at ``t = 1.0``) acts as a -inf
+    sentinel yielding TPR = 1 for that point. The result is non-decreasing
+    because the grid is.
 
     Args:
         grid: FPR grid, non-decreasing, in [0, 1].

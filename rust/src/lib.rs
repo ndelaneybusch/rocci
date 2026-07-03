@@ -1,9 +1,9 @@
-//! Bootstrap TPR kernel for rocci (spec appendix A2, transcribed exactly).
+//! Bootstrap TPR kernel: resamples scores and computes true positive rates at grid points.
 //!
 //! Per replicate: resample both classes with replacement; the TPR at grid
 //! point `t` is the fraction of resampled positives strictly greater than
 //! the resampled negatives' order statistic at descending 0-based index
-//! `k_t` (A14), where `k_t == n_neg` denotes a −∞ sentinel (TPR = 1).
+//! `k_t`, where `k_t == n_neg` denotes a −∞ sentinel (TPR = 1).
 //! Draws are tallied into count vectors over the pre-sorted originals and
 //! thresholds/TPRs are read off with linear walks — O(n0 + n1 + K) per
 //! replicate, O(n) memory per thread.
@@ -68,7 +68,7 @@ impl Xoshiro256pp {
     }
 }
 
-/// Per-replicate RNG seed mixing (spec appendix A2 parallel driver).
+/// Derives a unique RNG seed for each replicate to ensure reproducible results across thread counts.
 #[inline]
 #[must_use]
 pub fn replicate_seed(seed: u64, rep: u64) -> u64 {
@@ -77,9 +77,7 @@ pub fn replicate_seed(seed: u64, rep: u64) -> u64 {
 
 /// One replicate. `neg_sorted`/`pos_sorted` ascending; `k_indices` ascending
 /// with values in `[0, n0]`; `cnt_*` and `thresholds` are reused
-/// thread-local buffers.
-// Transcribed verbatim from spec appendix A2; index-based loops and the
-// 8-argument buffer-reuse signature are part of the validated transcription.
+/// thread-local buffers for efficiency.
 #[allow(clippy::needless_range_loop, clippy::too_many_arguments)]
 pub fn replicate(
     rng: &mut Xoshiro256pp,
@@ -234,7 +232,7 @@ pub fn bootstrap_tpr_matrix_vec(
     }
 }
 
-/// Bootstrap TPR matrix `(n_boot, K)` (spec §8.1, appendix A2).
+/// Bootstrap TPR matrix `(n_boot, K)` where each row is a replicate.
 // PyO3 extracts arguments by value; passing references is not an option here.
 #[allow(clippy::needless_pass_by_value)]
 #[pyfunction]

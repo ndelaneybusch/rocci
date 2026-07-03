@@ -1,4 +1,4 @@
-"""NumPy fallback kernel (A3) against a brute-force resampling oracle.
+"""NumPy fallback kernel against a brute-force resampling oracle.
 
 Risk mitigated: the cumsum/searchsorted counting shortcut disagreeing with
 literal "resample, sort, threshold, count strictly-greater" semantics —
@@ -19,7 +19,7 @@ from tests.conftest import binormal_scores
 
 
 def oracle_bootstrap(neg_sorted, pos_sorted, k_indices, n_boot, seed):
-    """Literal A2/A3 semantics: expand counts to resamples, sort, index."""
+    """Brute-force reference: expand counts to resamples, sort, and index."""
     n0, n1 = len(neg_sorted), len(pos_sorted)
     rng = np.random.default_rng(seed)
     out = np.empty((n_boot, len(k_indices)))

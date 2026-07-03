@@ -1,4 +1,4 @@
-"""Wilson machinery (A4), rectangle band (A5), gate (A7), Beta floor (A8).
+"""Wilson confidence bounds, rectangle band, variance gate, and Beta floor.
 
 Risks mitigated: floor formulas drifting from the closed forms; the
 rectangle floor narrowing instead of widening; the Beta floor raising the
@@ -213,7 +213,7 @@ class TestBetaOrderstatFloor:
 
     def test_jurisdiction_capped_by_n_neg(self):
         # n_neg < j_max: only n_neg order statistics exist, but the alpha
-        # split stays Bonferroni over 2*j_max (per A8)
+        # split stays Bonferroni over 2*j_max
         neg, pos = binormal_scores(10, 50, seed=11)
         grid = make_grid(10)
         floored = beta_orderstat_floor(grid, np.ones_like(grid), neg, pos, 0.05)

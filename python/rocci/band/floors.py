@@ -1,16 +1,14 @@
-"""Wilson score machinery and the exact band floors (appendix A4, A5, A7, A8).
+"""Wilson score machinery and the exact band floors.
 
 Three mechanisms repair the bootstrap envelope where resampling variance
 collapses or goes blind:
 
-- the Wilson variance floor used during studentization (A4, consumed by A6);
-- the variance-ratio gated Wilson rectangle floor (A5 + A7), which widens
-  the band wherever raw bootstrap variance falls below even the binomial
-  component;
-- the Beta order-statistic floor (A8), which *lowers* an overconfident
-  lower band at extreme FPR, where the dominant uncertainty is the
-  horizontal location of the threshold and no variance-based mechanism can
-  see it.
+- the Wilson variance floor used during studentization;
+- the variance-ratio gated Wilson rectangle floor, which widens the band
+  wherever raw bootstrap variance falls below even the binomial component;
+- the Beta order-statistic floor, which *lowers* an overconfident lower
+  band at extreme FPR, where the dominant uncertainty is the horizontal
+  location of the threshold and no variance-based mechanism can see it.
 """
 
 from __future__ import annotations
@@ -26,13 +24,13 @@ from rocci.band.grids import empirical_roc_on_grid
 
 FloatArray = NDArray[np.float64]
 
-#: Number of negative order statistics used by the Beta floor (A8).
-#: Fixed by the validated method; deliberately not exposed as a parameter.
+#: Number of negative order statistics used by the Beta floor.
+#: This is a fixed design parameter, deliberately not exposed for tuning.
 J_MAX = 25
 
 
 def wilson_bounds(p: FloatArray, n: int, z: float) -> tuple[FloatArray, FloatArray]:
-    """Two-sided Wilson interval, clipped to [0, 1] (appendix A4).
+    """Two-sided Wilson interval, clipped to [0, 1].
 
     Args:
         p: Proportion estimates.
@@ -61,7 +59,7 @@ def wilson_bounds(p: FloatArray, n: int, z: float) -> tuple[FloatArray, FloatArr
 
 
 def wilson_halfwidth_sq(p: FloatArray, n: int, z: float) -> FloatArray:
-    """Squared Wilson half-width; strictly positive even at p in {0, 1} (A4).
+    """Squared Wilson half-width; strictly positive even at p in {0, 1}.
 
     Used as the studentization variance floor: divide by ``z**2`` to convert
     a half-width^2 at level ``z`` into a variance-scale quantity.
@@ -89,7 +87,7 @@ def wilson_halfwidth_sq(p: FloatArray, n: int, z: float) -> FloatArray:
 
 
 def wilson_lower_one_sided(p: FloatArray, n: int, alpha: float) -> FloatArray:
-    """One-sided Wilson lower bound at level ``alpha`` (appendix A4).
+    """One-sided Wilson lower bound at level ``alpha``.
 
     Args:
         p: Proportion estimates.
@@ -117,7 +115,7 @@ def wilson_lower_one_sided(p: FloatArray, n: int, alpha: float) -> FloatArray:
 def _corner_envelope(
     x: FloatArray, y: FloatArray, grid: FloatArray, take: str
 ) -> FloatArray:
-    """Project rectangle corner points onto the grid (appendix A5).
+    """Project rectangle corner points onto the grid.
 
     Sort by x, collapse duplicate x (min for lower / max for upper), then
     linear interpolation with edge clamping (``np.interp`` semantics).
@@ -134,9 +132,9 @@ def _corner_envelope(
 def wilson_rectangle_band(
     neg: FloatArray, pos: FloatArray, grid: FloatArray, alpha: float
 ) -> tuple[FloatArray, FloatArray]:
-    """Pointwise Wilson 2-D rectangle band (appendix A5).
+    """Pointwise Wilson 2-D rectangle band.
 
-    Used **only** as the floor source inside the variance-ratio gate (A7),
+    Used **only** as the floor source inside the variance-ratio gate,
     always with Šidák correction across each rectangle's two margins.
 
     Args:
@@ -163,9 +161,9 @@ def wilson_rectangle_band(
     n0, n1 = len(neg), len(pos)
 
     grid = np.asarray(grid, dtype=np.float64)
-    tpr = empirical_roc_on_grid(neg, pos, grid)  # A1
-    fpr_lo, fpr_hi = wilson_bounds(grid, n0, z)  # A4 (uncertainty in FPR)
-    tpr_lo, tpr_hi = wilson_bounds(tpr, n1, z)  # A4 (uncertainty in TPR)
+    tpr = empirical_roc_on_grid(neg, pos, grid)
+    fpr_lo, fpr_hi = wilson_bounds(grid, n0, z)  # uncertainty in FPR
+    tpr_lo, tpr_hi = wilson_bounds(tpr, n1, z)  # uncertainty in TPR
 
     # upper envelope from upper-left corners (optimistic); lower from
     # lower-right corners (pessimistic)
@@ -187,18 +185,18 @@ def rectangle_floor(
     grid: FloatArray,
     alpha: float,
 ) -> tuple[FloatArray, FloatArray]:
-    """Variance-ratio gate + Wilson rectangle floor (appendix A7).
+    """Variance-ratio gate + Wilson rectangle floor.
 
     Detects where the **raw** (unfloored) bootstrap variance has collapsed
-    below even the binomial component and floors those points with the A5
+    below even the binomial component and floors those points with the
     rectangle band at a Šidák-corrected level, then enforces band
     monotonicity. The floor can only widen the band.
 
     Args:
-        lower_env: Pre-floor lower envelope arm (A6).
-        upper_env: Pre-floor upper envelope arm (A6).
+        lower_env: Pre-floor lower envelope arm.
+        upper_env: Pre-floor upper envelope arm.
         var_raw: Raw bootstrap variance per grid point (ddof=1).
-        wilson_var: Wilson variance floor per grid point (A6).
+        wilson_var: Wilson variance floor per grid point.
         neg: Negative-class scores.
         pos: Positive-class scores.
         grid: FPR evaluation grid.
@@ -237,7 +235,7 @@ def rectangle_floor(
     lower, upper = lower_env.copy(), upper_env.copy()
     needs = deficiency > 0
     if needs.any():
-        rect_lo, rect_hi = wilson_rectangle_band(neg, pos, grid, alpha_w)  # A5
+        rect_lo, rect_hi = wilson_rectangle_band(neg, pos, grid, alpha_w)
         lower[needs] = np.minimum(lower[needs], rect_lo[needs])
         upper[needs] = np.maximum(upper[needs], rect_hi[needs])
         # enforce band monotonicity (ROC bands are non-decreasing):
@@ -254,7 +252,7 @@ def beta_orderstat_floor(
     alpha: float,
     j_max: int = J_MAX,
 ) -> FloatArray:
-    """Exact Beta order-statistic floor for the lower band (appendix A8).
+    """Exact Beta order-statistic floor for the lower band.
 
     For continuous scores the true FPR exceedance at the j-th largest
     negative is exactly ``Beta(j, n0 + 1 - j)`` regardless of the score
@@ -300,7 +298,7 @@ def beta_orderstat_floor(
     pos_asc = np.sort(pos)
     tpr_hat_j = (n1 - np.searchsorted(pos_asc, neg_desc, side="right")) / n1
 
-    # one-sided Wilson lower bounds (A4) at level a_e; prepend 0 so that
+    # one-sided Wilson lower bounds at level a_e; prepend 0 so that
     # "no qualifying order statistic" (j_star == 0) maps to a vacuous floor
     bounds = np.concatenate(([0.0], wilson_lower_one_sided(tpr_hat_j, n1, a_e)))
 
@@ -314,7 +312,7 @@ def beta_orderstat_floor(
 
 
 def beta_floor_vacuous_below(n_neg: int, alpha: float, j_max: int = J_MAX) -> float:
-    """FPR below which the lower band is provably vacuous (``q_1`` from A8).
+    """FPR below which the lower band is provably vacuous (``q_1``).
 
     Args:
         n_neg: Number of negative-class samples.

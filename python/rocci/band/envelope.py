@@ -1,8 +1,8 @@
-"""Studentized envelope, assembly order, attribution, and AUC (A6, A9, A10).
+"""Studentized envelope, assembly order, attribution, and AUC.
 
 The assembly order (envelope -> rectangle floor + monotonicity -> Beta
-floor -> pinned endpoints) is load-bearing and must not be changed: the
-golden-master fixtures (spec §5.7) encode exactly this sequence.
+floor -> pinned endpoints) is load-bearing and must not be changed:
+reordering the floors will change the resulting band.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ _trapezoid: Any = getattr(np, "trapezoid", getattr(np, "trapz", None))
 if _trapezoid is None:  # pragma: no cover — unreachable on numpy >= 1.24
     raise ImportError("numpy provides neither trapezoid nor trapz")
 
-#: Attribution codes for the lower band (spec §3.4).
+#: Attribution codes for the lower band.
 ATTR_BOOTSTRAP, ATTR_BETA_FLOOR, ATTR_WILSON_FLOOR, ATTR_PINNED = 0, 1, 2, 3
 
 
@@ -41,14 +41,14 @@ class EnvelopeBand:
 
     Attributes:
         grid: FPR evaluation grid, shape ``(K,)``.
-        tpr: Empirical ROC at the grid (A1).
+        tpr: Empirical ROC at the grid.
         lower: Final lower band (floors applied, endpoints pinned).
         upper: Final upper band.
         attribution: int8 codes per grid point — 0 bootstrap envelope,
             1 Beta floor, 2 Wilson rectangle floor, 3 pinned endpoint.
-        lower_env: Pre-floor lower envelope arm (A6), kept for attribution.
-        upper_env: Pre-floor upper envelope arm (A6).
-        lower_rect: Lower band after the rectangle floor (A7), before A8.
+        lower_env: Pre-floor lower envelope arm, kept for attribution.
+        upper_env: Pre-floor upper envelope arm.
+        lower_rect: Lower band after the rectangle floor.
         var_raw: Raw bootstrap variance per grid point (ddof=1).
         wilson_var: Wilson variance floor per grid point.
         vacuous_below: FPR below which the lower band is provably vacuous.
@@ -72,7 +72,7 @@ class EnvelopeBand:
 def studentized_envelope(
     boot_tpr: FloatArray, tpr_hat: FloatArray, alpha: float, n_neg: int, n_pos: int
 ) -> tuple[FloatArray, FloatArray, FloatArray, FloatArray]:
-    """Studentization, KS retention, and pointwise envelope (appendix A6).
+    """Studentization, KS retention, and pointwise envelope.
 
     Deviations from the empirical ROC are studentized by the bootstrap SD
     floored at the Wilson variance; each replicate is scored by its supremum
@@ -89,8 +89,8 @@ def studentized_envelope(
 
     Returns:
         Tuple ``(lower_env, upper_env, var_raw, wilson_var)``; the envelope
-        arms are the **pre-floor arm** retained for attribution (A9), and
-        ``var_raw`` is kept for the A7 gate.
+        arms are the **pre-floor arms** retained for attribution, and
+        ``var_raw`` is kept for the variance-ratio gate.
 
     Examples:
         >>> import numpy as np
@@ -104,7 +104,7 @@ def studentized_envelope(
     """
     n_boot = boot_tpr.shape[0]
     z_alpha = float(norm.ppf(1.0 - alpha / 2.0))
-    var_raw = boot_tpr.var(axis=0, ddof=1)  # keep: used by A7 gate
+    var_raw = boot_tpr.var(axis=0, ddof=1)  # kept for variance-ratio gate
     wilson_var = wilson_halfwidth_sq(tpr_hat, n_pos, z_alpha) / z_alpha**2
     sd = np.sqrt(np.maximum(var_raw, wilson_var))
 
@@ -135,11 +135,11 @@ def assemble_envelope_band(
     pos: FloatArray,
     alpha: float,
 ) -> EnvelopeBand:
-    """Full envelope-band assembly with attribution (appendix A9).
+    """Full envelope-band assembly with attribution.
 
-    Pipeline order — envelope (A6) -> rectangle floor + monotonicity (A7)
-    -> Beta floor (A8) -> pinned endpoints — is normative; do not re-run
-    the monotonicity pass after A8 and do not reorder the floors.
+    The pipeline order is load-bearing: envelope -> rectangle floor +
+    monotonicity -> Beta floor -> pinned endpoints. Do not rerun the
+    monotonicity pass after the Beta floor and do not reorder the floors.
 
     Args:
         boot_tpr: Bootstrap TPR matrix, shape ``(B, K)``.
@@ -189,7 +189,7 @@ def assemble_envelope_band(
         grid=grid,
         alpha=alpha,
     )
-    lower = beta_orderstat_floor(grid, lower_rect, neg, pos, alpha)  # A8, last
+    lower = beta_orderstat_floor(grid, lower_rect, neg, pos, alpha)  # applied last
     lower = lower.copy()
     upper = upper.copy()
     lower[0] = 0.0  # pinned endpoints
@@ -218,11 +218,11 @@ def assemble_envelope_band(
 
 
 def auc_from_vertices(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
-    """Trapezoid AUC over the full empirical vertex list (appendix A10).
+    """Trapezoid AUC over the full empirical vertex list.
 
     Args:
-        fpr_v: Vertex FPR coordinates from A1 (non-decreasing).
-        tpr_v: Vertex TPR coordinates from A1.
+        fpr_v: Vertex FPR coordinates (non-decreasing).
+        tpr_v: Vertex TPR coordinates.
 
     Returns:
         The empirical AUC — computed on the vertex list, not the K grid.
@@ -239,7 +239,7 @@ def auc_from_vertices(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
 def bootstrap_auc_ci(
     boot_tpr: FloatArray, grid: FloatArray, alpha: float
 ) -> tuple[float, float]:
-    """Percentile bootstrap CI of per-replicate grid AUCs (appendix A10).
+    """Percentile bootstrap CI of per-replicate grid AUCs.
 
     Documented as a pointwise (scalar-parameter) percentile CI.
 

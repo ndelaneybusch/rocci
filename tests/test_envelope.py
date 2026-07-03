@@ -1,4 +1,4 @@
-"""Studentized envelope (A6), assembly + attribution (A9), AUC (A10).
+"""Studentized envelope, assembly + attribution, and AUC calculation.
 
 Risks mitigated: retention off-by-one or tie mishandling; the collapse
 guard silently dividing by ~0; assembly reordering; attribution codes not
@@ -165,7 +165,7 @@ class TestAuc:
         assert auc_from_vertices(fpr_v, tpr_v) == pytest.approx(0.75)
 
     def test_auc_close_to_mann_whitney(self):
-        # For continuous scores the A10 trapezoid over the A1 vertex list is
+        # For continuous scores the trapezoid over the empirical vertex list is
         # MW - h_last/(2*n_neg): the final rise at FPR=1 is vertical and
         # carries no trapezoid area. Verify that exact relationship.
         neg, pos = binormal_scores(500, 500, seed=8)
@@ -176,8 +176,8 @@ class TestAuc:
         assert auc == pytest.approx(mw - h_last / (2 * 500), abs=1e-12)
 
     def test_auc_uses_vertex_list_not_grid(self):
-        # a coarse grid visibly distorts the trapezoid; the vertex list is
-        # the normative input (A10)
+        # a coarse grid visibly distorts the trapezoid; the full vertex list is
+        # the correct input for the AUC point estimate
         neg, pos = binormal_scores(200, 200, seed=8)
         fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
         auc_vertices = auc_from_vertices(fpr_v, tpr_v)

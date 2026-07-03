@@ -1,8 +1,9 @@
-"""Property-based invariants of the assembled band (spec §11.8, M1 slice).
+"""Property-based invariants of the assembled confidence band.
 
 Risks mitigated: invariants that hold on cherry-picked fixtures but break
 on adversarial score distributions (ties, tiny classes, skew), and loss of
-the envelope's rank invariance — the paper's key selling point.
+the envelope's rank invariance — a critical property ensuring the band
+correctly summarizes the underlying bootstrap replicates.
 """
 
 from __future__ import annotations

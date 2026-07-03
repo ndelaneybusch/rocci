@@ -1,7 +1,7 @@
-"""Grid rule, empirical ROC (A1), step lookup (A13), index mapping (A14).
+"""Grid rule, empirical ROC, step lookup, and index mapping.
 
 Risk mitigated: the O(n log n) searchsorted formulation silently diverging
-from the validated >=-threshold step semantics, especially under ties.
+from the >=-threshold step semantics, especially under ties.
 """
 
 from __future__ import annotations
@@ -21,8 +21,8 @@ from tests.conftest import binormal_scores
 
 
 def roc_on_grid_reference(neg, pos, grid):
-    """O(n^2) reference with the paper's exact semantics: every negative is
-    a threshold, >= counting on both classes, right-continuous step lookup."""
+    """O(n^2) brute-force reference: every negative is a threshold, >= counting
+    on both classes, right-continuous step lookup."""
     thr = np.sort(neg)[::-1]
     fpr_v = np.concatenate(([0.0], [(neg >= t).mean() for t in thr], [1.0]))
     tpr_v = np.concatenate(([0.0], [(pos >= t).mean() for t in thr], [1.0]))
