@@ -1,0 +1,21 @@
+name: Feature request
+description: Propose an addition or change
+labels: [enhancement]
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Does this belong in the validated statistical surface?
+      description: >
+        rocci's API is deliberately small: it ships exactly the band
+        construction validated in the method paper. Explain whether this is
+        new statistical surface (needs validation evidence) or ergonomics
+        around the existing surface.
+    validations:
+      required: true

@@ -1,0 +1,16 @@
+name: Documentation
+description: Docs are wrong, unclear, or missing
+labels: [documentation]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Page or docstring
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true

@@ -1,0 +1,29 @@
+name: Bug report
+description: Something is wrong or broken
+labels: [bug]
+body:
+  - type: textarea
+    id: versions
+    attributes:
+      label: rocci.show_versions() output
+      description: >
+        Paste the full output of `python -c "import rocci; rocci.show_versions()"`.
+        (Until show_versions ships, paste rocci/numpy/scipy versions, OS, and
+        whether the backend is rust or numpy.)
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal reproducer
+      description: Smallest self-contained code that shows the problem.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual behavior
+    validations:
+      required: true

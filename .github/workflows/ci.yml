@@ -1,0 +1,123 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: Swatinem/rust-cache@v2
+      - uses: extractions/setup-just@v2
+      - run: uv sync --all-groups --no-install-project
+      - run: just lint
+      - name: Conventional Commit PR title
+        if: github.event_name == 'pull_request'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "$TITLE" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|release|revert)(\(.+\))?!?: .+' \
+            || { echo "PR title must follow Conventional Commits"; exit 1; }
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: extractions/setup-just@v2
+      - run: uv sync --all-groups --no-install-project
+      - run: just typecheck
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo install cargo-audit --locked
+      - run: cargo audit
+      - run: uv sync --all-groups
+      - run: uv run --with pip-audit pip-audit --skip-editable -e .
+
+  rust:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test
+      - name: MSRV build check
+        run: |
+          rustup toolchain install 1.94 --profile minimal
+          cargo +1.94 check
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+        python: ["3.10", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: Swatinem/rust-cache@v2
+      - run: uv sync --all-groups
+      - run: uv run pytest -q -m "not slow" --cov=python/rocci --cov-report=xml
+      - run: uv run pytest -q --doctest-modules python/rocci
+      - name: Coverage gate (>= 95%)
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        run: uv run coverage report --fail-under=95
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+
+  test-fallback:
+    # Proves the package works with zero compiled code.
+    runs-on: ubuntu-latest
+    env:
+      ROCCI_BACKEND: numpy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
+      - uses: Swatinem/rust-cache@v2
+      - run: uv sync --all-groups
+      - run: uv run pytest -q -m "not slow"
+
+  test-minimums:
+    # Guards the loose lower bounds numpy>=1.24, scipy>=1.10.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
+      - uses: Swatinem/rust-cache@v2
+      - run: uv sync --all-groups
+      - run: uv pip install "numpy==1.24.*" "scipy==1.10.*"
+      - run: uv run --no-sync pytest -q -m "not slow"
+
+  # docs-build joins this workflow in milestone M5 (mkdocs --strict with
+  # executed vignettes); gates.yml (calibration + perf) lands in milestone M6.

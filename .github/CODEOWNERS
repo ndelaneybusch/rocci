@@ -1,0 +1,8 @@
+# Owner on everything.
+* @ndelaneybusch
+
+# Statistical core — golden masters must pass, spec update required (see
+# PULL_REQUEST_TEMPLATE.md).
+/python/rocci/band/ @ndelaneybusch
+/rust/ @ndelaneybusch
+/tests/fixtures/golden/ @ndelaneybusch

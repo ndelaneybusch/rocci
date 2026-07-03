@@ -1,0 +1,124 @@
+name: wheels
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: # dry-run: builds and smoke-tests but cannot publish
+
+permissions:
+  contents: read
+
+jobs:
+  release-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assert tag/version/changelog consistency (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PYVER=$(grep -Po '(?<=^version = ")[^"]+' pyproject.toml | head -1)
+          [ "$TAG" = "$PYVER" ] || { echo "tag $TAG != pyproject version $PYVER"; exit 1; }
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "tag commit not on main"; exit 1; }
+          git cat-file -t "$GITHUB_REF" | grep -q tag || { echo "tag must be annotated"; exit 1; }
+          grep -q "$TAG" CHANGELOG.md || { echo "CHANGELOG.md missing section for $TAG"; exit 1; }
+
+  build:
+    needs: release-guard
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64, manylinux: "2014", name: manylinux2014-x86_64 }
+          - { os: ubuntu-24.04-arm, target: aarch64, manylinux: "2014", name: manylinux2014-aarch64 }
+          - { os: ubuntu-latest, target: x86_64, manylinux: musllinux_1_2, name: musllinux-x86_64 }
+          - { os: macos-13, target: x86_64, manylinux: auto, name: macos-x86_64 }
+          - { os: macos-14, target: aarch64, manylinux: auto, name: macos-arm64 }
+          - { os: windows-latest, target: x64, manylinux: auto, name: windows-x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          args: --release --out dist
+      - name: Smoke test in a clean venv (own platform)
+        # `pip install rocci` must never compile Rust on a supported platform.
+        shell: bash
+        run: |
+          python -m venv smoke
+          if [ -e smoke/bin/python ]; then PY=smoke/bin/python; else PY=smoke/Scripts/python.exe; fi
+          "$PY" -m pip install --no-index --find-links dist rocci --only-binary rocci \
+            || "$PY" -m pip install dist/*.whl
+          "$PY" - <<'EOF'
+          import numpy as np
+          import rocci
+          from rocci.backend import BACKEND, bootstrap_tpr_matrix
+
+          assert BACKEND == "rust", f"expected rust backend, got {BACKEND}"
+          rng = np.random.default_rng(0)
+          neg = np.sort(rng.normal(size=250))
+          pos = np.sort(rng.normal(1.0, size=250))
+          grid = np.linspace(0, 1, 128)
+          k = np.clip(np.floor(grid * 250), 0, 250).astype(np.uint64)
+          out = bootstrap_tpr_matrix(neg, pos, k, n_boot=200, seed=1, n_threads=0)
+          assert out.shape == (200, 128) and np.isfinite(out).all()
+          print("wheel smoke OK", rocci.__version__)
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.name }}
+          path: dist
+
+  sdist:
+    needs: release-guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Smoke test sdist (compile from source)
+        run: |
+          python -m venv smoke
+          smoke/bin/pip install dist/*.tar.gz
+          smoke/bin/python -c "import rocci; from rocci.backend import BACKEND; assert BACKEND == 'rust'"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist
+
+  publish:
+    # Trusted publishing (OIDC); the human "go" is the environment protection
+    # rule on `release`. rc tags -> TestPyPI, final tags -> PyPI.
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build, sdist]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*"
+      - name: Publish to TestPyPI (release candidates)
+        if: contains(github.ref_name, 'rc')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist
+      - name: Publish to PyPI (final releases)
+        if: "!contains(github.ref_name, 'rc')"
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
