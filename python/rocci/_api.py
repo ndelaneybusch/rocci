@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import platform
+import warnings
 from typing import Any, Literal
 
 import numpy as np
@@ -18,13 +19,20 @@ import rocci.backend as _backend
 from rocci._exceptions import RocciError
 from rocci._result import RocBand
 from rocci._validation import check_confidence, check_n_boot, resolve_seed
+from rocci._warnings import NormalityWarning
 from rocci.band.envelope import (
     assemble_envelope_band,
     auc_from_vertices,
     bootstrap_auc_ci,
 )
-from rocci.band.grids import empirical_roc_vertices, grid_k_indices, make_grid
-from rocci.ingest import ingest
+from rocci.band.grids import (
+    empirical_roc_on_grid,
+    empirical_roc_vertices,
+    grid_k_indices,
+    make_grid,
+)
+from rocci.band.normal import normality_report, working_hotelling_band
+from rocci.ingest import heavy_ties, ingest
 
 __all__ = ["from_estimator", "roc_band", "roc_band_ovr", "show_versions"]
 
@@ -56,15 +64,15 @@ def roc_band(
         y_score: Scores (higher = more positive); 1-D, an ``(n, 2)``
             probability matrix, or posterior draws with ``score_reduce`` set.
         confidence: Simultaneous coverage target in ``(0, 1)``.
-        n_boot: Bootstrap replicates (``>= 100``).
-        normal: ``False`` → envelope method. ``True`` → Working-Hotelling
-            (not yet implemented).
+        n_boot: Bootstrap replicates (``>= 100``); ignored when ``normal=True``.
+        normal: ``False`` → distribution-free envelope method. ``True`` →
+            Working-Hotelling binormal band plus normality diagnostics.
         grid_size: FPR grid points ``K``; ``None`` → ``min(512, n_neg + 1)``.
         pos_label: Which label is positive; ``None`` infers.
         score_reduce: ``"mean"``/``"median"`` for posterior-draw scores.
         nan_policy: ``"raise"`` (default) or ``"omit"``.
         random_state: Seeds the bootstrap; same seed + backend + version ⇒
-            bit-identical band.
+            bit-identical band. Ignored when ``normal=True``.
         diagnostics: Render the floor-attribution figure immediately
             (not yet implemented). Attribution is always stored.
         n_threads: Rust thread count; ``None`` → all cores.
@@ -75,8 +83,7 @@ def roc_band(
     Raises:
         RocciError: On invalid inputs (see :mod:`rocci.ingest`, ``confidence``,
             ``n_boot``).
-        NotImplementedError: For ``normal=True`` or ``diagnostics=True`` (not
-            yet implemented).
+        NotImplementedError: For ``diagnostics=True`` (not yet implemented).
 
     Examples:
         >>> import numpy as np
@@ -90,11 +97,6 @@ def roc_band(
         >>> bool(0.0 <= band.auc <= 1.0)
         True
     """
-    if normal:
-        raise NotImplementedError(
-            "the Working-Hotelling path (normal=True) is not yet implemented; "
-            "use normal=False for the distribution-free envelope band."
-        )
     if diagnostics:
         raise NotImplementedError(
             "diagnostics=True rendering is not yet implemented (it will arrive "
@@ -103,7 +105,8 @@ def roc_band(
         )
 
     alpha = check_confidence(confidence)
-    check_n_boot(n_boot)
+    if not normal:
+        check_n_boot(n_boot)
     data = ingest(
         y_true,
         y_score,
@@ -115,16 +118,42 @@ def roc_band(
     neg = np.sort(data.neg)
     pos = np.sort(data.pos)
     grid = make_grid(data.n_neg, grid_size)
+    fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+    auc = auc_from_vertices(fpr_v, tpr_v)
+
+    if normal:
+        lower, upper = working_hotelling_band(neg, pos, grid, alpha)
+        report = normality_report(
+            neg, pos, fpr_v, tpr_v, heavy_ties=heavy_ties(neg, pos)
+        )
+        if report.suspect:
+            warnings.warn(report.warning, NormalityWarning, stacklevel=2)
+        return RocBand(
+            fpr=grid,
+            tpr=empirical_roc_on_grid(neg, pos, grid),
+            lower=lower,
+            upper=upper,
+            confidence=confidence,
+            method="working_hotelling",
+            n_neg=data.n_neg,
+            n_pos=data.n_pos,
+            n_boot=None,
+            auc=auc,
+            auc_ci=None,
+            attribution=np.zeros(len(grid), dtype=np.int8),
+            vacuous_below=None,
+            normality=report,
+            backend=_backend.BACKEND,
+            random_state=None,
+            notes=data.notes,
+        )
+
     k_indices = grid_k_indices(grid, data.n_neg)
     seed = resolve_seed(random_state)
-
     boot_tpr = _backend.bootstrap_tpr_matrix(
         neg, pos, k_indices, n_boot, seed, n_threads
     )
     band = assemble_envelope_band(boot_tpr, grid, neg, pos, alpha)
-
-    fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
-    auc = auc_from_vertices(fpr_v, tpr_v)
     auc_ci = bootstrap_auc_ci(boot_tpr, grid, alpha)
 
     return RocBand(

@@ -95,11 +95,6 @@ class TestWarningsAndErrors:
         with pytest.raises(RocciError, match="n_boot"):
             roc_band(y_true, y_score, n_boot=50, random_state=0)
 
-    def test_normal_true_deferred(self):
-        y_true, y_score = binormal_dataset(60, 60, seed=10)
-        with pytest.raises(NotImplementedError, match="not yet implemented"):
-            roc_band(y_true, y_score, normal=True)
-
     def test_diagnostics_true_deferred(self):
         y_true, y_score = binormal_dataset(60, 60, seed=11)
         with pytest.raises(NotImplementedError, match="not yet implemented"):
