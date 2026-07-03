@@ -1,0 +1,43 @@
+# Normalize all text files to LF in the repo; check out native on Windows.
+* text=auto
+
+# ---- Force LF (these break or misbehave with CRLF) ----
+*.sh        text eol=lf
+*.py        text eol=lf
+*.pyi       text eol=lf
+*.rs        text eol=lf
+*.toml      text eol=lf
+*.cff       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.md        text eol=lf
+*.cfg       text eol=lf
+*.ini       text eol=lf
+justfile    text eol=lf
+Justfile    text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+
+# ---- Force CRLF (Windows-only scripts) ----
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# ---- Binary (never diff or convert line endings) ----
+# Golden-master fixtures (spec §5.7) and other numeric/image blobs
+*.npy       binary
+*.npz       binary
+*.parquet   binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.pdf       binary
+*.ico       binary
+*.lock      -diff
+
+# ---- GitHub linguist hints ----
+docs/**            linguist-documentation
+tests/fixtures/**  linguist-generated
+uv.lock            linguist-generated
+Cargo.lock         linguist-generated
