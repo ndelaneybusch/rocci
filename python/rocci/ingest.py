@@ -245,6 +245,32 @@ def _apply_nan_policy(
     return is_pos[keep], scores[keep]
 
 
+def heavy_ties(neg: FloatArray, pos: FloatArray) -> bool:
+    """Whether the pooled scores are heavily tied.
+
+    True when the fraction of distinct pooled scores falls below
+    :data:`_TIES_FRACTION` — the band stays valid but conservative, and the
+    binormal model becomes untenable (ties have probability zero under it).
+
+    Args:
+        neg: Negative-class scores.
+        pos: Positive-class scores.
+
+    Returns:
+        ``True`` if the distinct-score fraction is below the threshold.
+
+    Examples:
+        >>> import numpy as np
+        >>> from rocci.ingest import heavy_ties
+        >>> heavy_ties(np.array([0.0, 0.0, 1.0]), np.array([1.0, 1.0, 0.0]))
+        True
+        >>> heavy_ties(np.arange(10.0), np.arange(10.0, 20.0))
+        False
+    """
+    combined = np.concatenate([neg, pos])
+    return len(np.unique(combined)) / len(combined) < _TIES_FRACTION
+
+
 def _check_ties(neg: FloatArray, pos: FloatArray) -> None:
     """Warn on heavy ties or a constant-score class."""
     for label, arr in (("negative", neg), ("positive", pos)):
@@ -255,10 +281,10 @@ def _check_ties(neg: FloatArray, pos: FloatArray) -> None:
                 TiesWarning,
                 stacklevel=3,
             )
-    combined = np.concatenate([neg, pos])
-    n = len(combined)
-    n_unique = len(np.unique(combined))
-    if n_unique / n < _TIES_FRACTION:
+    if heavy_ties(neg, pos):
+        combined = np.concatenate([neg, pos])
+        n = len(combined)
+        n_unique = len(np.unique(combined))
         warnings.warn(
             f"scores are heavily tied ({n_unique} distinct of {n}); the band stays "
             "valid but conservative (the Beta floor errs safe under ties).",
