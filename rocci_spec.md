@@ -26,14 +26,7 @@ material for the docs.
 | Core runtime deps                      | `numpy>=1.24`, `scipy>=1.10` — nothing else               | "Just works and is fast" requires a tiny dependency footprint                                                                                   |
 | Plotting                               | `matplotlib` via optional extra `rocci[plot]`             | Lazy import with actionable error message                                                                                                       |
 | License                                | MIT                                                       | Maximize adoption (owner may override)                                                                                                          |
-| Versioning                             | SemVer, start at `0.1.0`, `1.0.0` when paper is published |                                                                                                                                                 |
-
-
-Data-model note: the owner's general style guide prefers pydantic models for data
-values. `rocci` deliberately deviates: results are frozen `dataclasses` holding
-NumPy arrays. Pydantic would add a dependency and provides no value for
-ndarray-centric scientific results; validation happens once at ingestion
-(§4) with explicit checks and typed errors.
+| Versioning                             | SemVer, start at `0.1.0`, `1.0.0` when out of beta        |                                                                                                                                                 |
 
 ---
 
@@ -95,7 +88,7 @@ def roc_band(
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `y_true`       | Labels in any form §4 can coerce.                                                                                                                                               |
 | `y_score`      | Scores in any form §4 can coerce (higher = more positive).                                                                                                                      |
-| `confidence`   | Simultaneous coverage target, in (0, 1). `alpha = 1 - confidence`. Warn (`LowConfidenceWarning`) if `< 0.90`: sup-norm bands intentionally over-cover at low levels (paper §7). |
+| `confidence`   | Simultaneous coverage target, in (0, 1). `alpha = 1 - confidence`.                                                                                                              |
 | `n_boot`       | Bootstrap replicates. `ValueError` if `< 100`; warn if `< 1000` (quantile resolution). Ignored with `normal=True`.                                                              |
 | `normal`       | `False` → envelope method (§5). `True` → Working–Hotelling (§6) plus normality diagnostics.                                                                                     |
 | `grid_size`    | FPR grid points `K`. Default `None` → `K = min(512, n_neg + 1)`. Grid is `linspace(0, 1, K)`.                                                                                   |
@@ -163,8 +156,8 @@ probit–probit linearity R²; boolean `suspect`; the exact warning text emitted
 ### 3.5 Warnings and exceptions (`rocci._warnings`, `rocci._exceptions`)
 
 - `RocciWarning(UserWarning)` base; subclasses `NormalityWarning`,
-`LowConfidenceWarning`, `SmallSampleWarning`, `TiesWarning`,
-`FallbackBackendWarning` (once per process when the Rust core is missing).
+`SmallSampleWarning`, `TiesWarning`, `FallbackBackendWarning` (once per process
+when the Rust core is missing).
 - `RocciError(ValueError)` base for all input errors, with messages that state
 the fix, not just the failure.
 
@@ -479,8 +472,7 @@ ratios within [0.9, 1.1].
 
 ## 9. Performance requirements
 
-Baseline measurements from the routing decision (Ryzen 9 5900X 12C/24T vs
-RTX 3080 10 GB; B×512 grid; torch = current paper implementation):
+Baseline measurements from the routing decision:
 
 
 | n_total | B    | torch CUDA | torch CPU | Rust prototype |
@@ -995,7 +987,7 @@ release cannot ship half-done or inconsistent.
 3. **M2 — Rust kernel**: port the profiled prototype into PyO3, oracle +
   determinism tests, fallback parity, backend selection. DONE
 4. **M3 — API + ingestion**: `roc_band`, `RocBand`, `from_estimator`,
-  warnings, ingestion matrix tests.
+  warnings, ingestion matrix tests. DONE.
 5. **M4 — WH path + diagnostics**: §6 + normality machinery.
 6. **M5 — Plots + docs + vignettes**: §7, mkdocs site (§13), executed
   vignettes, versioned deployment.
