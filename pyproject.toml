@@ -94,6 +94,9 @@ select = [
 ignore = [
     "D105",      # magic-method docstrings
     "D107",      # __init__ docstrings (class docstring carries the contract)
+    "E501",      # line length: `ruff format` wraps code; a line left overlong is
+                 # one it cannot split — a trailing `# ty: ignore[...]` / `# noqa`
+                 # pragma — which we allow rather than contort the code around.
 ]
 
 [tool.ruff.lint.pydocstyle]
