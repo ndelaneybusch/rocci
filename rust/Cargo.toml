@@ -1,0 +1,32 @@
+[package]
+name = "rocci-core"
+# Internal crate version; never ships. The single version source for the
+# package is [project] version in pyproject.toml.
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.94"
+publish = false
+license = "MIT"
+description = "Rust bootstrap kernel for the rocci Python package"
+
+[lib]
+name = "rocci_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.23", features = ["abi3-py310"] }
+numpy = "0.23"
+rayon = "1.10"
+
+[lints.rust]
+unsafe_code = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "deny"
+# Documented allow-list (kept short):
+cast_precision_loss = "allow"   # u64/usize -> f64 for TPR fractions is intentional
+cast_possible_truncation = "allow" # Lemire bounded sampling truncates by design
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_panics_doc = "allow"    # PyO3 entry point documents errors via PyResult

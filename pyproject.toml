@@ -1,0 +1,129 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rocci"
+version = "0.1.0"
+description = "Distribution-free simultaneous confidence bands for ROC curves"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "N. Delaney-Busch", email = "ndelaneybusch@gmail.com" }]
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "scipy>=1.10"]
+keywords = ["roc", "confidence-band", "bootstrap", "auc", "classification"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/ndelaneybusch/rocci"
+Documentation = "https://ndelaneybusch.github.io/rocci"
+Repository = "https://github.com/ndelaneybusch/rocci"
+Changelog = "https://github.com/ndelaneybusch/rocci/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.7"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "hypothesis>=6",
+    "ruff>=0.8",
+    "ty",
+    "maturin>=1.7,<2.0",
+    "pandas>=2",
+    "matplotlib>=3.7",
+    "pre-commit>=3",
+]
+
+[tool.maturin]
+python-source = "python"
+module-name = "rocci._core"
+manifest-path = "rust/Cargo.toml"
+features = ["pyo3/extension-module"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "slow: long-running statistical suites (excluded from `just test`)",
+]
+
+[tool.coverage.run]
+source = ["python/rocci"]
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E", "W",    # pycodestyle
+    "F",         # pyflakes
+    "I",         # isort-style import sorting
+    "B",         # bugbear (likely bugs)
+    "UP",        # pyupgrade (keep idioms current for the 3.10 floor)
+    "D",         # pydocstyle — Google convention
+    "N",         # pep8-naming
+    "NPY",       # numpy-specific rules (legacy RNG ban, deprecated aliases)
+    "C4",        # comprehension hygiene
+    "SIM",       # simplifications
+    "RET",       # return-statement hygiene
+    "ARG",       # unused arguments
+    "PT",        # pytest style
+    "TID252",    # ban relative parent imports
+    "PERF",      # perflint (accidental quadratic patterns)
+    "RUF",       # ruff-native rules (incl. mutable-default, unused-noqa)
+]
+ignore = [
+    "D105",      # magic-method docstrings
+    "D107",      # __init__ docstrings (class docstring carries the contract)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["rocci"]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "ARG"]        # test names are the documentation
+"benchmarks/**" = ["D"]
+"docs/**" = ["D", "E402"]        # vignettes import mid-file for narrative flow
+"scripts/**" = ["D"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+skip-magic-trailing-comma = true
+
+[tool.ty.environment]
+python-version = "3.10"          # check against the floor, not the dev interpreter
+
+[tool.ty.src]
+include = ["python/rocci", "tests"]
+
+[tool.ty.rules]
+# ty's default correctness rules stay at their default (error) severity.
+# Promote the off-by-default/lenient ones that catch real bugs in numeric code:
+possibly-unresolved-reference = "error"
+unused-ignore-comment = "error"   # suppressions must stay honest
+redundant-cast = "warn"
+division-by-zero = "warn"
