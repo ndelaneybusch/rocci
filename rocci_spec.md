@@ -46,7 +46,7 @@ requiring any of those libraries (§4).
 - Multiclass via `roc_band_ovr` (§3.6): one-vs-rest bands with an exact
 (conservative) family-wise coverage guarantee across classes.
 - Paper-quality plot of the band; floor-attribution diagnostic plot.
-- Fast by default: Rust core wheels for all mainstream platforms; a pure-NumPy  
+- Fast by default: Rust core wheels for all mainstream platforms; a pure-NumPy
 fallback keeps the package functional everywhere else.
 
 ---
@@ -1004,7 +1004,10 @@ release cannot ship half-done or inconsistent.
   vignettes, versioned deployment. DONE.
 7. **M6 — Merge gates**: calibration suite (§11.5) and perf gates (§9) wired
   into `gates.yml` as required PR checks (§14.2). DONE.
-8. **M7 — Release**: 0.1.0 to PyPI, then conda-forge feedstock.
+8. **M7 — Release**: 0.1.0 to PyPI. DONE (released 2026-07-05: six abi3
+   wheels + sdist, post-publish verified on all three OSes, GitHub Release,
+   versioned docs). conda-forge feedstock: deliberately deferred — see §14.5
+   step 8; revisit if user demand appears.
 
 Definition of done for v0.1.0: all gates in §9 and §11 green; a user with only
 `pip` gets a correct, fast band and a paper-quality figure in ≤ 5 lines on
