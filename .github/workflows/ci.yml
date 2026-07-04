@@ -48,7 +48,7 @@ jobs:
       - run: cargo install cargo-audit --locked
       - run: cargo audit
       - run: uv sync --all-groups
-      - run: uv run --with pip-audit pip-audit --skip-editable -e .
+      - run: uv run --with pip-audit pip-audit --skip-editable
 
   rust:
     strategy:
