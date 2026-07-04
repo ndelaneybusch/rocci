@@ -7,8 +7,8 @@ dependency for no gain.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -17,7 +17,11 @@ from rocci._exceptions import RocciError
 from rocci.band.grids import step_lookup
 
 if TYPE_CHECKING:
+    import matplotlib.axes
+    import matplotlib.figure
     import pandas as pd
+
+    from rocci.band.envelope import EnvelopeBand
 
 FloatArray = NDArray[np.float64]
 
@@ -62,6 +66,24 @@ class NormalityReport:
     probit_r2: float
     suspect: bool
     warning: str
+
+
+@dataclass(frozen=True)
+class ScoreDiagnostics:
+    """Sorted class scores retained for Working-Hotelling diagnostic plots.
+
+    Internal payload of ``RocBand._diag`` on the ``normal=True`` path; holds
+    references to (not copies of) the sorted score arrays the band was built
+    from, so the QQ and probit-linearity panels of
+    :meth:`RocBand.plot_diagnostics` can be drawn after the fact.
+
+    Attributes:
+        neg_sorted: Negative-class scores, ascending.
+        pos_sorted: Positive-class scores, ascending.
+    """
+
+    neg_sorted: FloatArray
+    pos_sorted: FloatArray
 
 
 @dataclass(frozen=True, eq=False)
@@ -123,6 +145,12 @@ class RocBand:
     backend: Literal["rust", "numpy"]
     random_state: int | None
     notes: tuple[str, ...] = ()
+    # Diagnostics payload for plot_diagnostics(): the EnvelopeBand
+    # intermediates (envelope path) or the sorted scores (WH path). Internal —
+    # K-sized arrays or references to arrays that already exist, never copies.
+    _diag: EnvelopeBand | ScoreDiagnostics | None = field(
+        default=None, repr=False, compare=False
+    )
 
     @property
     def band_area(self) -> float:
@@ -177,6 +205,74 @@ class RocBand:
             step_lookup(self.fpr, self.tpr, query),
             step_lookup(self.fpr, self.upper, query),
         )
+
+    def plot(
+        self, ax: matplotlib.axes.Axes | None = None, **style: Any
+    ) -> matplotlib.axes.Axes:
+        """Plot the band, the empirical ROC, and the chance diagonal.
+
+        Requires matplotlib (``pip install 'rocci[plot]'``); imported lazily.
+
+        Args:
+            ax: Axes to draw into; ``None`` creates a new figure.
+            **style: Style overrides forwarded to
+                :func:`rocci.plotting.plot_band` (``color``, ``band_alpha``,
+                ``label``, ``show_vacuous``).
+
+        Returns:
+            The Axes, for composition.
+
+        Raises:
+            RocciError: If matplotlib is not installed.
+
+        Examples:
+            >>> import numpy as np
+            >>> from rocci import roc_band
+            >>> rng = np.random.default_rng(5)
+            >>> y_true = np.r_[np.zeros(60), np.ones(60)]
+            >>> y_score = np.r_[rng.normal(0, 1, 60), rng.normal(1.4, 1, 60)]
+            >>> ax = roc_band(y_true, y_score, random_state=0).plot()
+            >>> ax.get_xlabel()
+            'False positive rate'
+        """
+        from rocci import plotting
+
+        return plotting.plot_band(self, ax=ax, **style)
+
+    def plot_diagnostics(
+        self, fig: matplotlib.figure.Figure | None = None
+    ) -> matplotlib.figure.Figure:
+        """Plot the "why did my band do that" diagnostics figure.
+
+        Envelope path: the band with the lower arm color-coded by floor
+        attribution, plus the variance channels that drive the floor gate.
+        Working-Hotelling path: the band plus the normality diagnostics
+        (per-class QQ plots and the probit-linearity fit).
+
+        Requires matplotlib (``pip install 'rocci[plot]'``); imported lazily.
+
+        Args:
+            fig: Figure to draw into; ``None`` creates a new one.
+
+        Returns:
+            The Figure.
+
+        Raises:
+            RocciError: If matplotlib is not installed.
+
+        Examples:
+            >>> import numpy as np
+            >>> from rocci import roc_band
+            >>> rng = np.random.default_rng(6)
+            >>> y_true = np.r_[np.zeros(60), np.ones(60)]
+            >>> y_score = np.r_[rng.normal(0, 1, 60), rng.normal(1.4, 1, 60)]
+            >>> fig = roc_band(y_true, y_score, random_state=0).plot_diagnostics()
+            >>> len(fig.axes)
+            2
+        """
+        from rocci import plotting
+
+        return plotting.plot_diagnostics(self, fig=fig)
 
     def to_dataframe(self) -> pd.DataFrame:
         """Return the band as a pandas DataFrame (lazy import).

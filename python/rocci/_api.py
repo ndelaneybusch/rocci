@@ -17,7 +17,7 @@ from numpy.typing import ArrayLike
 
 import rocci.backend as _backend
 from rocci._exceptions import RocciError
-from rocci._result import RocBand
+from rocci._result import RocBand, ScoreDiagnostics
 from rocci._validation import (
     check_confidence,
     check_grid_size,
@@ -79,8 +79,10 @@ def roc_band(
         nan_policy: ``"raise"`` (default) or ``"omit"``.
         random_state: Seeds the bootstrap; same seed + backend + version ⇒
             bit-identical band. Ignored when ``normal=True``.
-        diagnostics: Render the floor-attribution figure immediately
-            (not yet implemented). Attribution is always stored.
+        diagnostics: Render the diagnostics figure immediately (a notebook
+            convenience; requires matplotlib). The same figure is available
+            later via :meth:`~rocci._result.RocBand.plot_diagnostics`, and
+            the attribution data is always stored on the result.
         n_threads: Rust thread count; ``None`` or ``-1`` → all cores.
 
     Returns:
@@ -88,8 +90,7 @@ def roc_band(
 
     Raises:
         RocciError: On invalid inputs (see :mod:`rocci.ingest`, ``confidence``,
-            ``n_boot``).
-        NotImplementedError: For ``diagnostics=True`` (not yet implemented).
+            ``n_boot``), or for ``diagnostics=True`` without matplotlib.
 
     Examples:
         >>> import numpy as np
@@ -103,13 +104,6 @@ def roc_band(
         >>> bool(0.0 <= band.auc <= 1.0)
         True
     """
-    if diagnostics:
-        raise NotImplementedError(
-            "diagnostics=True rendering is not yet implemented (it will arrive "
-            "with the plotting layer); the attribution data is already stored on "
-            "the result (band.attribution)."
-        )
-
     alpha = check_confidence(confidence)
     if not normal:
         check_n_boot(n_boot)
@@ -136,7 +130,7 @@ def roc_band(
         )
         if report.suspect:
             warnings.warn(report.warning, NormalityWarning, stacklevel=2)
-        return RocBand(
+        result = RocBand(
             fpr=grid,
             tpr=empirical_roc_on_grid(neg, pos, grid),
             lower=lower,
@@ -154,35 +148,40 @@ def roc_band(
             backend=_backend.BACKEND,
             random_state=None,
             notes=data.notes,
+            _diag=ScoreDiagnostics(neg_sorted=neg, pos_sorted=pos),
+        )
+    else:
+        k_indices = grid_k_indices(grid, data.n_neg)
+        seed = resolve_seed(random_state)
+        boot_tpr = _backend.bootstrap_tpr_matrix(
+            neg, pos, k_indices, n_boot, seed, kernel_threads
+        )
+        band = assemble_envelope_band(boot_tpr, grid, neg, pos, alpha)
+        auc_ci = bootstrap_auc_ci(boot_tpr, grid, alpha)
+        result = RocBand(
+            fpr=band.grid,
+            tpr=band.tpr,
+            lower=band.lower,
+            upper=band.upper,
+            confidence=confidence,
+            method="envelope",
+            n_neg=data.n_neg,
+            n_pos=data.n_pos,
+            n_boot=n_boot,
+            auc=auc,
+            auc_ci=auc_ci,
+            attribution=band.attribution,
+            vacuous_below=band.vacuous_below,
+            normality=None,
+            backend=_backend.BACKEND,
+            random_state=random_state,
+            notes=data.notes,
+            _diag=band,
         )
 
-    k_indices = grid_k_indices(grid, data.n_neg)
-    seed = resolve_seed(random_state)
-    boot_tpr = _backend.bootstrap_tpr_matrix(
-        neg, pos, k_indices, n_boot, seed, kernel_threads
-    )
-    band = assemble_envelope_band(boot_tpr, grid, neg, pos, alpha)
-    auc_ci = bootstrap_auc_ci(boot_tpr, grid, alpha)
-
-    return RocBand(
-        fpr=band.grid,
-        tpr=band.tpr,
-        lower=band.lower,
-        upper=band.upper,
-        confidence=confidence,
-        method="envelope",
-        n_neg=data.n_neg,
-        n_pos=data.n_pos,
-        n_boot=n_boot,
-        auc=auc,
-        auc_ci=auc_ci,
-        attribution=band.attribution,
-        vacuous_below=band.vacuous_below,
-        normality=None,
-        backend=_backend.BACKEND,
-        random_state=random_state,
-        notes=data.notes,
-    )
+    if diagnostics:
+        result.plot_diagnostics()
+    return result
 
 
 def roc_band_ovr(

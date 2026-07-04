@@ -95,10 +95,16 @@ class TestWarningsAndErrors:
         with pytest.raises(RocciError, match="n_boot"):
             roc_band(y_true, y_score, n_boot=50, random_state=0)
 
-    def test_diagnostics_true_deferred(self):
+    def test_diagnostics_true_renders_figure(self):
+        matplotlib = pytest.importorskip("matplotlib")
+        matplotlib.use("Agg", force=True)
+        import matplotlib.pyplot as plt
+
         y_true, y_score = binormal_dataset(60, 60, seed=11)
-        with pytest.raises(NotImplementedError, match="not yet implemented"):
-            roc_band(y_true, y_score, diagnostics=True)
+        n_before = len(plt.get_fignums())
+        roc_band(y_true, y_score, diagnostics=True, random_state=0)
+        assert len(plt.get_fignums()) == n_before + 1
+        plt.close("all")
 
     @pytest.mark.parametrize("random_state", [-1, 2**64, "seven", 1.5])
     def test_bad_random_state_raises_rocci_error(self, random_state):

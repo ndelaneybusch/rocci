@@ -34,6 +34,10 @@ misses. If you are comfortable adding a normality assumption to get tighter
 bands, `rocci` yields a "Working-Hotelling" band, but also carefully checks the
 normality assumption and warns you when it looks dicey.
 
+```bash
+pip install rocci          # binary wheels; add 'rocci[plot]' for plotting
+```
+
 ```python
 from rocci import roc_band
 
