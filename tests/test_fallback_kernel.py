@@ -78,6 +78,22 @@ def test_batching_boundary_preserves_stream():
     np.testing.assert_array_equal(full, again)
 
 
+def test_unsorted_or_nan_scores_rejected():
+    # the counting shortcut silently miscounts on unsorted/NaN input, so the
+    # kernel must refuse it (same contract as the Rust core)
+    sorted_scores = np.array([0.0, 1.0])
+    k = np.array([0], dtype=np.uint64)
+    with pytest.raises(ValueError, match="ascending"):
+        bootstrap_tpr_matrix_numpy(np.array([1.0, 0.0]), sorted_scores, k, 4, 0)
+    with pytest.raises(ValueError, match="ascending"):
+        bootstrap_tpr_matrix_numpy(sorted_scores, np.array([0.0, np.nan]), k, 4, 0)
+    with pytest.raises(ValueError, match="ascending"):
+        bootstrap_tpr_matrix_numpy(np.array([np.nan]), sorted_scores, k, 4, 0)
+    # +-inf sorts normally and is legal
+    with_inf = np.array([-np.inf, 0.5, np.inf])
+    bootstrap_tpr_matrix_numpy(with_inf, sorted_scores, k, 4, 0)
+
+
 def test_values_are_valid_tprs():
     neg, pos = binormal_scores(15, 11, seed=5)
     neg, pos = np.sort(neg), np.sort(pos)

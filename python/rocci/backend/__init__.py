@@ -89,7 +89,7 @@ def bootstrap_tpr_matrix(
 
     Raises:
         RocciError: On empty classes, an empty grid, ``n_boot < 1``, or
-            out-of-range ``k_indices``.
+            ``k_indices`` that are out of range or not ascending.
 
     Examples:
         >>> import numpy as np
@@ -123,6 +123,12 @@ def bootstrap_tpr_matrix(
             f"k_indices values must lie in [0, n_neg={n_neg}]; "
             f"got max {int(k_indices.max())}"
         )
+    # Both kernels assume ascending k_indices; the Rust core rejects a
+    # descending step (as PyValueError) while the NumPy fallback would
+    # silently return wrong values. Check here so behavior — and the error
+    # type — is identical across backends.
+    if len(k_indices) > 1 and not bool((k_indices[:-1] <= k_indices[1:]).all()):
+        raise RocciError("k_indices must be ascending (see grid_k_indices)")
 
     if _rust_kernel is not None:
         return _rust_kernel(

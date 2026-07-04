@@ -184,14 +184,21 @@ fn compute_matrix(
     out
 }
 
+/// `true` iff `xs` is non-decreasing and NaN-free (any NaN fails a `<=`
+/// comparison, so one pass covers both).
+fn is_ascending(xs: &[f64]) -> bool {
+    !xs[0].is_nan() && xs.windows(2).all(|w| w[0] <= w[1])
+}
+
 /// Run the kernel, on a dedicated pool when `n_threads > 0`, else the
 /// global rayon pool. Output is identical either way (replicate-indexed
 /// RNG streams).
 ///
 /// # Errors
 ///
-/// Returns a message when any input is empty, `n_boot == 0`, `k_indices`
-/// is out of range or not ascending, or the thread pool cannot be built.
+/// Returns a message when any input is empty, `n_boot == 0`, a score array
+/// is not ascending or contains NaN, `k_indices` is out of range or not
+/// ascending, or the thread pool cannot be built.
 pub fn bootstrap_tpr_matrix_vec(
     neg_sorted: &[f64],
     pos_sorted: &[f64],
@@ -207,6 +214,14 @@ pub fn bootstrap_tpr_matrix_vec(
             pos_sorted.len(),
             k_indices.len(),
         ));
+    }
+    // The counting kernel silently miscounts on unsorted or NaN scores; one
+    // O(n) pass here is negligible next to the O(B * n) bootstrap.
+    if !is_ascending(neg_sorted) || !is_ascending(pos_sorted) {
+        return Err(
+            "neg_sorted and pos_sorted must be ascending and NaN-free (\u{b1}inf is allowed)"
+                .to_string(),
+        );
     }
     let n_neg = neg_sorted.len() as u64;
     if k_indices.iter().any(|&k| k > n_neg) {
@@ -394,6 +409,18 @@ mod tests {
         assert!(bootstrap_tpr_matrix_vec(&neg, &pos, &[3], 1, 0, 1).is_err()); // k > n_neg
         assert!(bootstrap_tpr_matrix_vec(&neg, &pos, &[1, 0], 1, 0, 1).is_err());
         // not ascending
+    }
+
+    #[test]
+    fn rejects_unsorted_and_nan_scores() {
+        let sorted = vec![0.0, 1.0];
+        assert!(bootstrap_tpr_matrix_vec(&[1.0, 0.0], &sorted, &[0], 1, 0, 1).is_err());
+        assert!(bootstrap_tpr_matrix_vec(&sorted, &[1.0, 0.0], &[0], 1, 0, 1).is_err());
+        assert!(bootstrap_tpr_matrix_vec(&[0.0, f64::NAN], &sorted, &[0], 1, 0, 1).is_err());
+        assert!(bootstrap_tpr_matrix_vec(&[f64::NAN], &sorted, &[0], 1, 0, 1).is_err());
+        // +-inf is legal and sorts normally
+        let with_inf = vec![f64::NEG_INFINITY, 0.5, f64::INFINITY];
+        assert!(bootstrap_tpr_matrix_vec(&with_inf, &sorted, &[0], 1, 0, 1).is_ok());
     }
 
     #[test]

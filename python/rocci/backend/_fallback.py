@@ -52,8 +52,16 @@ def bootstrap_tpr_matrix_numpy(
         True
     """
     n0, n1, n_grid = len(neg_sorted), len(pos_sorted), len(k_indices)
+    # The counting logic silently miscounts on unsorted or NaN scores (the
+    # Rust kernel enforces the same contract); one O(n) check is negligible.
+    for name, arr in (("neg_sorted", neg_sorted), ("pos_sorted", pos_sorted)):
+        # NaN fails every <=, so checking pairs plus the first element covers it.
+        bad = len(arr) and (np.isnan(arr[0]) or not bool((arr[:-1] <= arr[1:]).all()))
+        if bad:
+            raise ValueError(f"{name} must be ascending and NaN-free")
     rng = np.random.default_rng(seed)
     out = np.empty((n_boot, n_grid), dtype=np.float64)
+    neg_desc = neg_sorted[::-1]  # view; hoisted out of the replicate loop
 
     n_resolved = int(np.searchsorted(k_indices, n0, side="left"))  # k == n0 -> sentinel
     out[:, n_resolved:] = 1.0
@@ -78,7 +86,7 @@ def bootstrap_tpr_matrix_numpy(
         for b in range(m):
             # smallest i with cum_neg[b, i] > k  =>  threshold = (k+1)-th largest
             i = np.searchsorted(cum_neg[b], ks, side="right")
-            thr = neg_sorted[::-1][i]  # descending order values
+            thr = neg_desc[i]  # descending order values
             # strictly-greater count: n1_draws - #{resampled pos <= thr}
             pos_le = np.searchsorted(pos_sorted, thr, side="right")
             n_le = np.where(pos_le > 0, cum_pos[b][pos_le - 1], 0)
