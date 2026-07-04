@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from rocci.backend._fallback import bootstrap_tpr_matrix_numpy
 from rocci.band.grids import grid_k_indices, make_grid
@@ -34,8 +36,14 @@ def oracle_bootstrap(neg_sorted, pos_sorted, k_indices, n_boot, seed):
         neg_resamp_desc = np.repeat(neg_sorted, cn)[::-1]
         pos_resamp = np.repeat(pos_sorted, cp)
         for j, k in enumerate(k_indices):
-            thr = -np.inf if int(k) == n0 else neg_resamp_desc[int(k)]
-            out[r, j] = (pos_resamp > thr).mean()
+            if int(k) == n0:
+                # A14 sentinel: TPR is 1 by definition at k == n_neg. This is
+                # deliberately not a literal `pos > -inf` comparison — scores
+                # of -inf are legal, and -inf > -inf would give 0 where the
+                # contract pins the ROC endpoint at 1.
+                out[r, j] = 1.0
+            else:
+                out[r, j] = (pos_resamp > neg_resamp_desc[int(k)]).mean()
     return out
 
 
@@ -46,6 +54,8 @@ def oracle_bootstrap(neg_sorted, pos_sorted, k_indices, n_boot, seed):
         (30, 30, 31, None),
         (25, 40, 11, 0.5),  # heavy ties
         (1, 5, 3, None),  # n_neg = 1 edge
+        (10, 1, 6, None),  # n_pos = 1 edge
+        (5, 8, 11, None),  # grid finer than negatives: duplicated k indices
         (8, 8, 9, 100.0),  # all-ties (every score rounds to 0)
     ],
 )
@@ -57,6 +67,29 @@ def test_fallback_matches_bruteforce_oracle(n_neg, n_pos, grid_size, tie_step, s
     k = grid_k_indices(grid, n_neg)
     ours = bootstrap_tpr_matrix_numpy(neg, pos, k, n_boot=64, seed=seed)
     np.testing.assert_array_equal(ours, oracle_bootstrap(neg, pos, k, 64, seed))
+
+
+@st.composite
+def kernel_cases(draw):
+    """Adversarial tiny inputs: massive tie pressure (a 6-value score pool
+    including ±inf), duplicated/unsorted-free k sets, both sentinel and k=0."""
+    pool = st.sampled_from([-np.inf, -1.5, 0.0, 0.25, 1.0, np.inf])
+    n_neg = draw(st.integers(min_value=1, max_value=8))
+    n_pos = draw(st.integers(min_value=1, max_value=8))
+    neg = np.sort(np.array([draw(pool) for _ in range(n_neg)]))
+    pos = np.sort(np.array([draw(pool) for _ in range(n_pos)]))
+    ks = draw(st.lists(st.integers(0, n_neg), min_size=1, max_size=6))
+    k = np.array(sorted(ks), dtype=np.uint64)
+    seed = draw(st.integers(min_value=0, max_value=2**32))
+    return neg, pos, k, seed
+
+
+@given(kernel_cases())
+@settings(max_examples=40, deadline=None)
+def test_kernel_matches_oracle_on_adversarial_inputs(case):
+    neg, pos, k, seed = case
+    ours = bootstrap_tpr_matrix_numpy(neg, pos, k, n_boot=16, seed=seed)
+    np.testing.assert_array_equal(ours, oracle_bootstrap(neg, pos, k, 16, seed))
 
 
 def test_sentinel_column_pins_tpr_to_one():

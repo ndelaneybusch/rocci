@@ -60,6 +60,39 @@ class TestRouting:
         for j in (0, 1, 2):
             assert bands[j].auc > 0.9
 
+    def test_classes_order_routes_columns(self):
+        # `classes` is the column key: column j must score classes[j], not
+        # the sorted-unique order. Build the diagonal signal against a
+        # permuted order and string labels; a routing slip would send a
+        # near-random column to some class and crater its AUC.
+        rng = np.random.default_rng(4)
+        y = np.repeat(np.array(["ant", "bee", "cat"]), 40)
+        order = ["cat", "ant", "bee"]
+        scores = rng.normal(0.0, 1.0, (120, 3))
+        for j, cls in enumerate(order):
+            scores[y == cls, j] += 3.0
+        bands = roc_band_ovr(y, scores, classes=order, random_state=0)
+        assert list(bands) == order
+        for cls in order:
+            assert bands[cls].auc > 0.9, f"column routed to the wrong class: {cls}"
+
+    def test_kwargs_forwarded_to_each_band(self):
+        y, scores = three_class()
+        bands = roc_band_ovr(y, scores, grid_size=17, n_boot=1200, random_state=0)
+        for band in bands.values():
+            assert band.fpr.shape == (17,)
+            assert band.n_boot == 1200
+
+    def test_invalid_family_raises(self):
+        y, scores = three_class()
+        with pytest.raises(RocciError, match="family"):
+            roc_band_ovr(
+                y,
+                scores,
+                family="sidak",  # ty: ignore[invalid-argument-type]
+                random_state=0,
+            )
+
     def test_column_count_mismatch_raises(self):
         y, scores = three_class()
         with pytest.raises(RocciError, match="n, m=3"):
@@ -106,10 +139,29 @@ class TestNormalRefused:
             roc_band_ovr(y, scores, normal=True, random_state=0)
 
 
-def test_ovr_joint_coverage_matches_manual_loop():
-    """A hand loop of roc_band at 1 - alpha/m reproduces the OvR bands' width."""
+def test_ovr_is_bitwise_a_manual_bonferroni_loop():
+    """The OvR reduction is exactly the documented manual loop, bit for bit.
+
+    Rebuilds every ingredient independently from the spec §3.6 contract —
+    one-vs-rest labels ``y == cls``, column ``j`` for ``classes[j]``,
+    per-class confidence ``1 - alpha/m``, and per-class seeds via
+    ``SeedSequence(random_state).spawn(m)`` — and demands identical band
+    arrays. Comparing arrays (not the ``confidence`` field, which
+    ``roc_band_ovr`` sets by assignment) means a wrong column routing, an
+    uncorrected alpha actually used in the computation, or a drifted seed
+    derivation each produce different bootstrap draws or widths and fail.
+    """
     y, scores = three_class(seed=2)
     bands = roc_band_ovr(y, scores, confidence=0.95, random_state=3)
-    # the effective per-class confidence is what a manual Bonferroni loop uses
-    manual = roc_band(y == 0, scores[:, 0], confidence=1.0 - 0.05 / 3.0, random_state=0)
-    assert bands[0].confidence == pytest.approx(manual.confidence)
+    seeds = np.random.SeedSequence(3).spawn(3)
+    for j, cls in enumerate((0, 1, 2)):
+        seed_j = int(seeds[j].generate_state(1, dtype=np.uint64)[0])
+        manual = roc_band(
+            y == cls, scores[:, j], confidence=1.0 - 0.05 / 3.0, random_state=seed_j
+        )
+        assert bands[cls].random_state == seed_j
+        assert bands[cls].confidence == pytest.approx(manual.confidence)
+        np.testing.assert_array_equal(bands[cls].lower, manual.lower)
+        np.testing.assert_array_equal(bands[cls].upper, manual.upper)
+        np.testing.assert_array_equal(bands[cls].tpr, manual.tpr)
+        assert bands[cls].auc == manual.auc

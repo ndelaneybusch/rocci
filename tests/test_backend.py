@@ -47,6 +47,20 @@ class TestSelection:
         assert proc.returncode != 0
         assert "ROCCI_BACKEND" in proc.stderr
 
+    @pytest.mark.skipif(BACKEND != "rust", reason="requires the Rust core")
+    def test_rust_import_does_not_warn(self):
+        # FallbackBackendWarning is declared for exactly one circumstance:
+        # the Rust core missing. With the core present the import is silent.
+        proc = run_python(
+            "import warnings\n"
+            "with warnings.catch_warnings(record=True) as w:\n"
+            "    warnings.simplefilter('always')\n"
+            "    import rocci.backend\n"
+            "print(sum('Fallback' in str(x.category) for x in w))"
+        )
+        assert proc.returncode == 0, proc.stderr
+        assert proc.stdout.strip() == "0"
+
     def test_explicit_numpy_override_does_not_warn(self):
         proc = run_python(
             "import warnings\n"
