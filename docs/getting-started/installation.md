@@ -7,15 +7,47 @@ pip install 'rocci[plot]'    # + matplotlib for band.plot() / diagnostics
 
 Binary wheels ship for Linux (x86-64, aarch64, musl), macOS (Intel and Apple
 silicon), and Windows, for every Python ≥ 3.10 — `pip install rocci` never
-compiles Rust on a supported platform.
+compiles Rust on a supported platform. Every wheel is smoke-tested on its own
+platform in a clean environment before it can be published, and each release
+is re-verified from the live index on all three OSes minutes after it goes
+up.
 
-## conda-forge
+## By tool
 
-Once the feedstock lands (after the first PyPI release):
+=== "pip"
 
-```bash
-conda install -c conda-forge rocci
-```
+    ```bash
+    pip install 'rocci[plot]'
+    pip install rocci==0.1.0        # pin for reproducible environments
+    ```
+
+=== "uv"
+
+    ```bash
+    uv add rocci                    # add to a uv-managed project
+    uv pip install 'rocci[plot]'    # or into the active environment
+    ```
+
+=== "conda"
+
+    ```bash
+    conda install -c conda-forge rocci
+    ```
+
+    The conda-forge feedstock follows the first PyPI release; until it
+    lands, use `pip install rocci` inside the conda environment (the wheel
+    is self-contained and coexists cleanly with conda-managed numpy/scipy).
+
+=== "from source"
+
+    ```bash
+    # needs a Rust toolchain: https://rustup.rs
+    pip install git+https://github.com/ndelaneybusch/rocci
+    ```
+
+    Installing from a git ref (or from the sdist on a platform with no
+    wheel) compiles the Rust kernel locally via maturin. Build time is a
+    couple of minutes; the result is identical to a released wheel.
 
 ## The fallback backend
 
