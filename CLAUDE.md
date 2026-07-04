@@ -46,6 +46,15 @@ Layers, from outside in:
 - `rust/src/lib.rs` — the bootstrap TPR kernel (rayon-parallel, xoshiro256++ seeded per replicate). Internal crate version stays `0.0.0`; the single version source is `[project]` in `pyproject.toml`.
 - `python/rocci/_result.py` — frozen dataclasses `RocBand` / `NormalityReport`; `plotting.py` is behind the optional `rocci[plot]` extra.
 
+## Parallel work: one task = one worktree = one branch = one PR
+
+Concurrent agents (or tasks) must never share a checkout — simultaneous edits to one working tree collide silently and contaminate each other's commits. Isolate every task:
+
+- **Branch** from up-to-date `main`, named `<type>/<short-slug>` where `<type>` is the Conventional Commit type the eventual PR title will carry (`fix/ingest-bool-pos-label`, `test/floor-oracles`, `ci/gates-workflow`). Choosing the type up front forces the scope decision early: if you can't pick one type, the task is two branches.
+- **Worktree** per branch, as a sibling directory: `git worktree add ../rocci-<slug> -b <type>/<slug> main`, then `just setup` inside it. Each worktree gets its own `.venv`, Rust `target/`, and compiled extension — nothing is shared except the git object store, so builds and test runs cannot interfere. Remove with `git worktree remove ../rocci-<slug>` after merge.
+- **PR** per branch, squash-merged. The PR title becomes the sole commit on `main` and is CI-checked against `^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|release|revert)(\(.+\))?!?: .+` (lowercase type). git-cliff builds the changelog from these titles, so one PR = one type = one changelog entry — keep PRs single-facet, and peel a user-visible `fix` out of a `test`/`ci` sweep into its own small PR rather than letting the squash bury it.
+- Keep branches hours-to-days short (trunk-based); if `main` moves, rebase the worktree branch rather than merging `main` into it — branch protection requires linear history.
+
 ## Conventions
 
 - Trunk-based, squash merge; PR titles follow Conventional Commits (CI-enforced — the PR title becomes the commit message). `CHANGELOG.md` is git-cliff-generated at release; don't hand-edit.
