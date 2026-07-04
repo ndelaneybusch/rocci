@@ -37,9 +37,24 @@ misses. If you are comfortable adding a normality assumption to get tighter
 bands, `rocci` yields a "Working-Hotelling" band, but also carefully checks the
 normality assumption and warns you when it looks dicey.
 
+## Installation
+
 ```bash
-pip install rocci          # binary wheels; add 'rocci[plot]' for plotting
+pip install rocci            # prebuilt wheels — no Rust toolchain needed
+pip install 'rocci[plot]'    # + matplotlib for band.plot() and diagnostics
+uv add rocci                 # in uv-managed projects
 ```
+
+Wheels cover Linux (glibc x86-64/aarch64 and musl), macOS (Intel and Apple
+silicon), and Windows, for every Python ≥ 3.10; runtime dependencies are
+numpy and scipy only. On any other platform `pip` falls back to the sdist
+(requires a [Rust toolchain](https://rustup.rs)), and if no compiled kernel
+is present at runtime a pure-NumPy backend with identical statistical
+semantics takes over automatically. A conda-forge package
+(`conda install -c conda-forge rocci`) follows the first PyPI release.
+Details: [installation guide](https://ndelaneybusch.github.io/rocci/getting-started/installation/).
+
+## Quickstart
 
 ```python
 from rocci import roc_band
@@ -49,5 +64,7 @@ band.plot()
 print(band.summary())
 ```
 
-Docs: <https://ndelaneybusch.github.io/rocci> · Contributing:
+Docs: <https://ndelaneybusch.github.io/rocci> ·
+Changelog: [CHANGELOG.md](CHANGELOG.md) ·
+Contributing (including the release process):
 [CONTRIBUTING.md](CONTRIBUTING.md)
