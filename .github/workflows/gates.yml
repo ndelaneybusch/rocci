@@ -1,0 +1,85 @@
+name: gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: gates-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  calibration:
+    name: calibration
+    runs-on: ubuntu-latest
+    # Sized to finish well inside 15 min (spec §14.2); ~16 s on a desktop, so
+    # the timeout is a hang backstop, not headroom.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - uses: Swatinem/rust-cache@v2
+      - uses: extractions/setup-just@v2
+      - run: uv sync --all-groups
+      - run: uv run maturin develop --release
+      - run: just calibration
+
+  perf:
+    name: perf
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: pr
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # The cargo workspace root (and its target/) is the repo root, not
+          # the crate directory.
+          workspaces: pr
+      - name: Benchmark PR revision
+        working-directory: pr
+        run: |
+          uv sync --all-groups
+          uv run maturin develop --release
+          uv run python benchmarks/run_benchmarks.py --repeats 5 --json perf-pr.json
+
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          # Pin to the SHA recorded on the event, not the branch name: if main
+          # advances while this job queues, a moving ref would credit/blame
+          # the PR for unrelated changes.
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+      - name: Benchmark base revision
+        if: github.event_name == 'pull_request'
+        working-directory: base
+        run: |
+          uv sync --all-groups
+          uv run maturin develop --release
+          uv run python benchmarks/run_benchmarks.py --repeats 5 --json perf-base.json
+
+      - name: Compare PR against base
+        if: github.event_name == 'pull_request'
+        working-directory: pr
+        run: |
+          uv run python benchmarks/run_benchmarks.py \
+            --from-json perf-pr.json \
+            --compare-json ../base/perf-base.json \
+            --relative-tolerance 0.30 \
+            --strict
+
+      - name: Report main performance
+        if: github.event_name != 'pull_request'
+        working-directory: pr
+        run: uv run python benchmarks/run_benchmarks.py --from-json perf-pr.json

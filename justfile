@@ -38,9 +38,18 @@ typecheck:
 rust-test:
     cargo test
 
-# benchmarks/ perf gates, prints table vs thresholds
+# benchmarks/ perf gates, prints table vs thresholds; fails on breach so
+# release-prep's absolute-budget verification (spec §14.5) has teeth
 bench:
-    uv run python benchmarks/run_benchmarks.py
+    uv run python benchmarks/run_benchmarks.py --strict
+
+# Slow deterministic calibration suite from spec §11.5 / appendix A15.
+calibration:
+    uv run pytest -q -m slow tests/test_calibration.py
+
+# Merge gates used by .github/workflows/gates.yml (perf runs relative-to-main
+# there; locally the absolute gates stand in).
+gates: calibration bench
 
 # Live-preview the docs site (vignettes execute on first render)
 docs:
