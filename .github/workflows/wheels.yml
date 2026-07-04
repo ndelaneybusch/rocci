@@ -22,7 +22,11 @@ jobs:
           PYVER=$(grep -Po '(?<=^version = ")[^"]+' pyproject.toml | head -1)
           [ "$TAG" = "$PYVER" ] || { echo "tag $TAG != pyproject version $PYVER"; exit 1; }
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "tag commit not on main"; exit 1; }
-          git cat-file -t "$GITHUB_REF" | grep -q tag || { echo "tag must be annotated"; exit 1; }
+          # actions/checkout rewrites the annotated tag as a lightweight tag on
+          # the commit (actions/checkout#290), so re-fetch the real tag object
+          # before asserting annotation.
+          git fetch origin "+${GITHUB_REF}:${GITHUB_REF}" --force
+          git cat-file -t "$GITHUB_REF" | grep -qx tag || { echo "tag must be annotated"; exit 1; }
           grep -q "$TAG" CHANGELOG.md || { echo "CHANGELOG.md missing section for $TAG"; exit 1; }
 
   build:
