@@ -23,7 +23,7 @@ from rocci.band.envelope import (
     studentized_envelope,
 )
 from rocci.band.floors import beta_floor_vacuous_below
-from rocci.band.grids import grid_k_indices, make_grid
+from rocci.band.grids import empirical_roc_vertices, grid_k_indices, make_grid
 from tests.conftest import binormal_scores
 
 
@@ -60,6 +60,19 @@ class TestStudentizedEnvelope:
         lo, hi, _, _ = studentized_envelope(boot, tpr_hat, 0.3, 50, 50)
         assert lo[0] == pytest.approx(0.5 - 0.03)
         assert hi[0] == pytest.approx(0.5 + 0.03)
+
+    def test_retention_count_exact_when_quantile_is_integral(self):
+        # (1 - alpha) * B = 8.0 exactly: ceil must keep 8 curves, not 9 — the
+        # classic off-by-one. Distances 0.00..0.09 are all distinct, so the 8
+        # survivors are |offset| <= 0.07 and the envelope is exactly their range.
+        tpr_hat = np.full(3, 0.5)
+        offsets = np.array(
+            [0.00, 0.01, -0.02, 0.03, -0.04, 0.05, -0.06, 0.07, -0.08, 0.09]
+        )
+        boot = 0.5 + np.tile(offsets[:, None], (1, 3))
+        lo, hi, _, _ = studentized_envelope(boot, tpr_hat, 0.2, 50, 50)
+        assert lo[0] == 0.5 - 0.06
+        assert hi[0] == 0.5 + 0.07
 
     def test_collapse_guard_scores_noise_as_zero(self):
         # n_pos=0 zeroes the Wilson floor; constant columns give sd=0 < eps,
@@ -180,6 +193,45 @@ class TestAuc:
         pos = np.array([1.0, 2.0])
         # pairs: (1,0)> (1,1)= (1,1)= (2,0)> (2,1)> (2,1)>  -> (4 + 0.5*2)/6
         assert mann_whitney_auc(neg, pos) == pytest.approx(5.0 / 6.0)
+
+    @pytest.mark.parametrize("tie_step", [None, 0.5], ids=["continuous", "ties"])
+    def test_complement_symmetry(self, tie_step):
+        # swapping the classes reverses every pair, and ties contribute 1/2 to
+        # both directions, so the two AUCs must sum to exactly 1
+        neg, pos = binormal_scores(70, 90, seed=13, tie_step=tie_step)
+        total = mann_whitney_auc(neg, pos) + mann_whitney_auc(pos, neg)
+        assert total == pytest.approx(1.0, abs=1e-15)
+
+    def test_rank_invariance_under_monotone_transform(self):
+        # MW is a pure rank statistic: arctan preserves every pairwise
+        # comparison, so the AUC must be bit-identical
+        neg, pos = binormal_scores(80, 60, seed=14, tie_step=0.25)
+        assert mann_whitney_auc(np.arctan(neg), np.arctan(pos)) == mann_whitney_auc(
+            neg, pos
+        )
+
+    def test_vertex_trapezoid_equals_mw_minus_tail_correction(self):
+        # first-principles identity linking A1 and A10 for continuous scores:
+        # the trapezoid over the empirical vertex list equals the Mann-Whitney
+        # AUC minus h_last / (2 n_neg), where h_last is the fraction of
+        # positives at or above the smallest negative (spec A10 delta note).
+        # A drift in either the vertex construction or the MW counting breaks it.
+        from rocci.band.envelope import _trapezoid
+
+        neg, pos = binormal_scores(120, 90, seed=21)
+        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+        area = float(_trapezoid(tpr_v, fpr_v))
+        h_last = float((pos >= neg.min()).mean())
+        expected = mann_whitney_auc(neg, pos) - h_last / (2 * len(neg))
+        assert area == pytest.approx(expected, abs=1e-12)
+
+    def test_kernel_grid_auc_hand_derived(self):
+        # neg=[0,1], pos=[0.5,1.5], grid=[0,.5,1]: k=[0,1,2]. k=0 -> threshold
+        # 1, one positive strictly above -> 1/2; k=1 -> threshold 0 -> 1;
+        # k=2 is the sentinel -> 1. Trapezoid over [.5, 1, 1] = 0.875.
+        neg = np.array([0.0, 1.0])
+        pos = np.array([0.5, 1.5])
+        assert kernel_grid_auc(neg, pos, np.array([0.0, 0.5, 1.0])) == 0.875
 
     def test_bootstrap_ci_brackets_point_estimate(self):
         neg, pos = binormal_scores(100, 100, seed=9)
