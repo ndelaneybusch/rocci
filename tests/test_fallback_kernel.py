@@ -1,11 +1,26 @@
 """NumPy fallback kernel against a brute-force resampling oracle.
 
-Risk mitigated: the cumsum/searchsorted counting shortcut disagreeing with
-literal "resample, sort, threshold, count strictly-greater" semantics —
-the exact class of off-by-one/tie bug that is invisible statistically.
+The NumPy kernel replaces the literal "resample, sort, threshold, count
+strictly-greater" definition with a cumsum/searchsorted shortcut for speed. This
+suite proves the shortcut is not merely close but *identical* to the literal
+definition: a brute-force oracle expands the multinomial counts into actual
+resamples and counts by hand, drawing from the same RNG stream (matching
+``default_rng`` / ``multinomial`` calls, including the batching boundary), so any
+off-by-one or tie mishandling — the class of bug that is invisible to a
+distributional check — surfaces as an exact-equality failure.
 
-The oracle consumes the *same* RNG stream (identical ``default_rng`` /
-``multinomial`` calls, including batching) so outputs must match exactly.
+Guaranteed. Bit-for-bit agreement with the oracle across balanced, unbalanced,
+heavy-tie, all-tie, and single-sample-per-class shapes and finer-than-negatives
+grids, plus a Hypothesis sweep over adversarial tiny inputs drawn from a
+6-value pool that includes +/-inf. The ``k == n_neg`` sentinel column is pinned
+to TPR = 1 by definition (not a ``> -inf`` comparison, so -inf scores are legal),
+every output is a valid multiple of ``1/n_pos``, and unsorted or NaN score
+inputs are refused because the counting shortcut would silently miscount them.
+
+Limitations. This validates the NumPy kernel against the reference definition
+only; it does not compare against the Rust kernel (that is
+``test_rust_backend.py``, statistical not bit-wise) and says nothing about the
+band assembled on top of these draws.
 """
 
 from __future__ import annotations

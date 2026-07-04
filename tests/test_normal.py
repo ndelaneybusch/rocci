@@ -1,10 +1,31 @@
 """Working-Hotelling path and normality diagnostics (``normal=True``).
 
-Risk mitigated: the parametric band is only safe to offer if its failure modes
-are visible. These tests pin the WH result's provenance and shape, confirm the
-diagnostics flag non-binormal data (and stay quiet on clean binormal data),
-and lock in the rank-invariance contrast that distinguishes the WH band from
-the distribution-free envelope.
+The ``normal=True`` band trades distribution-freeness for tightness by assuming a
+binormal model — a good deal exactly when that assumption holds and a silent
+coverage failure when it does not. So the guarantee here has two halves: the band
+is the correct parametric object, and its diagnostics make the assumption's
+failure *visible* to the user rather than swallowing it.
+
+Guaranteed. The band reproduces the normative A11 closed forms to float
+precision, its probit-space width scales as ``sqrt(chi2.ppf(1-alpha, 2))`` (right
+df, not a z substitution), and on a deterministic quantile-grid "sample" it
+contains the true binormal ROC and shrinks at the exact delta-method rate (width
+halves when n quadruples). Provenance is distinct from the envelope path
+(``method = "working_hotelling"``, ``n_boot`` / ``auc_ci`` / ``vacuous_below`` /
+``random_state`` are ``None``, attribution all zero, a normality report attached),
+and ignored arguments (``random_state``, low ``n_boot``) genuinely change
+nothing. The diagnostics flag heavy-tailed data as suspect and stay silent on
+clean binormal data, choose the per-class test correctly (Shapiro up to n=5000,
+D'Agostino above; "insufficient" for constant/tiny classes, which never create
+false suspicion), and append the heavy-ties clause when relevant. The contrast
+test locks in the defining difference: the envelope is rank-invariant under a
+sigmoid transform while the WH band moves.
+
+Limitations. These tests certify that the WH machinery is correct and that its
+assumption-violation *warning* fires — they do not certify coverage when the
+binormal model is wrong (there is none to certify; that is the whole point of the
+diagnostic). Asymptotic-rate claims use noise-free quantile grids, not random
+draws.
 """
 
 from __future__ import annotations

@@ -1,7 +1,26 @@
 """Grid rule, empirical ROC, step lookup, and index mapping.
 
-Risk mitigated: the O(n log n) searchsorted formulation silently diverging
-from the >=-threshold step semantics, especially under ties.
+Everything downstream — the bootstrap thresholds, the empirical curve the band
+must contain, the AUC — is indexed off this geometry, so a quiet error here is
+laundered into every result. The empirical ROC is computed with an
+``O(n log n)`` searchsorted formulation; this suite proves it equals the naive
+``O(n^2)`` ``>=``-threshold, right-continuous step definition exactly, which is
+where tie handling usually goes wrong.
+
+Guaranteed. The FPR grid rule is pinned (``2 n + 1`` capped at 512, spanning
+[0, 1] strictly increasing). The empirical ROC matches the quadratic reference
+bit-for-bit across balanced, unbalanced, heavy-tie, and tiny-vs-large shapes, on
+all-tied and +/-inf scores, and on a fully hand-worked staircase; it is
+rank-invariant under monotone transforms, resolves duplicate FPR vertices to the
+largest TPR (side="right"), and clips below the first vertex. ``step_lookup`` is
+right-continuous at vertices, and ``grid_k_indices`` produces the exact
+``floor(t * n_neg)`` mapping — nondecreasing, ``uint64``, with the ``k = n_neg``
+sentinel appearing only at ``t = 1`` and duplicated indices when the grid is
+finer than the negatives.
+
+Limitations. These are exact geometric checks; they do not touch resampling,
+studentization, or the floors — only the deterministic scaffolding those layers
+stand on.
 """
 
 from __future__ import annotations

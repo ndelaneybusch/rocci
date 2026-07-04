@@ -1,8 +1,22 @@
 """Rust backend contract: determinism and cross-backend agreement.
 
-Risks mitigated: RNG streams accidentally depending on thread scheduling
-(silently breaking reproducibility), and the two kernels drifting apart
-statistically while both looking individually plausible.
+The Rust kernel is rayon-parallel, which is exactly where reproducibility usually
+dies: if any RNG stream is keyed to thread scheduling, results wobble with core
+count while every individual run still looks plausible. This suite holds the
+Rust kernel to the project's reproducibility contract and, separately, confirms
+it has not silently drifted away from the NumPy kernel.
+
+Guaranteed. For a fixed (data, seed) the Rust output is bit-identical across
+thread counts (1, 4, all) and across repeated runs — parallelism buys speed, not
+a different answer — with the ``k = n_neg`` sentinel column pinned to 1 and every
+value a valid multiple of ``1/n_pos``. The two kernels agree distributionally at
+B=8000: max pointwise mean-difference z below 6 and interior standard-deviation
+ratios within [0.9, 1.1].
+
+Limitations. Cross-backend agreement is statistical, never bit-wise — Rust and
+NumPy use different RNG streams by design, so identical bands are not expected,
+only matching distributions. The whole file skips unless the Rust core is built,
+and the agreement gate is marked ``slow``.
 """
 
 from __future__ import annotations

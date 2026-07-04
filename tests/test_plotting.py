@@ -1,11 +1,26 @@
 """Plot smoke tests (headless Agg) and the no-matplotlib error contract.
 
-Risk mitigated: the plotting layer is the first thing users see; a figure
-that silently drops the band, mislabels an axis, or crashes without
-matplotlib breaks the five-line quickstart. Tests assert figures build
-headless, every element is legend-labeled (vector-friendly contract), the
-diagnostics panels match the band's method, and a missing matplotlib
-produces the actionable install message.
+Plots are the first thing most users see, and their failures are quiet: a figure
+that drops the band, mislabels an axis, or crashes only off-screen still
+"passes" a naive check. These are smoke tests — they confirm the figures build
+and are correctly *labeled*, which is the machine-checkable proxy for "the right
+thing was drawn", rather than asserting anything about pixels.
+
+Guaranteed. Both bands render headless (Agg) into a new or a supplied
+axes/figure. Axes are labeled ("False positive rate" / "True positive rate") and
+every drawn element carries a legend entry — the contract that keeps vector
+exports readable — including the confidence level, the empirical ROC, the chance
+line, style overrides, and the hatched vacuous region when requested. Diagnostics
+match the band's method: two panels for the envelope (attribution overlay,
+log-scale variance, and floor overlays when floors fire) and four for
+Working-Hotelling (both QQ plots and the probit-probit panel), with a missing
+diagnostics payload raising. A missing matplotlib raises a ``RocciError`` naming
+``rocci[plot]``.
+
+Limitations. This asserts structure and labels, not visual correctness — it
+cannot see whether a curve is drawn in the right place, only that a labeled
+artist exists. It requires matplotlib installed (the from-scratch absence
+contract is ``test_optional_deps.py``).
 """
 
 from __future__ import annotations
