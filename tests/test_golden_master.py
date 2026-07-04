@@ -36,10 +36,7 @@ def split_classes(fx):
     return y_score[y_true == 0], y_score[y_true == 1]
 
 
-@pytest.mark.skipif(
-    not FIXTURES,
-    reason="golden-master fixtures not recorded yet",
-)
+@pytest.mark.skipif(not FIXTURES, reason="golden-master fixtures not recorded yet")
 class TestGoldenMasters:
     @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.stem)
     def test_full_band_matches_paper_implementation(self, path):
@@ -52,12 +49,19 @@ class TestGoldenMasters:
             pos,
             float(fx["alpha"]),
         )
+        # Documented statistical delta from the recorded implementation
+        # (spec §5.6 / appendix A9): rocci additionally pins lower[-1] = 1.0
+        # because the true ROC at FPR = 1 is identically 1, so the pin
+        # tightens the band at zero coverage cost. The fixtures are NOT
+        # regenerated; every other grid point must still match the validated
+        # implementation exactly.
         np.testing.assert_allclose(
-            band.lower,
-            fx["lower"].astype(np.float64),
+            band.lower[:-1],
+            fx["lower"].astype(np.float64)[:-1],
             atol=ATOL,
             err_msg="lower band diverged from the validated implementation",
         )
+        assert band.lower[-1] == 1.0, "final lower endpoint must be pinned to 1"
         np.testing.assert_allclose(
             band.upper,
             fx["upper"].astype(np.float64),

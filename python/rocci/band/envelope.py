@@ -192,7 +192,13 @@ def assemble_envelope_band(
     lower = beta_orderstat_floor(grid, lower_rect, neg, pos, alpha)  # applied last
     lower = lower.copy()
     upper = upper.copy()
-    lower[0] = 0.0  # pinned endpoints
+    # Pinned endpoints. At FPR=1 the last grid point maps to the k == n_neg
+    # sentinel: the threshold sits below every negative, so TPR is
+    # deterministically 1 with no sampling uncertainty. A floor (e.g. the
+    # Wilson rectangle) can otherwise drag lower[-1] below the envelope's
+    # exact 1.0, so pin it back after all floors.
+    lower[0] = 0.0
+    lower[-1] = 1.0
     upper[-1] = 1.0
 
     tol = 1e-12
@@ -200,6 +206,7 @@ def assemble_envelope_band(
     attribution[lower_rect < lower_env - tol] = ATTR_WILSON_FLOOR
     attribution[lower < lower_rect - tol] = ATTR_BETA_FLOOR  # applied last, wins
     attribution[0] = ATTR_PINNED
+    attribution[-1] = ATTR_PINNED
 
     return EnvelopeBand(
         grid=grid,

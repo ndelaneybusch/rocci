@@ -325,6 +325,13 @@ the largest j with `q_j ≤ t`; vacuous (0) below `q_1`. Applied as pointwise
 - Pipeline order (envelope → rectangle floor + monotonicity → Beta floor →
 pinned endpoints) and the attribution rule are **appendix A9** — the order
 is load-bearing and must not be changed.
+- Pinned endpoints are `lower[0] = 0`, `upper[-1] = 1`, **and**
+`lower[-1] = 1`. The last pin is a documented statistical delta from the
+recorded paper implementation (which left `lower[-1]` at the floored value):
+at FPR = 1 the true ROC is identically 1, so pinning tightens the band at
+zero coverage cost. The golden-master test therefore compares `lower[:-1]`
+against the fixtures (which are **not** regenerated) and asserts the pin
+separately.
 - `attribution[k]`: which mechanism produced the final `lower[k]` —
 bootstrap envelope, Beta floor, Wilson floor, or pinned endpoint — from the
 A9 comparison against the retained pre-floor envelope arm.
@@ -988,7 +995,7 @@ release cannot ship half-done or inconsistent.
   determinism tests, fallback parity, backend selection. DONE
 4. **M3 — API + ingestion**: `roc_band`, `RocBand`, `from_estimator`,
   warnings, ingestion matrix tests. DONE.
-5. **M4 — WH path + diagnostics**: §6 + normality machinery.
+5. **M4 — WH path + diagnostics**: §6 + normality machinery. DONE.
 6. **M5 — Plots + docs + vignettes**: §7, mkdocs site (§13), executed
   vignettes, versioned deployment.
 7. **M6 — Merge gates**: calibration suite (§11.5) and perf gates (§9) wired

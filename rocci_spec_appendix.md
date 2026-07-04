@@ -423,11 +423,19 @@ lower_env, upper_env = A6(...)                    # pre-floor arm (keep a copy)
 lower_rect, upper = A7(lower_env, upper_env)      # rectangle floor + monotonicity
 lower = beta_orderstat_floor(grid, lower_rect, neg, pos, alpha)   # A8, last
 lower[0] = 0.0                                    # pinned endpoints
+lower[-1] = 1.0                                   # see delta note below
 upper[-1] = 1.0
 ```
 
 Do **not** re-run the monotonicity pass after A8 and do not reorder the
 floors: the golden masters (spec §5.7) encode exactly this sequence.
+
+Documented delta from the recorded implementation: the `lower[-1] = 1.0`
+pin was added after fixture recording. The last grid point maps to the
+`k = n0` sentinel, where the true ROC value is identically 1 — the pin
+tightens the band at zero coverage cost. The golden-master test asserts it
+separately and compares all other grid points against the untouched
+fixtures (spec §5.6).
 
 Attribution codes for the lower band (`tol = 1e-12`):
 
@@ -435,7 +443,8 @@ Attribution codes for the lower band (`tol = 1e-12`):
 attribution = np.zeros(K, dtype=np.int8)          # 0 = bootstrap envelope
 attribution[lower_rect < lower_env - tol] = 2     # Wilson rectangle floor
 attribution[lower < lower_rect - tol] = 1         # Beta floor (applied last, wins)
-attribution[0] = 3                                # pinned endpoint
+attribution[0] = 3                                # pinned endpoints
+attribution[-1] = 3
 ```
 
 ---
