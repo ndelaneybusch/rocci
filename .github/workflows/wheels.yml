@@ -135,11 +135,15 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           packages-dir: dist
+          skip-existing: true
       - name: Publish to PyPI (final releases)
         if: "!contains(github.ref_name, 'rc')"
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
+          # A retried publish must be idempotent: files already on the index
+          # (e.g. wheels that landed before a failed sdist) are skipped.
+          skip-existing: true
 
   post-publish-verify:
     # Catch broken metadata or wheel-selection issues the moment they exist,

@@ -64,6 +64,9 @@ python-source = "python"
 module-name = "rocci._core"
 manifest-path = "rust/Cargo.toml"
 features = ["pyo3/extension-module"]
+# maturin's workspace sdist omits the root LICENSE even though it emits
+# `License-File: LICENSE` metadata; PyPI rejects that mismatch at upload.
+include = [{ path = "LICENSE", format = "sdist" }]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
