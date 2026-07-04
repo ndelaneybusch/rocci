@@ -36,9 +36,7 @@ sys.meta_path.insert(0, _BlockOptionalDeps())
 def run_blocked(body: str) -> subprocess.CompletedProcess:
     """Run ``body`` in a clean interpreter with matplotlib/pandas blocked."""
     code = _BLOCKER + textwrap.dedent(body)
-    return subprocess.run(
-        [sys.executable, "-c", code], capture_output=True, text=True
-    )
+    return subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
 
 
 def test_full_pipeline_works_without_matplotlib_or_pandas():
@@ -153,8 +151,6 @@ def test_import_and_band_construction_stay_lazy():
         assert not leaked, f"eagerly imported: {leaked}"
         print("LAZY-OK")
     """)
-    proc = subprocess.run(
-        [sys.executable, "-c", code], capture_output=True, text=True
-    )
+    proc = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert proc.returncode == 0, proc.stderr
     assert "LAZY-OK" in proc.stdout
