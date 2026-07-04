@@ -71,6 +71,17 @@ class TestRouting:
         with pytest.raises(RocciError, match="m > 2"):
             roc_band_ovr(y, scores, random_state=0)
 
+    def test_class_absent_from_labels_raises(self):
+        # a wrong `classes` entry must not surface as a cryptic one-class error
+        y, scores = three_class()
+        with pytest.raises(RocciError, match=r"do not occur in y_true"):
+            roc_band_ovr(y, scores, classes=[0, 1, 9], random_state=0)
+
+    def test_duplicate_classes_raise(self):
+        y, scores = three_class()
+        with pytest.raises(RocciError, match="duplicates"):
+            roc_band_ovr(y, scores, classes=[0, 1, 1], random_state=0)
+
 
 class TestSeeding:
     def test_per_class_seeds_differ(self):

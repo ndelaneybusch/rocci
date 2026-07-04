@@ -166,10 +166,11 @@ class RocBand:
             True
         """
         query = np.asarray(fpr, dtype=np.float64)
-        if query.size and (query.min() < 0.0 or query.max() > 1.0):
+        # NaN fails every comparison, so check containment as a negation.
+        if query.size and not ((query >= 0.0) & (query <= 1.0)).all():
             raise RocciError(
                 "at() queries must lie in [0, 1] (the FPR axis); got a value "
-                "outside that range."
+                "outside that range or NaN."
             )
         return (
             step_lookup(self.fpr, self.lower, query),

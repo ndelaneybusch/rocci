@@ -8,6 +8,7 @@ warning taxonomy on out-of-range inputs. Kept separate from
 
 from __future__ import annotations
 
+import operator
 import warnings
 
 import numpy as np
@@ -84,6 +85,37 @@ def check_n_boot(n_boot: int) -> None:
         )
 
 
+def check_grid_size(grid_size: int | None) -> None:
+    """Validate an explicit FPR grid size.
+
+    Args:
+        grid_size: Requested number of grid points, or ``None`` for the
+            default rule.
+
+    Raises:
+        RocciError: If ``grid_size`` is not ``None`` and is below 2 — the
+            grid must contain both endpoints (FPR 0 and 1) for the pinned
+            endpoints to be distinct points.
+
+    Examples:
+        >>> from rocci._validation import check_grid_size
+        >>> check_grid_size(None) is None and check_grid_size(33) is None
+        True
+    """
+    if grid_size is None:
+        return
+    try:
+        k = operator.index(grid_size)
+    except TypeError:
+        k = -1  # non-integer: fall through to the shared error message
+    if k < 2:
+        raise RocciError(
+            f"grid_size must be an integer of at least 2 (the FPR endpoints 0 "
+            f"and 1), got {grid_size!r}; pass None for the default "
+            "min(512, n_neg + 1)."
+        )
+
+
 def resolve_seed(random_state: int | None) -> int:
     """Turn ``random_state`` into a concrete non-negative kernel seed.
 
@@ -108,10 +140,57 @@ def resolve_seed(random_state: int | None) -> int:
     """
     if random_state is None:
         return int(np.random.default_rng().integers(0, 2**64, dtype=np.uint64))
-    seed = int(random_state)
-    if seed < 0:
+    try:
+        # operator.index accepts int-like (numpy ints) but rejects floats and
+        # strings instead of silently truncating.
+        seed = operator.index(random_state)
+    except TypeError as err:
         raise RocciError(
-            "random_state must be a non-negative integer or None, got "
+            f"random_state must be a non-negative integer or None, got "
             f"{random_state!r}."
+        ) from err
+    if not 0 <= seed < 2**64:
+        raise RocciError(
+            "random_state must be a non-negative integer below 2**64 (the kernel "
+            f"seed is a u64), got {random_state!r}."
         )
     return seed
+
+
+def check_n_threads(n_threads: int | None) -> int:
+    """Resolve ``n_threads`` to the kernel's convention (0 = all cores).
+
+    ``None`` and ``-1`` (the sklearn ``n_jobs`` idiom) both mean all cores.
+
+    Args:
+        n_threads: User thread count, ``None``, or ``-1``.
+
+    Returns:
+        A non-negative integer for the Rust kernel; 0 means all cores.
+
+    Raises:
+        RocciError: If ``n_threads`` is not ``None``, ``-1``, or a
+            non-negative integer.
+
+    Examples:
+        >>> from rocci._validation import check_n_threads
+        >>> check_n_threads(None), check_n_threads(-1), check_n_threads(4)
+        (0, 0, 4)
+    """
+    if n_threads is None:
+        return 0
+    try:
+        n = operator.index(n_threads)
+    except TypeError as err:
+        raise RocciError(
+            f"n_threads must be a positive integer, -1, or None (all cores); "
+            f"got {n_threads!r}."
+        ) from err
+    if n == -1:
+        return 0
+    if n < 0:
+        raise RocciError(
+            f"n_threads must be a positive integer, -1, or None (all cores); "
+            f"got {n_threads}."
+        )
+    return n

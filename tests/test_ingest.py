@@ -138,6 +138,30 @@ class TestLabels:
         assert data.n_neg == 10
 
 
+class TestColumnVectors:
+    def test_column_vector_labels_ravel(self):
+        # sklearn/keras habit: y.reshape(-1, 1)
+        y_true, y_score = labeled()
+        data = ingest(y_true.reshape(-1, 1), y_score)
+        assert data.n_neg == 40
+        assert data.n_pos == 40
+
+    def test_column_vector_scores_ravel(self):
+        # predict_proba(X)[:, [1]] keeps a trailing singleton axis
+        y_true, y_score = labeled()
+        data = ingest(y_true, y_score.reshape(-1, 1))
+        np.testing.assert_array_equal(np.sort(data.pos), np.sort(y_score[y_true == 1]))
+
+    def test_higher_dim_labels_raise(self):
+        y_true, y_score = labeled()
+        with pytest.raises(RocciError, match="1-D"):
+            ingest(np.tile(y_true, (2, 1)), y_score)
+
+    def test_empty_labels_raise(self):
+        with pytest.raises(RocciError, match="empty"):
+            ingest(np.array([]), np.array([]))
+
+
 class TestScores:
     def test_proba_matrix_takes_positive_column(self):
         y_true, raw = labeled()
@@ -146,6 +170,13 @@ class TestScores:
         data = ingest(y_true, proba)
         assert data.notes  # an INFO note, not a warning
         np.testing.assert_allclose(np.sort(data.pos), np.sort(p1[y_true == 1]))
+
+    def test_multiclass_proba_matrix_points_to_ovr(self):
+        # a 3-column predict_proba must not surface as a "posterior draws" error
+        y_true, _ = labeled()
+        proba = np.random.default_rng(0).dirichlet(np.ones(3), size=len(y_true))
+        with pytest.raises(RocciError, match="roc_band_ovr"):
+            ingest(y_true, proba)
 
     def test_posterior_draws_require_score_reduce(self):
         y_true, raw = labeled()

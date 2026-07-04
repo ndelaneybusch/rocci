@@ -3,13 +3,25 @@
 The public surface is small by design: :func:`roc_band` (and its multiclass
 sibling :func:`roc_band_ovr`), the :func:`from_estimator` convenience, the
 :class:`RocBand` result object, and :func:`show_versions` for bug reports.
-Everything else is private (``rocci._*``) or documented as internal.
+The exception and warning taxonomy is re-exported here so users can catch
+:class:`RocciError` or filter :class:`RocciWarning` (and its subclasses)
+without touching private modules. Everything else is private (``rocci._*``)
+or documented as internal.
 """
 
 from importlib.metadata import PackageNotFoundError, version
 
 from rocci._api import from_estimator, roc_band, roc_band_ovr, show_versions
+from rocci._exceptions import RocciError
 from rocci._result import NormalityReport, RocBand
+from rocci._warnings import (
+    FallbackBackendWarning,
+    LowConfidenceWarning,
+    NormalityWarning,
+    RocciWarning,
+    SmallSampleWarning,
+    TiesWarning,
+)
 
 try:
     __version__ = version("rocci")
@@ -17,8 +29,15 @@ except PackageNotFoundError:  # pragma: no cover — source tree without install
     __version__ = "0+unknown"
 
 __all__ = [
+    "FallbackBackendWarning",
+    "LowConfidenceWarning",
     "NormalityReport",
+    "NormalityWarning",
     "RocBand",
+    "RocciError",
+    "RocciWarning",
+    "SmallSampleWarning",
+    "TiesWarning",
     "__version__",
     "from_estimator",
     "roc_band",

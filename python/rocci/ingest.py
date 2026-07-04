@@ -169,7 +169,8 @@ def _reduce_scores(
     """Reduce raw scores to a 1-D positive-class score vector.
 
     Args:
-        y_score: Coerced score array (1-D, ``(n, 2)`` proba, or draw axes).
+        y_score: Coerced score array (1-D, an ``(n, 1)`` column vector, an
+            ``(n, 2)`` proba matrix, or draw axes).
         score_reduce: ``"mean"`` / ``"median"`` for posterior draws, else ``None``.
         pos_col: Positive-class column for ``(n, 2)`` probabilities.
 
@@ -182,6 +183,10 @@ def _reduce_scores(
     arr = _as_float(y_score)
     notes: list[str] = []
 
+    if arr.ndim == 2 and arr.shape[1] == 1:
+        # (n, 1) column vectors (predict_proba(X)[:, [1]], keras predictions)
+        # are unambiguously per-sample scores, not draws.
+        return arr.ravel(), notes
     if arr.ndim == 1:
         return arr, notes
 
@@ -191,6 +196,14 @@ def _reduce_scores(
             f"{pos_col} as the positive-class score."
         )
         return np.ascontiguousarray(arr[:, pos_col]), notes
+
+    if arr.ndim == 2 and arr.shape[1] > 2 and _rows_sum_to_one(arr):
+        raise RocciError(
+            f"y_score looks like multiclass predict_proba output with "
+            f"{arr.shape[1]} columns; roc_band draws a single binary ROC. Use "
+            "roc_band_ovr for one-vs-rest bands with a family-wise guarantee, "
+            "or pass one class's probability column as 1-D scores."
+        )
 
     if arr.ndim in (2, 3):
         if score_reduce is None:
@@ -236,10 +249,11 @@ def _apply_nan_policy(
             "nan_policy='omit' to drop those rows, or clean the inputs first. "
             "(±inf scores are allowed; only NaN is rejected.)"
         )
+    # stacklevel 4: warn -> helper -> ingest -> roc_band -> user code
     warnings.warn(
         f"nan_policy='omit': dropped {n_nan} row(s) containing NaN.",
         SmallSampleWarning,
-        stacklevel=3,
+        stacklevel=4,
     )
     keep = ~nan_mask
     return is_pos[keep], scores[keep]
@@ -272,14 +286,17 @@ def heavy_ties(neg: FloatArray, pos: FloatArray) -> bool:
 
 
 def _check_ties(neg: FloatArray, pos: FloatArray) -> None:
-    """Warn on heavy ties or a constant-score class."""
+    """Warn on heavy ties or a constant-score class.
+
+    stacklevel 4: warn -> helper -> ingest -> roc_band -> user code.
+    """
     for label, arr in (("negative", neg), ("positive", pos)):
         if len(np.unique(arr)) == 1:
             warnings.warn(
                 f"the {label} class has constant scores; the band degenerates to "
                 "the exact floors and will be honestly wide, but stays valid.",
                 TiesWarning,
-                stacklevel=3,
+                stacklevel=4,
             )
     if heavy_ties(neg, pos):
         combined = np.concatenate([neg, pos])
@@ -289,7 +306,7 @@ def _check_ties(neg: FloatArray, pos: FloatArray) -> None:
             f"scores are heavily tied ({n_unique} distinct of {n}); the band stays "
             "valid but conservative (the Beta floor errs safe under ties).",
             TiesWarning,
-            stacklevel=3,
+            stacklevel=4,
         )
 
 
@@ -330,6 +347,15 @@ def ingest(
         (2, 2)
     """
     yt = _coerce(y_true, "y_true")
+    if yt.ndim == 2 and yt.shape[1] == 1:
+        yt = yt.ravel()  # (n, 1) column vectors are a common sklearn/keras habit
+    if yt.ndim != 1:
+        raise RocciError(
+            f"y_true must be 1-D labels, got shape {yt.shape}; each sample needs "
+            "exactly one label."
+        )
+    if len(yt) == 0:
+        raise RocciError("y_true is empty; a ROC curve needs labeled samples.")
     label_nan = np.isnan(yt) if yt.dtype.kind == "f" else np.zeros(len(yt), bool)
     pos_value, pos_col = _label_mapping(yt[~label_nan], pos_label)
 
@@ -342,10 +368,12 @@ def ingest(
 
     is_pos = (yt == pos_value) if yt.dtype != bool else yt.astype(bool)
     # Fold NaN labels into the score-NaN mask so the policy handles both together
-    # (raise, or drop the row) without silently pre-filtering.
-    scores_masked = scores.astype(np.float64, copy=True)
-    scores_masked[label_nan] = np.nan
-    is_pos, scores = _apply_nan_policy(is_pos, scores_masked, nan_policy)
+    # (raise, or drop the row) without silently pre-filtering. Copy only when
+    # needed: `scores` may share memory with the caller's array.
+    if label_nan.any():
+        scores = scores.astype(np.float64, copy=True)
+        scores[label_nan] = np.nan
+    is_pos, scores = _apply_nan_policy(is_pos, scores, nan_policy)
 
     neg = np.ascontiguousarray(scores[~is_pos])
     pos = np.ascontiguousarray(scores[is_pos])
@@ -361,11 +389,12 @@ def ingest(
             f"each class needs at least 2 samples, got n_neg={n_neg}, n_pos={n_pos}."
         )
     if n_neg < 20 or n_pos < 20:
+        # stacklevel 3: warn -> ingest -> roc_band -> user code
         warnings.warn(
             f"small sample (n_neg={n_neg}, n_pos={n_pos}); the band will be "
             "dominated by the exact floors, but remains valid.",
             SmallSampleWarning,
-            stacklevel=2,
+            stacklevel=3,
         )
 
     _check_ties(neg, pos)

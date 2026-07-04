@@ -18,7 +18,13 @@ from numpy.typing import ArrayLike
 import rocci.backend as _backend
 from rocci._exceptions import RocciError
 from rocci._result import RocBand
-from rocci._validation import check_confidence, check_n_boot, resolve_seed
+from rocci._validation import (
+    check_confidence,
+    check_grid_size,
+    check_n_boot,
+    check_n_threads,
+    resolve_seed,
+)
 from rocci._warnings import NormalityWarning
 from rocci.band.envelope import (
     assemble_envelope_band,
@@ -75,7 +81,7 @@ def roc_band(
             bit-identical band. Ignored when ``normal=True``.
         diagnostics: Render the floor-attribution figure immediately
             (not yet implemented). Attribution is always stored.
-        n_threads: Rust thread count; ``None`` → all cores.
+        n_threads: Rust thread count; ``None`` or ``-1`` → all cores.
 
     Returns:
         A :class:`~rocci._result.RocBand`.
@@ -107,6 +113,8 @@ def roc_band(
     alpha = check_confidence(confidence)
     if not normal:
         check_n_boot(n_boot)
+    check_grid_size(grid_size)
+    kernel_threads = check_n_threads(n_threads)
     data = ingest(
         y_true,
         y_score,
@@ -151,7 +159,7 @@ def roc_band(
     k_indices = grid_k_indices(grid, data.n_neg)
     seed = resolve_seed(random_state)
     boot_tpr = _backend.bootstrap_tpr_matrix(
-        neg, pos, k_indices, n_boot, seed, n_threads
+        neg, pos, k_indices, n_boot, seed, kernel_threads
     )
     band = assemble_envelope_band(boot_tpr, grid, neg, pos, alpha)
     auc_ci = bootstrap_auc_ci(boot_tpr, grid, alpha)
@@ -242,6 +250,19 @@ def roc_band_ovr(
             f"roc_band_ovr needs m > 2 classes, found {m}; for a binary problem "
             "use roc_band directly."
         )
+    if len({str(c) for c in class_list}) != m:
+        raise RocciError(
+            f"classes contains duplicates: {class_list!r}; each class must "
+            "appear exactly once."
+        )
+    present = np.unique(yt)
+    missing = [c for c in class_list if not np.any(present == c)]
+    if missing:
+        raise RocciError(
+            f"classes {missing!r} do not occur in y_true (present: "
+            f"{present.tolist()!r}); every one-vs-rest split needs at least one "
+            "positive sample."
+        )
     if ys.ndim != 2 or ys.shape[1] != m:
         raise RocciError(
             f"y_score must be an (n, m={m}) matrix to match the {m} classes; got "
@@ -307,6 +328,11 @@ def from_estimator(
         >>> band.method
         'envelope'
     """
+    if response_method not in ("auto", "predict_proba", "decision_function"):
+        raise RocciError(
+            f"response_method must be 'auto', 'predict_proba', or "
+            f"'decision_function', got {response_method!r}."
+        )
     has_proba = hasattr(estimator, "predict_proba")
     has_decision = hasattr(estimator, "decision_function")
 
