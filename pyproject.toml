@@ -47,6 +47,7 @@ dev = [
     "pandas>=2",
     "matplotlib>=3.7",
     "pre-commit>=3",
+    "git-cliff>=2.7",
 ]
 docs = [
     "mkdocs-material>=9.5",
