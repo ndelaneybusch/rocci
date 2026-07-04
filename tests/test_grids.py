@@ -99,6 +99,26 @@ class TestEmpiricalRoc:
         assert out[0] == pytest.approx(1.0 / 3.0)
         assert out[1] == 1.0
 
+    def test_hand_worked_example_exact(self):
+        # 4 negatives at 1..4, positives interleaved at 1.5..4.5: thresholds
+        # (descending) 4, 3, 2, 1 give vertices (0.25, 0.25) .. (1, 1), a
+        # perfect staircase. Every grid value below is derived by hand.
+        neg = np.array([1.0, 2.0, 3.0, 4.0])
+        pos = np.array([1.5, 2.5, 3.5, 4.5])
+        grid = np.linspace(0, 1, 9)
+        expected = [0.0, 0.0, 0.25, 0.25, 0.5, 0.5, 0.75, 0.75, 1.0]
+        assert empirical_roc_on_grid(neg, pos, grid).tolist() == expected
+
+    def test_rank_invariance_under_monotone_transform(self):
+        # the empirical ROC only sees score order, so arctan (strictly
+        # monotone) must leave every grid value bit-identical
+        neg, pos = binormal_scores(60, 45, seed=9, tie_step=0.25)
+        grid = make_grid(60)
+        np.testing.assert_array_equal(
+            empirical_roc_on_grid(np.arctan(neg), np.arctan(pos), grid),
+            empirical_roc_on_grid(neg, pos, grid),
+        )
+
     def test_vertices_are_nondecreasing(self):
         neg, pos = binormal_scores(80, 60, seed=7)
         fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
@@ -138,3 +158,10 @@ class TestKIndices:
 
     def test_dtype_is_uint64(self):
         assert grid_k_indices(make_grid(10), 10).dtype == np.uint64
+
+    def test_grid_finer_than_negatives_duplicates_indices(self):
+        # 11 grid points over 5 negatives: floor(t * 5) repeats every index —
+        # the kernel must be exercised with duplicated thresholds, so the
+        # mapping itself is pinned here by hand
+        k = grid_k_indices(np.linspace(0, 1, 11), n_neg=5)
+        assert k.tolist() == [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5]

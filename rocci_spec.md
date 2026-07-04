@@ -846,7 +846,7 @@ services exist — no manual upkeep):
 | conda-forge version | `img.shields.io/conda/vn/conda-forge/rocci` (appears once the feedstock lands)               |
 | CI                  | `github.com/ndelaneybusch/rocci/actions/workflows/ci.yml/badge.svg`                          |
 | Merge gates         | `.../workflows/gates.yml/badge.svg` (calibration + perf — the "the science is tested" badge) |
-| Coverage            | Codecov badge for the repo                                                                   |
+| Coverage            | shields.io endpoint badge fed by a gist the `test` job writes from `coverage.xml` (no third-party service) |
 | Docs                | static shields.io "docs — latest" badge linking to the Pages site                            |
 | License             | `img.shields.io/pypi/l/rocci`                                                                |
 | DOI                 | Zenodo concept-DOI badge (appears after the first release, §13.5)                            |
@@ -874,7 +874,7 @@ for cargo, uv's built-in cache keyed on `uv.lock`. Jobs:
 | `typecheck`     | ubuntu                                     | `ty check` (§12.4 config)                                                                                                                                  |
 | `audit`         | ubuntu                                     | `cargo audit` + `pip-audit` (fast; runs per-PR, not on a schedule)                                                                                         |
 | `rust`          | ubuntu, windows                            | `cargo test` (oracle + determinism kernel tests), MSRV build check                                                                                         |
-| `test`          | {ubuntu, windows, macos-14} × {3.10, 3.13} | maturin build + full pytest (minus `slow`), doctests (`--doctest-modules` on `python/rocci`), coverage upload (Codecov, ≥95% gate on the ubuntu/3.13 cell) |
+| `test`          | {ubuntu, windows, macos-14} × {3.10, 3.13} | maturin build + full pytest (minus `slow`), doctests (`--doctest-modules` on `python/rocci`), coverage (≥95% gate on the ubuntu/3.13 cell; badge JSON published to a gist on main pushes) |
 | `test-fallback` | ubuntu × 3.10                              | `ROCCI_BACKEND=numpy` full pytest — proves the package works with zero compiled code                                                                       |
 | `test-minimums` | ubuntu × 3.10                              | pins `numpy==1.24.*`, `scipy==1.10.*` — guards the loose lower bounds                                                                                      |
 | `docs-build`    | ubuntu                                     | `mkdocs build --strict` with vignette execution — broken docs/vignettes fail PRs                                                                           |

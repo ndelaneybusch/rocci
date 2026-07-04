@@ -5,7 +5,7 @@
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/rocci)](https://anaconda.org/conda-forge/rocci)
 [![CI](https://github.com/ndelaneybusch/rocci/actions/workflows/ci.yml/badge.svg)](https://github.com/ndelaneybusch/rocci/actions/workflows/ci.yml)
 [![Merge gates](https://github.com/ndelaneybusch/rocci/actions/workflows/gates.yml/badge.svg)](https://github.com/ndelaneybusch/rocci/actions/workflows/gates.yml)
-[![codecov](https://codecov.io/gh/ndelaneybusch/rocci/branch/main/graph/badge.svg)](https://codecov.io/gh/ndelaneybusch/rocci)
+[![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ndelaneybusch/c2865a0da1db40e24976b7c721a4ca97/raw/rocci-coverage.json)](https://github.com/ndelaneybusch/rocci/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-latest-blue)](https://ndelaneybusch.github.io/rocci)
 [![License](https://img.shields.io/pypi/l/rocci)](https://github.com/ndelaneybusch/rocci/blob/main/LICENSE)
 

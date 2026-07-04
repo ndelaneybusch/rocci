@@ -137,6 +137,67 @@ class TestLabels:
             data = ingest(y_true, y_score)
         assert data.n_neg == 10
 
+    def test_small_sample_boundary_is_twenty(self):
+        # declared threshold: warn when a class has fewer than 20 samples
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", SmallSampleWarning)
+            ingest(*labeled(n_neg=20, n_pos=20))
+        with pytest.warns(SmallSampleWarning):
+            ingest(*labeled(n_neg=19, n_pos=20))
+
+    def test_bool_labels_honor_pos_label_false(self):
+        # an explicit pos_label must never be silently overridden, even for
+        # booleans: pos_label=False flips which class is positive
+        y = np.array([False, False, False, True, True])
+        s = np.array([0.1, 0.2, 0.3, 0.8, 0.9])
+        data = ingest(y, s, pos_label=False)
+        assert data.n_pos == 3
+        np.testing.assert_array_equal(np.sort(data.pos), [0.1, 0.2, 0.3])
+        np.testing.assert_array_equal(np.sort(data.neg), [0.8, 0.9])
+
+    def test_bool_labels_pos_label_true_matches_inference(self):
+        y = np.array([False, False, True, True])
+        s = np.array([0.1, 0.2, 0.8, 0.9])
+        inferred = ingest(y, s)
+        explicit = ingest(y, s, pos_label=True)
+        np.testing.assert_array_equal(np.sort(inferred.pos), np.sort(explicit.pos))
+        assert inferred.n_pos == explicit.n_pos == 2
+
+    def test_all_true_bool_labels_raise_single_class(self):
+        with pytest.raises(RocciError, match="one class"):
+            ingest(np.ones(6, bool), np.arange(6.0))
+
+    def test_nan_labels_raise_by_default(self):
+        y = np.array([0.0, 0.0, np.nan, 1.0, 1.0])
+        s = np.array([0.1, 0.2, 0.5, 0.8, 0.9])
+        with pytest.raises(RocciError, match="NaN"):
+            ingest(y, s)
+
+    def test_nan_labels_omit_drops_row_not_class_count(self):
+        # a NaN label must neither crash label resolution nor become a third
+        # class; under omit exactly that row disappears
+        y = np.array([0.0, 0.0, np.nan, 1.0, 1.0, 0.0, 1.0])
+        s = np.array([0.1, 0.2, 0.5, 0.8, 0.9, 0.15, 0.85])
+        with pytest.warns(SmallSampleWarning, match="dropped 1"):
+            data = ingest(y, s, nan_policy="omit")
+        assert data.n_neg == 3
+        assert data.n_pos == 3
+        assert 0.5 not in np.concatenate([data.neg, data.pos])
+
+    def test_omit_that_erases_a_class_raises(self):
+        y = np.array([0, 0, 0, 1, 1])
+        s = np.array([0.1, 0.2, 0.3, np.nan, np.nan])
+        with (
+            pytest.warns(SmallSampleWarning, match="dropped 2"),
+            pytest.raises(RocciError, match="one class"),
+        ):
+            ingest(y, s, nan_policy="omit")
+
+    def test_invalid_nan_policy_raises(self):
+        y_true, y_score = labeled()
+        with pytest.raises(RocciError, match="nan_policy"):
+            ingest(y_true, y_score, nan_policy="drop")
+
 
 class TestColumnVectors:
     def test_column_vector_labels_ravel(self):
@@ -196,6 +257,45 @@ class TestScores:
         with pytest.raises(RocciError, match="same samples"):
             ingest(np.array([0, 0, 1, 1]), np.array([0.1, 0.2, 0.3]))
 
+    def test_proba_matrix_honors_pos_label_column(self):
+        # pos_label=0 selects column 0 of a predict_proba matrix, mirroring
+        # sklearn's column ordering by sorted class label
+        y_true, raw = labeled()
+        p1 = 1.0 / (1.0 + np.exp(-raw))
+        proba = np.column_stack([1.0 - p1, p1])
+        data = ingest(y_true, proba, pos_label=0)
+        # class 0 is now positive, scored by column 0 = 1 - p1
+        np.testing.assert_allclose(np.sort(data.pos), np.sort(1.0 - p1[y_true == 0]))
+
+    def test_two_column_non_probabilities_demand_score_reduce(self):
+        # an (n, 2) matrix whose rows do not sum to 1 (e.g. paired logits)
+        # must not be silently treated as probabilities
+        y_true, raw = labeled()
+        logits = np.column_stack([raw, -raw])
+        with pytest.raises(RocciError, match="score_reduce"):
+            ingest(y_true, logits)
+
+    def test_invalid_score_reduce_raises(self):
+        y_true, raw = labeled()
+        draws = np.tile(raw, (5, 1))
+        with pytest.raises(RocciError, match="score_reduce must be"):
+            ingest(y_true, draws, score_reduce="max")
+
+    def test_four_dimensional_scores_rejected(self):
+        y_true, raw = labeled()
+        with pytest.raises(RocciError, match="unsupported shape"):
+            ingest(y_true, np.tile(raw, (2, 2, 2, 1)))
+
+    def test_score_reduce_mean_is_the_column_mean(self):
+        # the reduction must be over draw axes only, sample-aligned
+        y_true, raw = labeled()
+        rng = np.random.default_rng(1)
+        draws = raw + rng.normal(0, 0.1, (30, len(raw)))
+        data = ingest(y_true, draws, score_reduce="mean")
+        expected = draws.mean(axis=0)
+        got = np.sort(np.concatenate([data.neg, data.pos]))
+        np.testing.assert_allclose(got, np.sort(expected), atol=0)
+
 
 class TestNanAndInf:
     def test_nan_raises_by_default(self):
@@ -237,3 +337,17 @@ class TestTies:
         with warnings.catch_warnings():
             warnings.simplefilter("error", TiesWarning)
             ingest(y_true, y_score)
+
+    def test_ties_boundary_is_half_distinct(self):
+        # the declared trigger is distinct fraction strictly below 0.5:
+        # exactly half distinct stays silent, one fewer distinct value warns
+        y = np.concatenate([np.zeros(20, int), np.ones(20, int)])
+        neg = np.arange(20, dtype=float)
+        silent = np.concatenate([neg, neg])  # 20 distinct of 40 = exactly 0.5
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", TiesWarning)
+            ingest(y, silent)
+        neg_tied = neg.copy()
+        neg_tied[-1] = neg_tied[-2]  # 19 distinct of 40 < 0.5
+        with pytest.warns(TiesWarning, match="19 distinct of 40"):
+            ingest(y, np.concatenate([neg_tied, neg_tied]))

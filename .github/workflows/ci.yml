@@ -86,11 +86,32 @@ jobs:
       - name: Coverage gate (>= 95%)
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
         run: uv run coverage report --fail-under=95
-      - name: Upload coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
-        uses: codecov/codecov-action@v5
+      # Self-hosted coverage badge: read the line rate from the Cobertura XML we
+      # already emit and publish a shields.io endpoint JSON to a gist. Runs only
+      # on main pushes — PRs (incl. forks) never touch the badge or the secret.
+      - name: Coverage percentage
+        id: cov
+        if: >-
+          matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+          && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          pct=$(uv run python -c "import xml.etree.ElementTree as ET; \
+            print(round(float(ET.parse('coverage.xml').getroot().get('line-rate')) * 100, 1))")
+          echo "pct=$pct" >> "$GITHUB_OUTPUT"
+      - name: Publish coverage badge
+        if: >-
+          matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+          && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
-          files: coverage.xml
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: rocci-coverage.json
+          label: coverage
+          message: ${{ steps.cov.outputs.pct }}%
+          valColorRange: ${{ steps.cov.outputs.pct }}
+          minColorRange: 90
+          maxColorRange: 100
 
   test-fallback:
     # Proves the package works with zero compiled code.
@@ -129,5 +150,3 @@ jobs:
       - uses: extractions/setup-just@v2
       - run: uv sync --all-groups
       - run: just docs-build
-
-  # gates.yml (calibration + perf) lands in milestone M6.
