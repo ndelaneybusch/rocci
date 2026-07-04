@@ -11,6 +11,9 @@
 
 **Distribution-free simultaneous confidence bands for ROC curves.**
 
+<!-- Absolute URL so the figure renders on PyPI as well as GitHub. -->
+![rocci envelope band vs Working-Hotelling band on heavy-tailed scores](https://raw.githubusercontent.com/ndelaneybusch/rocci/main/docs/assets/hero.png)
+
 `rocci` is a simple interface to easily add uncertainty estimates to your ROC
 curve that are very likely to be correct in nearly all use cases. It draws a
 simultaneous confidence band, which maintains the specified confidence of
