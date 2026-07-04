@@ -64,3 +64,31 @@ Concurrent agents (or tasks) must never share a checkout — simultaneous edits 
 - Comments are evergreen; no commented-out code; no TODOs without a linked issue number. DO provide context and insights in docs and comments that let an interested and informed reader understand the purpose and implementation quickly. DO NOT reference design documents, external documents, prior code states, alternative implementations that the current implementation does not use etc.
 - Vignettes are jupytext `.md` files in `docs/vignettes/`, executed at docs build time (`just docs-build` catches breakage).
 
+
+## Releasing ("let's do a new release")
+
+The full operator guide is CONTRIBUTING.md §Releasing; the agent-shaped short
+version:
+
+1. Preflight: `main` clean and green; pick the SemVer version (`X.Y.Z`, or
+   `X.Y.ZrcN` for a TestPyPI release candidate).
+2. `just release-prep X.Y.Z` — sets the version, regenerates CHANGELOG.md,
+   and runs the absolute perf gates locally. Review the diff.
+3. Open a PR titled exactly `release: vX.Y.Z` from a `release/vX.Y.Z`
+   branch. The owner reviews and merges (agents cannot merge their own PRs).
+4. If wheels.yml changed since the last release, validate it first with the
+   `workflow_dispatch` dry-run (`gh workflow run wheels.yml`) — it builds and
+   smoke-tests everything but cannot publish. Cheaper than burning a tag.
+5. Tag the merge commit — **annotated**, on `main`:
+   `git tag -a vX.Y.Z -m "rocci X.Y.Z" && git push origin vX.Y.Z`.
+6. Watch the run (`gh run watch`). It pauses at the `release` environment;
+   only the owner can approve — tell them when it's waiting. Everything after
+   approval (publish, post-publish verification on three OSes, GitHub
+   Release/Zenodo, docs `stable` alias) is automatic.
+7. A failure before approval publishes nothing: fix via PR, merge, then move
+   the tag to the fixed commit (`git push origin :refs/tags/vX.Y.Z`, re-tag,
+   push). Moving a remote tag is destructive — get the owner's explicit OK.
+
+Owner-only, and required once per machine/account rather than per release:
+PyPI/TestPyPI trusted publishers, `release` environment approval rights,
+Zenodo webhook, conda-forge feedstock (and merging its autotick PRs).
