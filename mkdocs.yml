@@ -1,0 +1,100 @@
+site_name: rocci
+site_description: Distribution-free simultaneous confidence bands for ROC curves
+site_url: https://ndelaneybusch.github.io/rocci/
+repo_url: https://github.com/ndelaneybusch/rocci
+repo_name: ndelaneybusch/rocci
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
+  - User guide:
+      - Which band should I use?: guide/which-band.md
+      - Using rocci with your data: guide/your-data.md
+      - Reading the band: guide/reading-the-band.md
+      - Diagnostics: guide/diagnostics.md
+      - Performance: guide/performance.md
+  - Method:
+      - The envelope method: method/envelope.md
+      - Theoretical behavior: method/theory.md
+  - Vignettes:
+      - Quickstart with scikit-learn: vignettes/01-quickstart-sklearn.md
+      - Deep-learning scores: vignettes/02-deep-learning-scores.md
+      - Bayesian workflow: vignettes/03-bayesian-workflow.md
+      - Anatomy of the band: vignettes/04-anatomy-of-the-band.md
+  - API reference: api.md
+  - FAQ: faq.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [python]
+          options:
+            docstring_style: google
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+            show_source: true
+            merge_init_into_class: true
+  # Vignettes are jupytext Markdown notebooks, executed at build time so they
+  # can never silently rot (spec §13.3); a failure here fails `--strict`.
+  - mkdocs-jupyter:
+      include: ["vignettes/*.md"]
+      execute: true
+      allow_errors: false
+      include_source: true
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0.16/dist/katex.min.js
+  - https://unpkg.com/katex@0.16/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0.16/dist/katex.min.css
+
+extra:
+  version:
+    provider: mike

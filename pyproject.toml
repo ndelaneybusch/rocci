@@ -48,6 +48,15 @@ dev = [
     "matplotlib>=3.7",
     "pre-commit>=3",
 ]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.26",
+    "mkdocs-jupyter>=0.25",
+    "jupytext>=1.16",
+    "ipykernel>=6",
+    "mike>=2.1",
+    "scikit-learn>=1.4",   # vignette 1 (breast-cancer quickstart); docs build only
+]
 
 [tool.maturin]
 python-source = "python"

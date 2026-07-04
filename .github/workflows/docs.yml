@@ -1,0 +1,44 @@
+name: docs
+
+# Deploys the versioned docs site with mike (spec §13.1 / §14.1):
+# - push to main   -> deploy the `latest` alias
+# - release tag vX.Y.Z -> deploy version X.Y and move the `stable` alias
+# PRs never deploy — they only build, via the docs-build job in ci.yml.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: write # mike pushes to the gh-pages branch
+
+concurrency:
+  group: docs-deploy # serialize deploys; never cancel a push to gh-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # mike needs the gh-pages branch history
+      - uses: astral-sh/setup-uv@v5
+      - uses: Swatinem/rust-cache@v2
+      - run: uv sync --all-groups
+      - name: Configure git for gh-pages commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Deploy latest (push to main)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          uv run mike deploy --push latest
+          uv run mike set-default --push latest
+      - name: Deploy versioned + stable (release tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          MINOR="${VERSION%.*}"
+          uv run mike deploy --push --update-aliases "$MINOR" stable

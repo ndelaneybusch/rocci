@@ -42,9 +42,13 @@ rust-test:
 bench:
     uv run python benchmarks/run_benchmarks.py
 
-# mkdocs serve with executed vignettes (docs land in milestone M5)
+# Live-preview the docs site (vignettes execute on first render)
 docs:
     uv run mkdocs serve
+
+# Build the docs site strictly — what CI runs; failures include vignette errors
+docs-build:
+    uv run mkdocs build --strict
 
 # Regenerate golden masters (requires a studroc_paper checkout; prints provenance).
 # Policy: fixtures change ONLY with a spec change and a PR explaining the

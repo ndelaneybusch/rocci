@@ -119,5 +119,15 @@ jobs:
       - run: uv pip install "numpy==1.24.*" "scipy==1.10.*"
       - run: uv run --no-sync pytest -q -m "not slow"
 
-  # docs-build joins this workflow in milestone M5 (mkdocs --strict with
-  # executed vignettes); gates.yml (calibration + perf) lands in milestone M6.
+  docs-build:
+    # mkdocs --strict executes the vignettes, so a broken example fails PRs.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: Swatinem/rust-cache@v2
+      - uses: extractions/setup-just@v2
+      - run: uv sync --all-groups
+      - run: just docs-build
+
+  # gates.yml (calibration + perf) lands in milestone M6.
