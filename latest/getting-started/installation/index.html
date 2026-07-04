@@ -411,10 +411,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#conda-forge" class="md-nav__link">
+  <a href="#by-tool" class="md-nav__link">
     <span class="md-ellipsis">
       
-        conda-forge
+        By tool
       
     </span>
   </a>
@@ -1118,10 +1118,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#conda-forge" class="md-nav__link">
+  <a href="#by-tool" class="md-nav__link">
     <span class="md-ellipsis">
       
-        conda-forge
+        By tool
       
     </span>
   </a>
@@ -1187,11 +1187,42 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;
 </code></pre></div>
 <p>Binary wheels ship for Linux (x86-64, aarch64, musl), macOS (Intel and Apple
 silicon), and Windows, for every Python ≥ 3.10 — <code>pip install rocci</code> never
-compiles Rust on a supported platform.</p>
-<h2 id="conda-forge">conda-forge<a class="headerlink" href="#conda-forge" title="Permanent link">&para;</a></h2>
-<p>Once the feedstock lands (after the first PyPI release):</p>
-<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>rocci
-</code></pre></div>
+compiles Rust on a supported platform. Every wheel is smoke-tested on its own
+platform in a clean environment before it can be published, and each release
+is re-verified from the live index on all three OSes minutes after it goes
+up.</p>
+<h2 id="by-tool">By tool<a class="headerlink" href="#by-tool" title="Permanent link">&para;</a></h2>
+<p>=== "pip"</p>
+<pre><code>```bash
+pip install 'rocci[plot]'
+pip install rocci==0.1.0        # pin for reproducible environments
+```
+</code></pre>
+<p>=== "uv"</p>
+<pre><code>```bash
+uv add rocci                    # add to a uv-managed project
+uv pip install 'rocci[plot]'    # or into the active environment
+```
+</code></pre>
+<p>=== "conda"</p>
+<pre><code>```bash
+conda install -c conda-forge rocci
+```
+
+The conda-forge feedstock follows the first PyPI release; until it
+lands, use `pip install rocci` inside the conda environment (the wheel
+is self-contained and coexists cleanly with conda-managed numpy/scipy).
+</code></pre>
+<p>=== "from source"</p>
+<pre><code>```bash
+# needs a Rust toolchain: https://rustup.rs
+pip install git+https://github.com/ndelaneybusch/rocci
+```
+
+Installing from a git ref (or from the sdist on a platform with no
+wheel) compiles the Rust kernel locally via maturin. Build time is a
+couple of minutes; the result is identical to a released wheel.
+</code></pre>
 <h2 id="the-fallback-backend">The fallback backend<a class="headerlink" href="#the-fallback-backend" title="Permanent link">&para;</a></h2>
 <p>rocci's bootstrap kernel is compiled Rust. On a platform with no wheel and no
 Rust toolchain, the package still works: a pure-NumPy kernel with identical
