@@ -17,12 +17,13 @@ from rocci.band.envelope import (
     ATTR_PINNED,
     ATTR_WILSON_FLOOR,
     assemble_envelope_band,
-    auc_from_vertices,
     bootstrap_auc_ci,
+    kernel_grid_auc,
+    mann_whitney_auc,
     studentized_envelope,
 )
 from rocci.band.floors import beta_floor_vacuous_below
-from rocci.band.grids import empirical_roc_vertices, grid_k_indices, make_grid
+from rocci.band.grids import grid_k_indices, make_grid
 from tests.conftest import binormal_scores
 
 
@@ -158,34 +159,27 @@ class TestAssembly:
 
 
 class TestAuc:
-    def test_trapezoid_on_vertices_matches_hand_computation(self):
-        fpr_v = np.array([0.0, 0.25, 0.5, 1.0])
-        tpr_v = np.array([0.0, 0.5, 1.0, 1.0])
-        # segments: .25*(0+.5)/2 + .25*(.5+1)/2 + .5*1
-        assert auc_from_vertices(fpr_v, tpr_v) == pytest.approx(0.75)
+    @staticmethod
+    def brute_force_mw(neg, pos):
+        """Literal pairwise Mann-Whitney oracle, ties weighted 1/2."""
+        gt = (pos[:, None] > neg[None, :]).sum()
+        eq = (pos[:, None] == neg[None, :]).sum()
+        return (gt + 0.5 * eq) / (len(neg) * len(pos))
 
-    def test_auc_close_to_mann_whitney(self):
-        # For continuous scores the trapezoid over the empirical vertex list is
-        # MW - h_last/(2*n_neg): the final rise at FPR=1 is vertical and
-        # carries no trapezoid area. Verify that exact relationship.
-        neg, pos = binormal_scores(500, 500, seed=8)
-        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
-        auc = auc_from_vertices(fpr_v, tpr_v)
-        mw = (pos[:, None] > neg[None, :]).mean()
-        h_last = (pos > neg.min()).mean()
-        assert auc == pytest.approx(mw - h_last / (2 * 500), abs=1e-12)
+    @pytest.mark.parametrize(
+        "tie_step", [None, 0.5, 100.0], ids=["continuous", "heavy_ties", "all_tied"]
+    )
+    def test_auc_matches_bruteforce_mann_whitney(self, tie_step):
+        neg, pos = binormal_scores(150, 130, seed=8, tie_step=tie_step)
+        assert mann_whitney_auc(neg, pos) == pytest.approx(
+            self.brute_force_mw(neg, pos), abs=1e-12
+        )
 
-    def test_auc_uses_vertex_list_not_grid(self):
-        # a coarse grid visibly distorts the trapezoid; the full vertex list is
-        # the correct input for the AUC point estimate
-        neg, pos = binormal_scores(200, 200, seed=8)
-        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
-        auc_vertices = auc_from_vertices(fpr_v, tpr_v)
-        coarse = np.linspace(0, 1, 5)
-        from rocci.band.grids import step_lookup
-
-        auc_grid = auc_from_vertices(coarse, step_lookup(fpr_v, tpr_v, coarse))
-        assert abs(auc_vertices - auc_grid) > 1e-3
+    def test_auc_handles_hand_checked_ties(self):
+        neg = np.array([0.0, 1.0, 1.0])
+        pos = np.array([1.0, 2.0])
+        # pairs: (1,0)> (1,1)= (1,1)= (2,0)> (2,1)> (2,1)>  -> (4 + 0.5*2)/6
+        assert mann_whitney_auc(neg, pos) == pytest.approx(5.0 / 6.0)
 
     def test_bootstrap_ci_brackets_point_estimate(self):
         neg, pos = binormal_scores(100, 100, seed=9)
@@ -194,16 +188,32 @@ class TestAuc:
         boot = bootstrap_tpr_matrix_numpy(
             neg, pos, grid_k_indices(grid, 100), n_boot=500, seed=10
         )
-        lo, hi = bootstrap_auc_ci(boot, grid, alpha=0.05)
-        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
-        auc = auc_from_vertices(fpr_v, tpr_v)
+        lo, hi = bootstrap_auc_ci(boot, grid, neg, pos, alpha=0.05)
+        auc = mann_whitney_auc(neg, pos)
         assert lo < auc < hi
         assert 0.0 <= lo <= hi <= 1.0
+
+    @pytest.mark.parametrize("tie_step", [1.0, 100.0], ids=["integer", "binary_like"])
+    def test_ci_brackets_point_estimate_under_heavy_ties(self, tie_step):
+        # the raw percentile CI of strictly-greater grid AUCs sits below the
+        # Mann-Whitney point estimate by ~half the tie mass; the recentering
+        # must repair exactly this failure (appendix A10 delta note)
+        neg, pos = binormal_scores(150, 150, seed=11, tie_step=tie_step)
+        neg, pos = np.sort(neg), np.sort(pos)
+        grid = make_grid(150)
+        boot = bootstrap_tpr_matrix_numpy(
+            neg, pos, grid_k_indices(grid, 150), n_boot=500, seed=12
+        )
+        lo, hi = bootstrap_auc_ci(boot, grid, neg, pos, alpha=0.05)
+        assert lo <= mann_whitney_auc(neg, pos) <= hi
 
     def test_ci_percentiles_use_linear_method(self):
         grid = np.linspace(0, 1, 3)
         boot = np.array([[0, a, 1] for a in (0.1, 0.2, 0.3, 0.4)], dtype=float)
+        neg = np.array([0.0, 1.0])
+        pos = np.array([2.0, 3.0])  # separable: MW = kernel plug-in = 1
+        assert mann_whitney_auc(neg, pos) == kernel_grid_auc(neg, pos, grid) == 1.0
         aucs = 0.25 + np.array([0.1, 0.2, 0.3, 0.4]) / 2  # trapezoid by hand
-        lo, hi = bootstrap_auc_ci(boot, grid, alpha=0.5)
-        assert lo == pytest.approx(np.percentile(aucs, 25))
+        lo, hi = bootstrap_auc_ci(boot, grid, neg, pos, alpha=0.5)
+        assert lo == pytest.approx(np.percentile(aucs, 25))  # zero recentering
         assert hi == pytest.approx(np.percentile(aucs, 75))

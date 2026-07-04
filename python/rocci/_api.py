@@ -28,8 +28,8 @@ from rocci._validation import (
 from rocci._warnings import NormalityWarning
 from rocci.band.envelope import (
     assemble_envelope_band,
-    auc_from_vertices,
     bootstrap_auc_ci,
+    mann_whitney_auc,
 )
 from rocci.band.grids import (
     empirical_roc_on_grid,
@@ -120,11 +120,11 @@ def roc_band(
     neg = np.sort(data.neg)
     pos = np.sort(data.pos)
     grid = make_grid(data.n_neg, grid_size)
-    fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
-    auc = auc_from_vertices(fpr_v, tpr_v)
+    auc = mann_whitney_auc(neg, pos)
 
     if normal:
         lower, upper = working_hotelling_band(neg, pos, grid, alpha)
+        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
         report = normality_report(
             neg, pos, fpr_v, tpr_v, heavy_ties=heavy_ties(neg, pos)
         )
@@ -157,7 +157,7 @@ def roc_band(
             neg, pos, k_indices, n_boot, seed, kernel_threads
         )
         band = assemble_envelope_band(boot_tpr, grid, neg, pos, alpha)
-        auc_ci = bootstrap_auc_ci(boot_tpr, grid, alpha)
+        auc_ci = bootstrap_auc_ci(boot_tpr, grid, neg, pos, alpha)
         result = RocBand(
             fpr=band.grid,
             tpr=band.tpr,

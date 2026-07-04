@@ -451,12 +451,31 @@ attribution[-1] = 3
 
 ## A10. AUC and bootstrap AUC CI
 
-- `auc`: trapezoid rule over the full empirical vertex list from A1
-  (`np.trapezoid(tpr_v, fpr_v)`) — not over the K-point grid.
+- `auc`: the exact Mann–Whitney statistic with ties weighted 1/2 —
+  `(#{pos > neg} + 0.5 · #{pos = neg}) / (n0 · n1)` over all pairs, computed
+  with two `searchsorted` passes. Identical to `sklearn.roc_auc_score`.
 - `auc_ci` (envelope path only): per-replicate trapezoid AUCs on the grid,
   `np.trapezoid(boot_tpr, grid, axis=1)`, then the empirical
-  `(alpha/2, 1 - alpha/2)` percentiles (NumPy default `"linear"` method).
-  Documented as a pointwise (scalar-parameter) percentile CI.
+  `(alpha/2, 1 - alpha/2)` percentiles (NumPy default `"linear"` method),
+  **recentered** by `auc − ĝ` and clipped to [0, 1], where `ĝ` is the
+  plug-in grid AUC of the kernel-convention step ROC (A2/A14 strictly-`>`
+  semantics evaluated on the original data). Documented as a pointwise
+  (scalar-parameter) CI.
+
+Documented deltas from the recorded implementation (both post-fixture,
+reporting-layer only — fixtures record only band arms):
+
+1. The recorded `auc` was a trapezoid over the A1 vertex list, which equals
+   `MW − h_last/(2·n0)` for continuous scores (`h_last = #{pos ≥ min neg}/n1`)
+   and deviates further under ties — systematically below what every other
+   library reports. rocci reports exact MW.
+2. The recorded `auc_ci` was the raw percentile interval of the per-replicate
+   grid AUCs. Those replicates compute the strictly-`>` functional, whose
+   center sits below MW by ≈ half the tie mass `P(pos = neg)`; under heavy
+   ties the raw interval can exclude the reported point estimate entirely
+   (e.g. binary scores: `auc = 0.64`, raw CI `(0.34, 0.44)`). The recentering
+   keeps the bootstrap width/shape and anchors the interval to the estimator
+   actually reported.
 
 ---
 

@@ -21,7 +21,7 @@ from rocci.band.floors import (
     rectangle_floor,
     wilson_halfwidth_sq,
 )
-from rocci.band.grids import empirical_roc_on_grid
+from rocci.band.grids import empirical_roc_on_grid, grid_k_indices
 
 FloatArray = NDArray[np.float64]
 
@@ -224,50 +224,134 @@ def assemble_envelope_band(
     )
 
 
-def auc_from_vertices(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
-    """Trapezoid AUC over the full empirical vertex list.
+def mann_whitney_auc(neg: FloatArray, pos: FloatArray) -> float:
+    """Exact Mann-Whitney AUC with ties weighted 1/2.
+
+    This is the universal empirical-AUC convention (identical to
+    ``sklearn.metrics.roc_auc_score``): the fraction of (negative, positive)
+    pairs the scores order correctly, counting ties as half-correct. It is
+    the point estimate reported as ``RocBand.auc``.
+
+    Documented delta (spec §5.6 / appendix A10): the recorded paper
+    implementation used a trapezoid over the A1 vertex list, which equals
+    ``MW - h_last / (2 * n_neg)`` for continuous scores — systematically
+    below what every other library reports. rocci reports exact MW instead;
+    the golden-master fixtures do not record AUC, so nothing validated
+    changes.
 
     Args:
-        fpr_v: Vertex FPR coordinates (non-decreasing).
-        tpr_v: Vertex TPR coordinates.
+        neg: Negative-class scores, any order.
+        pos: Positive-class scores, any order.
 
     Returns:
-        The empirical AUC — computed on the vertex list, not the K grid.
+        The Mann-Whitney AUC in ``[0, 1]``.
 
     Examples:
         >>> import numpy as np
-        >>> from rocci.band.envelope import auc_from_vertices
-        >>> auc_from_vertices(np.array([0.0, 0.5, 1.0]), np.array([0.0, 1.0, 1.0]))
+        >>> from rocci.band.envelope import mann_whitney_auc
+        >>> mann_whitney_auc(np.array([0.1, 0.4]), np.array([0.35, 0.8]))
         0.75
+        >>> mann_whitney_auc(np.array([0.0, 1.0]), np.array([0.0, 1.0]))  # ties
+        0.5
     """
-    return float(_trapezoid(tpr_v, fpr_v))
+    neg = np.asarray(neg, dtype=np.float64)
+    pos_asc = np.sort(np.asarray(pos, dtype=np.float64))
+    n0, n1 = len(neg), len(pos_asc)
+    right = np.searchsorted(pos_asc, neg, side="right")
+    left = np.searchsorted(pos_asc, neg, side="left")
+    n_greater = (n1 - right).sum()  # pos strictly above each neg
+    n_ties = (right - left).sum()
+    return float((n_greater + 0.5 * n_ties) / (n0 * n1))
+
+
+def kernel_grid_auc(
+    neg_sorted: FloatArray, pos_sorted: FloatArray, grid: FloatArray
+) -> float:
+    """Plug-in grid AUC under the bootstrap kernel's own convention.
+
+    Evaluates exactly the functional each bootstrap replicate computes —
+    TPR = fraction of positives **strictly greater** than the negative order
+    statistic at index ``k_t`` (A14), trapezoid-integrated over the grid —
+    on the original (unresampled) data. This is the natural center of the
+    bootstrap AUC distribution and anchors the recentering in
+    :func:`bootstrap_auc_ci`.
+
+    Args:
+        neg_sorted: Negative-class scores, ascending.
+        pos_sorted: Positive-class scores, ascending.
+        grid: FPR evaluation grid.
+
+    Returns:
+        The plug-in AUC of the kernel-convention step ROC on the grid.
+
+    Examples:
+        >>> import numpy as np
+        >>> from rocci.band.envelope import kernel_grid_auc
+        >>> neg, pos = np.array([0.0, 1.0]), np.array([2.0, 3.0])
+        >>> kernel_grid_auc(neg, pos, np.linspace(0, 1, 5))  # separable
+        1.0
+    """
+    n0, n1 = len(neg_sorted), len(pos_sorted)
+    k = grid_k_indices(grid, n0)
+    tpr = np.ones(len(grid))
+    real = k < n0  # k == n0 is the -inf sentinel (TPR = 1)
+    thr = neg_sorted[::-1][k[real].astype(np.intp)]
+    tpr[real] = (n1 - np.searchsorted(pos_sorted, thr, side="right")) / n1
+    return float(_trapezoid(tpr, grid))
 
 
 def bootstrap_auc_ci(
-    boot_tpr: FloatArray, grid: FloatArray, alpha: float
+    boot_tpr: FloatArray,
+    grid: FloatArray,
+    neg_sorted: FloatArray,
+    pos_sorted: FloatArray,
+    alpha: float,
 ) -> tuple[float, float]:
-    """Percentile bootstrap CI of per-replicate grid AUCs.
+    """Recentered percentile bootstrap CI for the Mann-Whitney AUC.
 
-    Documented as a pointwise (scalar-parameter) percentile CI.
+    Per-replicate grid AUCs are trapezoid-integrated from ``boot_tpr`` and
+    their ``(alpha/2, 1 - alpha/2)`` percentiles (NumPy default ``"linear"``
+    method) taken, then the interval is shifted by
+    ``mann_whitney_auc - kernel_grid_auc`` and clipped to ``[0, 1]``.
+
+    The shift is load-bearing: the kernel resamples the strictly-greater
+    functional (A2/A14), whose plug-in value sits below the Mann-Whitney
+    point estimate — negligibly for continuous scores, but by roughly half
+    the tie mass ``P(pos = neg)`` under heavy ties, where a raw percentile
+    CI can exclude the reported AUC entirely. Recentering keeps the
+    bootstrap's width and shape while anchoring the interval to the
+    estimator actually reported. Documented as a pointwise
+    (scalar-parameter) CI.
 
     Args:
         boot_tpr: Bootstrap TPR matrix, shape ``(B, K)``.
         grid: FPR evaluation grid.
+        neg_sorted: Negative-class scores, ascending.
+        pos_sorted: Positive-class scores, ascending.
         alpha: Significance level.
 
     Returns:
-        Tuple ``(low, high)`` — the empirical ``(alpha/2, 1 - alpha/2)``
-        percentiles (NumPy default ``"linear"`` method).
+        Tuple ``(low, high)``, clipped to ``[0, 1]``.
 
     Examples:
         >>> import numpy as np
-        >>> from rocci.band.envelope import bootstrap_auc_ci
-        >>> grid = np.linspace(0, 1, 3)
-        >>> boot = np.array([[0.0, 0.5, 1.0], [0.0, 0.7, 1.0], [0.0, 0.6, 1.0]])
-        >>> lo, hi = bootstrap_auc_ci(boot, grid, alpha=0.5)
-        >>> bool(0.5 <= lo <= hi <= 0.6)
+        >>> from rocci.backend._fallback import bootstrap_tpr_matrix_numpy
+        >>> from rocci.band.envelope import bootstrap_auc_ci, mann_whitney_auc
+        >>> from rocci.band.grids import grid_k_indices, make_grid
+        >>> rng = np.random.default_rng(0)
+        >>> neg = np.sort(rng.normal(0, 1, 80))
+        >>> pos = np.sort(rng.normal(1.5, 1, 80))
+        >>> grid = make_grid(80)
+        >>> boot = bootstrap_tpr_matrix_numpy(
+        ...     neg, pos, grid_k_indices(grid, 80), n_boot=400, seed=1
+        ... )
+        >>> lo, hi = bootstrap_auc_ci(boot, grid, neg, pos, alpha=0.05)
+        >>> bool(lo <= mann_whitney_auc(neg, pos) <= hi)
         True
     """
     aucs = _trapezoid(boot_tpr, grid, axis=1)
     lo, hi = np.percentile(aucs, [100.0 * alpha / 2.0, 100.0 * (1.0 - alpha / 2.0)])
-    return float(lo), float(hi)
+    shift = mann_whitney_auc(neg_sorted, pos_sorted) - kernel_grid_auc(
+        neg_sorted, pos_sorted, grid
+    )
+    return (float(np.clip(lo + shift, 0.0, 1.0)), float(np.clip(hi + shift, 0.0, 1.0)))

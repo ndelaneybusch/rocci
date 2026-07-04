@@ -335,8 +335,12 @@ separately.
 - `attribution[k]`: which mechanism produced the final `lower[k]` —
 bootstrap envelope, Beta floor, Wilson floor, or pinned endpoint — from the
 A9 comparison against the retained pre-floor envelope arm.
-- `auc` and `auc_ci`: **appendix A10** (trapezoid point estimate on the full
-vertex list; percentile CI of per-replicate grid AUCs).
+- `auc` and `auc_ci`: **appendix A10** — exact Mann–Whitney point estimate
+(ties weighted 1/2, identical to `sklearn.roc_auc_score`) and the
+recentered percentile CI of per-replicate grid AUCs. Both are documented
+statistical deltas from the recorded implementation (see A10's delta note);
+the golden-master fixtures record only the band arms, so nothing validated
+changes.
 - `vacuous_below = q_1` (from A8).
 
 ### 5.7 Golden-master equivalence requirement

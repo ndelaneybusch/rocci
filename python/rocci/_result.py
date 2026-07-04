@@ -104,8 +104,10 @@ class RocBand:
         n_neg: Number of negatives.
         n_pos: Number of positives.
         n_boot: Bootstrap replicates (``None`` for Working-Hotelling).
-        auc: Trapezoid AUC on the full empirical ROC (not the grid).
-        auc_ci: Percentile bootstrap AUC CI (``None`` for Working-Hotelling).
+        auc: Exact Mann-Whitney AUC, ties weighted 1/2 — identical to
+            ``sklearn.metrics.roc_auc_score``.
+        auc_ci: Recentered percentile bootstrap AUC CI (``None`` for
+            Working-Hotelling); consistent with ``auc`` even under ties.
         attribution: int8 codes — 0 bootstrap, 1 Beta floor, 2 Wilson floor,
             3 pinned endpoint.
         vacuous_below: FPR below which the lower band is provably vacuous
