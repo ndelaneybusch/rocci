@@ -11,6 +11,9 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  # Hosted runners have no display (and Windows images ship a broken Tcl/Tk);
+  # every matplotlib use in tests and doctests must stay headless.
+  MPLBACKEND: Agg
 
 jobs:
   lint:
