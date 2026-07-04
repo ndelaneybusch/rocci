@@ -14,17 +14,22 @@ jupyter:
 # Quickstart with scikit-learn
 
 The full workflow on real data: fit a classifier, hand it to rocci, read the
-band. We use the Wisconsin breast-cancer dataset that ships with
-scikit-learn.
+band. We use the diabetes dataset that ships with scikit-learn, predicting
+whether a patient's disease progresses above the cohort median from three
+routine measurements — blood pressure and two blood-serum panels. This is a
+genuinely hard task (AUC around 0.75), which is exactly where a confidence
+band earns its keep: the uncertainty is real and worth quantifying.
 
 ```python
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import load_diabetes
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-X, y = load_breast_cancer(return_X_y=True)
+data = load_diabetes(as_frame=True)
+X = data.data[["bp", "s3", "s4"]]
+y = (data.target > data.target.median()).astype(int)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.5, stratify=y, random_state=0
 )
@@ -71,12 +76,12 @@ Line by line:
 
 ## Operating points
 
-Suppose the screening context tolerates at most 5% false positives. What TPR
+Suppose the screening context tolerates at most 10% false positives. What TPR
 can we actually claim there?
 
 ```python
-lower, tpr, upper = band.at(0.05)
-print(f"at FPR = 5%:  TPR = {float(tpr):.3f},  "
+lower, tpr, upper = band.at(0.10)
+print(f"at FPR = 10%:  TPR = {float(tpr):.3f},  "
       f"simultaneous bounds [{float(lower):.3f}, {float(upper):.3f}]")
 ```
 
