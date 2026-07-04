@@ -1,14 +1,28 @@
 """Statistical gold standards for the assembled envelope band.
 
-Risks mitigated: components that individually match their formulas but
-assemble into a band that misses the true ROC, is wider than the trivial
-KS/DKW construction it exists to beat, or stops responding to confidence
-and sample size in the theoretically required direction. Ground truth comes
-from DGPs with closed-form population ROCs (appendix A15); the KS yardstick
-is the normative A16 construction. All seeds are fixed, so every assertion
-is a deterministic regression check, not a stochastic gate. The full
-multi-DGP coverage gate lives in ``test_calibration.py``; these are its
-fast, single-draw companions.
+A band can be built from primitives that each match their formula and still fail
+as a whole — miss the true ROC, be wider than the trivial construction it exists
+to beat, or stop responding to its knobs. This suite checks those whole-band
+properties against ground truth (DGPs with closed-form population ROCs, appendix
+A15) on single fast draws, as the quick companion to the full multi-DGP coverage
+gate in ``test_calibration.py``.
+
+Guaranteed. On the recorded draws the band contains the true binormal ROC (the
+reason it exists), and it is strictly narrower than the KS/DKW reference band
+(appendix A16) on both binormal and heavy-tailed data — the paper's headline
+"tighter than the trivial valid band" claim, and the distribution-free part of it.
+The band responds correctly to its two knobs: raising confidence nests the bands
+pointwise (more confidence never buys a narrower bound) and grows the vacuous
+region as theory requires, while quadrupling n shrinks the mean width at roughly
+the ``sqrt(n)`` rate. And the honest cost of validity is bounded: on
+correctly-specified binormal data the envelope is wider than Working-Hotelling
+but by less than 2.5x — if it ever undercut the correct parametric band, it would
+be over-tight and coverage would be at risk.
+
+Limitations. All seeds are fixed, so these are deterministic regression checks on
+specific draws (recorded as covered), not a stochastic coverage estimate — that
+is ``test_calibration.py``. Direction and rate are asserted within tolerance
+windows, not as exact values, and containment is claimed only for these draws.
 """
 
 from __future__ import annotations

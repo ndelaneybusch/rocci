@@ -1,10 +1,31 @@
 """Ingestion matrix.
 
-Risk mitigated: rocci promises to accept whatever container users have with
-zero hard dependencies, then split it into clean ``(neg, pos)`` scores. A
-regression here silently corrupts every downstream band, so this suite red-teams
-coercion, label resolution, score reduction, NaN handling, and the ties/small-
-sample warnings across the containers and edge cases.
+Ingestion is the one layer that touches user data before any statistics run, and
+its mistakes are the most dangerous kind: a mis-split ``(neg, pos)`` produces a
+perfectly valid-looking band for the wrong problem. rocci also promises to accept
+whatever array-like a user has with zero hard dependencies (numpy + scipy only),
+so this suite red-teams the coercion and resolution logic across the containers
+and edge cases it claims to support.
+
+Guaranteed. Every supported container splits identically — Python lists, ndarray,
+and the duck-typed ``__array__`` / ``.to_numpy()`` / dlpack (with CUDA fallback)
+protocols — with non-numeric scores and non-CPU tensors raising actionable
+errors. Label resolution is exactly specified: bool / 0-1 / -1-1 infer the
+positive class, an explicit ``pos_label`` is always honored (never silently
+overridden, even for booleans), string labels demand ``pos_label``, and >2
+labels or a probability matrix with >2 columns point the user to
+``roc_band_ovr``. Score handling routes a 2-column predict_proba to its positive
+column (honoring ``pos_label``), requires ``score_reduce`` for posterior draws
+and non-probability matrices, and reduces over draw axes only. NaN scores/labels
+raise by default and drop-with-warning under ``nan_policy="omit"`` (never
+becoming a phantom third class); column vectors ravel; the small-sample (<20 per
+class) and heavy-ties (<50% distinct) warnings fire exactly at their declared
+boundaries, and clean continuous data is silent.
+
+Limitations. This validates coercion, resolution, and the warning taxonomy — not
+the statistics computed afterward. The container protocols are exercised through
+lightweight stand-ins, not real pandas/polars/torch/JAX objects, since rocci
+never imports those libraries.
 """
 
 from __future__ import annotations

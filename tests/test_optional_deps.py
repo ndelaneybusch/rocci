@@ -1,13 +1,26 @@
 """Optional-dependency contract: runtime deps are numpy + scipy only.
 
-Risk mitigated: dependency creep. A single top-level ``import matplotlib`` or
-``import pandas`` added anywhere in rocci would pass the whole suite in the
-dev environment (both are installed there) while breaking every user who
-installed plain ``rocci``. The in-process import-block test in
-``test_plotting.py`` cannot catch that either — it runs after rocci is fully
-imported. These tests run clean subprocesses: a meta-path blocker makes the
-optional packages unimportable *before* rocci is loaded, so the full pipeline
-must succeed without them and the error paths must stay actionable.
+The failure this guards is uniquely invisible: a single top-level ``import
+matplotlib`` or ``import pandas`` added anywhere in rocci passes the entire suite
+in the dev environment (both are installed) while breaking every user who
+installed plain ``rocci``. The in-process block in ``test_plotting.py`` can't
+catch it either, because it runs after rocci is already imported. The only honest
+test is a clean subprocess where the optional packages are made unimportable
+*before* rocci loads — which is what a meta-path blocker does here.
+
+Guaranteed. With matplotlib and pandas blocked, the full non-plotting pipeline
+works — envelope band, Working-Hotelling band, OvR, ``summary()``, ``at()``,
+``band_area``, and a ``show_versions()`` that degrades to "not installed" rather
+than crashing. Every entry point that genuinely needs an optional package
+(``plot``, ``plot_diagnostics``, ``diagnostics=True``, ``to_dataframe``) fails as
+a ``RocciError`` naming the exact fix (``rocci[plot]`` or ``pandas``), never as a
+raw ``ImportError`` traceback. And the mechanism those guarantees rely on —
+laziness — is verified directly: with the packages available, importing rocci and
+building a band still leaves them out of ``sys.modules``.
+
+Limitations. Only matplotlib and pandas are blocked (the declared optional deps);
+this is a contract on import structure and error messaging, not on the plots
+those packages produce (that is ``test_plotting.py``).
 """
 
 from __future__ import annotations

@@ -1,9 +1,26 @@
 """Property-based invariants of the assembled confidence band.
 
-Risks mitigated: invariants that hold on cherry-picked fixtures but break
-on adversarial score distributions (ties, tiny classes, skew), and loss of
-the envelope's rank invariance — a critical property ensuring the band
-correctly summarizes the underlying bootstrap replicates.
+The example-based suites prove behavior on inputs someone chose; this one uses
+Hypothesis to attack the same invariants with inputs no one chose — random sizes,
+shifts, and four distribution families (normal, uniform, lognormal, heavy-tie
+rounded) — so a band that is only accidentally valid on the curated fixtures gets
+found out.
+
+Guaranteed. Across the generated inputs the assembled band always holds its
+structural invariants: values in [0, 1], ``lower <= upper``, both arms monotone,
+endpoints pinned with the correct attribution, and a lower band that is exactly
+zero throughout the vacuous region below ``q_1``. The envelope is bit-identical
+under exact strictly-monotone rescaling (dyadic scale factors, which are exact in
+floating point) — the rank invariance that certifies the band reads only the
+order of the scores, not their magnitudes. The retained envelope arm never
+escapes the pointwise min/max of the full bootstrap matrix, and a wide
+``alpha = 0.5`` still yields a valid band.
+
+Limitations. Property tests certify *invariants*, not values or coverage — they
+say the band is always well-formed and rank-invariant, not that it is the
+statistically correct band (golden-master and calibration cover that). Search is
+bounded (``max_examples`` 10-25); it samples the input space, it does not
+exhaust it.
 """
 
 from __future__ import annotations

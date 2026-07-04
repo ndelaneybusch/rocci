@@ -1,10 +1,32 @@
 """Public API contract for ``roc_band`` / ``from_estimator``.
 
-Risk mitigated: the orchestration layer wires ingestion, validation, the
-bootstrap kernel, and result assembly together — a break here means the
-validated statistics are correct but the band a user receives is not. Tests
-assert the band shape/ordering invariants, the warning-and-error taxonomy fires
-exactly when specified, result immutability, and reproducibility.
+This suite exercises the orchestration layer (ingest -> validate -> kernel ->
+assemble), so a pass certifies the wiring and the caller-facing contract, not
+the statistics: the numerical correctness of the band *values* is proven in the
+envelope, floors, statistics, and calibration suites. What you can rely on here
+is that a well-formed call is turned into a structurally sound result and that a
+malformed one fails loudly and specifically.
+
+Guaranteed. Every returned ``RocBand`` is a valid ROC band — matching shapes,
+values in [0, 1], ``lower <= upper``, both arms monotone non-decreasing, and the
+band contains the empirical curve at every grid point (pinned endpoints
+included). Provenance fields (``method``, ``backend``, ``n_neg``, ``n_pos``,
+``n_boot``, ``random_state``) report what actually ran. ``auc`` equals the exact
+Mann-Whitney statistic (ties weighted 1/2) to 1e-14 and ``auc_ci`` brackets it.
+The warning/error taxonomy fires exactly at its declared thresholds and nowhere
+else: a healthy call is silent; ``confidence < 0.90`` warns; ``n_boot < 100``
+raises, ``[100, 1000)`` warns, ``>= 1000`` is silent; malformed
+``confidence`` / ``random_state`` / ``n_threads`` / ``grid_size`` raise
+``RocciError`` naming the offending argument. Results are frozen; ``.at()`` is
+the right-continuous step of appendix A13 (NaN and out-of-range queries raise).
+Exotic-but-legal inputs stay valid: float32 is bit-identical to its float64
+widening, integer-rank scores reproduce the band (rank invariance), +/-inf is
+handled, and the minimal ``n_neg = n_pos = 2`` problem yields the closed-form
+vacuous region.
+
+Limitations. Reproducibility is asserted only within a fixed backend and version
+— Rust and NumPy agree statistically, not bit-for-bit; thread-invariance is
+checked on Rust only. Coverage and width quality are out of scope for this file.
 """
 
 from __future__ import annotations

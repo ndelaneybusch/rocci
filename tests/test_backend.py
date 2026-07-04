@@ -1,7 +1,25 @@
 """Backend selection, validation, determinism, and env override.
 
-Risk mitigated: silent misrouting (wrong kernel, ignored override), and
-input contracts failing without an actionable message.
+These tests govern the router that sits in front of both kernels — they say
+nothing about whether a kernel computes the right numbers (that is
+``test_fallback_kernel.py`` and ``test_rust_backend.py``), only that the right
+kernel is chosen, that its shared input contract is enforced identically, and
+that a given (data, seed) reproduces.
+
+Guaranteed. ``BACKEND`` resolves to one of ``{"rust", "numpy"}`` and
+``ROCCI_BACKEND`` overrides it in a fresh interpreter, with an invalid value
+failing at import time rather than silently falling through. The fallback path
+warns exactly once, and only when the Rust core is genuinely absent — an
+explicit ``numpy`` override or a present Rust core imports silently. The shared
+validation layer rejects an empty class, an empty grid, ``n_boot < 1``, and
+out-of-range grid indices with a ``RocciError`` that names the bound. Within one
+backend, the same (neg, pos, k, n_boot, seed) is bit-identical across calls, and
+different seeds produce different draws.
+
+Limitations. Determinism is checked per backend in isolation; cross-backend
+bit-equality is deliberately not claimed. The env-override tests spawn
+subprocesses, so they assert selection at import, not hot-swapping within a live
+process.
 """
 
 from __future__ import annotations

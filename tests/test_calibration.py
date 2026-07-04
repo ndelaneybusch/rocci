@@ -1,10 +1,27 @@
 """Slow statistical calibration gates for the assembled envelope method.
 
-Risks mitigated: component tests can pass while the full method loses
-simultaneous coverage under distribution shift, heavy tails, mixtures, or
-ties. These tests follow rocci_spec_appendix A15/A16 and are deterministic:
-fixed seed sequences make the suite a regression gate rather than a stochastic
-acceptance test.
+This is the closest the suite comes to validating the headline claim — that the
+band achieves *simultaneous* coverage — end to end. Over four data-generating
+processes with closed-form population ROCs (binormal, Student-t3, a bimodal
+mixture, and a discretized/heavy-tie binormal; appendix A15) at two sample sizes,
+it Monte-Carlo estimates the fraction of draws whose band fully contains the true
+ROC and checks that estimate against a floor.
+
+Guaranteed. Empirical simultaneous coverage stays at or above 0.906 (the lower
+edge of the appendix's central 99.9% band for a 95% target), and it does so
+without cheating on width: the mean band is required to be narrower than the
+KS/DKW reference band (appendix A16) on the same draws, so an all-covering
+vacuous band cannot pass. Because the seed sequences are fixed, a regression that
+erodes coverage or inflates width changes the numbers deterministically.
+
+Limitations. This is a deterministic regression gate, not a statistical proof:
+the coverage estimate is over ``N_SIMS`` draws (default 250, env-tunable) at a
+fixed 0.95 target on this specific DGP table, so it can catch a coverage
+regression but does not certify coverage on distributions outside the table or
+at other confidence levels. The 0.906 floor is intentionally permissive toward
+over-coverage — the small-n floor stack may be conservative — so undercoverage
+is the failure this guards, and the KS-width check is what rejects the vacuous
+escape hatch. Marked ``slow``.
 """
 
 from __future__ import annotations

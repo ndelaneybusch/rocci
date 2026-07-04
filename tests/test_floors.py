@@ -1,8 +1,29 @@
 """Wilson confidence bounds, rectangle band, variance gate, and Beta floor.
 
-Risks mitigated: floor formulas drifting from the closed forms; the
-rectangle floor narrowing instead of widening; the Beta floor raising the
-band or claiming jurisdiction it does not have.
+The floors are the safety net that keeps the band honest where the bootstrap
+under-reports variance (near FPR = 0 at high AUC, and wherever a resampled TPR
+column collapses). This suite pins each floor to its closed form by independent
+derivation — not a scipy round-trip — and locks down the two invariants that make
+a floor safe: it may only *widen* the band, and it may only act inside its own
+jurisdiction.
+
+Guaranteed. The Wilson endpoints are checked against the score-test inversion
+they solve, ``(p_hat - p)^2 = z^2 p(1-p)/n``, so a drift in the closed form
+breaks the defining identity (and the one-sided lower bound uses the one-sided
+z). The variance-gated rectangle floor leaves healthy-variance points untouched,
+only ever widens deficient ones, keeps the output monotone, uses the Sidak
+correction only when the effective count ``k_eff > 1`` (and the uncorrected alpha
+otherwise), and matches a hand-transcribed A7 oracle under full collapse. The
+Beta order-statistic floor is provably vacuous below ``q_1`` (with
+``q_1 = 1 - (alpha/(2 j_max))^(1/n_neg)`` confirmed in closed form and via the
+Beta/Binomial survival identity that catches swapped parameters), never raises
+the band, is a no-op outside its ``(0, q_max]`` zone and on empty classes, and
+its floored value equals the one-sided Wilson lower bound of a hand-counted TPR.
+
+Limitations. These are exact primitive-level checks with synthetic envelope
+inputs; how the floors compose into the final band (assembly order, attribution)
+is ``test_envelope.py``, and their statistical effect on coverage is the
+statistics/calibration suites.
 """
 
 from __future__ import annotations

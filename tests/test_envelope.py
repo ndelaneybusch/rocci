@@ -1,8 +1,30 @@
 """Studentized envelope, assembly + attribution, and AUC calculation.
 
-Risks mitigated: retention off-by-one or tie mishandling; the collapse
-guard silently dividing by ~0; assembly reordering; attribution codes not
-reflecting which mechanism actually set the lower band.
+This is the white-box core: it pins the exact numerical behavior of the three
+statistical primitives that the public band is built from, on inputs small enough
+to reason about by hand. Where ``test_calibration.py`` asks "does the whole
+method cover?", this file asks "does each mechanism do precisely what the spec
+says, including at the tie and boundary cases that hide off-by-ones?".
+
+Guaranteed. Retention keeps exactly ``ceil((1 - alpha) * B)`` curves — verified
+on hand-built offset ladders, including the integral-quantile off-by-one and the
+tie-at-threshold rule that keeps every curve sharing the cutoff distance. The
+collapse guard scores deviations against ``eps = 1/(n_neg + n_pos)`` rather than
+dividing by a ~0 standard deviation, so numerical noise is retained and a real
+deviation above eps is trimmed. The envelope is clipped to [0, 1]. Assembly
+produces an ordered, monotone band with pinned endpoints in the load-bearing
+order (envelope -> Wilson rectangle floor -> Beta floor -> pins), the floors only
+ever widen, and the per-point ``attribution`` code truthfully identifies which
+mechanism set each lower value (bootstrap / Wilson / Beta / pinned). ``auc``
+matches a literal pairwise Mann-Whitney oracle (ties 1/2) to 1e-12, obeys
+complement symmetry and rank invariance, and the bootstrap AUC CI brackets the
+point estimate — including the heavy-tie recentering of appendix A10.
+
+Limitations. These are exact single-input checks with small ``n_boot``; they fix
+*what* each primitive computes, not its coverage or its cross-backend agreement
+(the numpy kernel is used directly). Statistical adequacy of the assembled band
+lives in the statistics/calibration suites, and the paper-validated numbers live
+in ``test_golden_master.py``.
 """
 
 from __future__ import annotations

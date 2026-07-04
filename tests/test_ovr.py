@@ -1,10 +1,27 @@
 """One-vs-rest multiclass contract for ``roc_band_ovr``.
 
-Risk mitigated: the OvR reduction is a thin loop, but its guarantees hinge on
-three easy-to-break details — the Bonferroni alpha split, the column-to-class
-routing, and per-class seed reproducibility — plus the permanent refusal of
-``normal=True`` (the rest class is the Working-Hotelling failure mode). This
-suite pins each.
+``roc_band_ovr`` is a thin loop over ``roc_band``, but "thin" is where silent
+mis-wiring hides: a band can look perfect while scoring the wrong class, using an
+uncorrected alpha, or reusing a seed. The signal in the fixtures is diagonal —
+column ``j`` separates class ``j`` — so a routing slip craters that class's AUC
+and is caught rather than hidden.
+
+Guaranteed. The family-wise correction is exact: each per-class band is built at
+``1 - alpha/m`` under the default Bonferroni split and at the marginal level under
+``family="none"``. Column-to-class routing follows the ``classes`` key, not the
+sorted-unique order (checked with a permuted order and string labels), and each
+class gets its own spawned seed so runs are reproducible from ``random_state``.
+The strongest check rebuilds the entire reduction independently from the spec 3.6
+contract — one-vs-rest labels, column selection, per-class confidence and seeds —
+and demands bit-identical band arrays, so a wrong column, an alpha that is
+displayed but not actually used, or a drifted seed derivation each fail. Malformed
+calls (bad ``family``, column-count mismatch, ``m <= 2``, a ``classes`` entry
+absent from ``y_true``, duplicate classes) raise naming the problem, and
+``normal=True`` is permanently refused because the rest class is a mixture.
+
+Limitations. This certifies the reduction wiring; the correctness of each
+underlying band is the single-class suites' job. Reproducibility inherits the
+same fixed-backend/version caveat as ``roc_band``.
 """
 
 from __future__ import annotations
