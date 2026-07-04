@@ -71,16 +71,20 @@ jobs:
       - name: Smoke test in a clean venv (own platform)
         if: matrix.name != 'musllinux-x86_64'
         shell: bash
+        # Deps resolve from PyPI; rocci itself strictly from dist/ (--no-index),
+        # so the wheel under test can never be shadowed by a published release.
         run: |
           python -m venv smoke
           if [ -e smoke/bin/python ]; then PY=smoke/bin/python; else PY=smoke/Scripts/python.exe; fi
+          "$PY" -m pip install --only-binary :all: numpy scipy
           "$PY" -m pip install --no-index --find-links dist --only-binary rocci rocci
           "$PY" smoke_test.py
       - name: Smoke test in an Alpine container (musl wheel; the runner libc is glibc)
         if: matrix.name == 'musllinux-x86_64'
         run: |
           docker run --rm -v "$PWD:/w" -w /w python:3.12-alpine sh -ec '
-            pip install --only-binary :all: --find-links dist rocci
+            pip install --only-binary :all: numpy scipy
+            pip install --no-index --find-links dist --only-binary rocci rocci
             python smoke_test.py'
       - uses: actions/upload-artifact@v7
         with:
