@@ -1001,7 +1001,7 @@ release cannot ship half-done or inconsistent.
   warnings, ingestion matrix tests. DONE.
 5. **M4 — WH path + diagnostics**: §6 + normality machinery. DONE.
 6. **M5 — Plots + docs + vignettes**: §7, mkdocs site (§13), executed
-  vignettes, versioned deployment.
+  vignettes, versioned deployment. DONE.
 7. **M6 — Merge gates**: calibration suite (§11.5) and perf gates (§9) wired
   into `gates.yml` as required PR checks (§14.2).
 8. **M7 — Release**: 0.1.0 to PyPI, then conda-forge feedstock.
