@@ -109,7 +109,8 @@ def _label_mapping(labels: np.ndarray, pos_label: object) -> tuple[object, int]:
     Operates on NaN-free labels so missing values never inflate the class
     count. Returns the positive value and its index (0 or 1) among the two
     sorted distinct labels — the latter selects the ``(n, 2)`` probability
-    column.
+    column. Boolean labels go through the same resolution so an explicit
+    ``pos_label=False`` is honored rather than silently overridden.
 
     Args:
         labels: Coerced, NaN-free label array (any dtype).
@@ -122,9 +123,6 @@ def _label_mapping(labels: np.ndarray, pos_label: object) -> tuple[object, int]:
         RocciError: On >2 classes, a single class, an unusable ``pos_label``,
             or an un-inferable pair.
     """
-    if labels.dtype == bool:
-        return True, 1
-
     uniques = np.unique(labels)
     if len(uniques) > 2:
         raise RocciError(
@@ -366,7 +364,7 @@ def ingest(
             "the two inputs must describe the same samples."
         )
 
-    is_pos = (yt == pos_value) if yt.dtype != bool else yt.astype(bool)
+    is_pos = np.asarray(yt == pos_value, dtype=bool)
     # Fold NaN labels into the score-NaN mask so the policy handles both together
     # (raise, or drop the row) without silently pre-filtering. Copy only when
     # needed: `scores` may share memory with the caller's array.
