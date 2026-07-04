@@ -122,3 +122,84 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
+
+  post-publish-verify:
+    # Catch broken metadata or wheel-selection issues the moment they exist,
+    # not when the first user does: poll the index until the version is live,
+    # then install into a clean venv on each OS and run an end-to-end band.
+    # rc tags verify against TestPyPI (deps still resolve from PyPI).
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: publish
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Wait for the index to serve the version, then install
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARGS=()
+          if [[ "$GITHUB_REF_NAME" == *rc* ]]; then
+            ARGS=(--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/)
+          fi
+          python -m venv fresh
+          if [ -e fresh/bin/python ]; then PY=fresh/bin/python; else PY=fresh/Scripts/python.exe; fi
+          ok=0
+          for i in $(seq 1 30); do
+            if "$PY" -m pip install --only-binary rocci "${ARGS[@]}" "rocci==$VERSION"; then
+              ok=1; break
+            fi
+            echo "rocci==$VERSION not installable yet (attempt $i/30); retrying in 30s"
+            sleep 30
+          done
+          [ "$ok" = 1 ] || { echo "rocci==$VERSION never became installable"; exit 1; }
+      - name: End-to-end smoke test from the live index
+        shell: bash
+        run: |
+          if [ -e fresh/bin/python ]; then PY=fresh/bin/python; else PY=fresh/Scripts/python.exe; fi
+          "$PY" - <<'EOF'
+          import numpy as np
+          import rocci
+
+          rng = np.random.default_rng(0)
+          y = rng.integers(0, 2, 500)
+          s = rng.normal(size=500) + 1.2 * y
+          band = rocci.roc_band(y, s, n_boot=300, random_state=1)
+          assert band.backend == "rust", f"expected rust backend, got {band.backend}"
+          assert (band.lower <= band.upper).all()
+          print("post-publish smoke OK:", rocci.__version__, "auc =", band.auc)
+          EOF
+
+  github-release:
+    # The GitHub Release carries this version's changelog section and is what
+    # triggers the Zenodo DOI webhook — created only after the published
+    # package has been verified installable on all three OSes.
+    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref_name, 'rc')
+    needs: post-publish-verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract this version's changelog section
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > release-notes.md
+          [ -s release-notes.md ] || { echo "no CHANGELOG.md section for $VERSION"; exit 1; }
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "rocci $GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag
