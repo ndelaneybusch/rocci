@@ -1003,7 +1003,7 @@ release cannot ship half-done or inconsistent.
 6. **M5 — Plots + docs + vignettes**: §7, mkdocs site (§13), executed
   vignettes, versioned deployment. DONE.
 7. **M6 — Merge gates**: calibration suite (§11.5) and perf gates (§9) wired
-  into `gates.yml` as required PR checks (§14.2).
+  into `gates.yml` as required PR checks (§14.2). DONE.
 8. **M7 — Release**: 0.1.0 to PyPI, then conda-forge feedstock.
 
 Definition of done for v0.1.0: all gates in §9 and §11 green; a user with only
