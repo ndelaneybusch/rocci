@@ -5,10 +5,9 @@
         "matcher": "Bash",
         "hooks": [
           {
-            "type": "agent",
-            "if": "Bash(gh pr create*)",
-            "prompt": "A pull request is about to be opened with `gh pr create`. Before it is created, run the `/security-review` skill to review the pending changes on this branch. Invoke `/security-review`, let it complete its full analysis of the branch diff, and act on its result:\n\n- If it reports one or more high-confidence, exploitable vulnerabilities, BLOCK the PR and surface them (file:line, severity, one-line fix).\n- If the review comes back clean, APPROVE so the changes are cleared and the PR proceeds.\n\nHook input: $ARGUMENTS",
-            "model": "claude-sonnet-5",
+            "type": "command",
+            "if": "Bash(gh pr create:*)",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pr-security-gate.sh",
             "timeout": 600,
             "statusMessage": "Security-reviewing branch before opening PR..."
           }
