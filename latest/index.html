@@ -797,6 +797,34 @@
   
   
     <li class="md-nav__item">
+      <a href="method/simulations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulations and validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="method/verification/" class="md-nav__link">
         
   
@@ -1202,10 +1230,12 @@ the confidence you ask for — not just each point one at a time.</p>
 <h2 id="why-rocci">Why rocci<a class="headerlink" href="#why-rocci" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Correct by default.</strong> The default band is a studentized bootstrap
-  envelope with exact small-sample floors — distribution-free, calibrated
-  across score distributions, and honest where no distribution-free bound
-  exists. No normality assumption; heavy ties and discrete scores are safe
-  (conservative, and tested).</li>
+  envelope with exact small-sample floors — distribution-free,
+  <a href="method/simulations/">validated in a 2.25M-evaluation simulation study</a>
+  across Gaussian, heavy-tailed, skewed, and multimodal score distributions,
+  and honest where no distribution-free bound exists. No normality
+  assumption; heavy ties and discrete scores are safe (conservative, and
+  tested).</li>
 <li><strong>Just works.</strong> NumPy arrays, pandas/polars Series, torch/JAX tensors,
   Python lists, <code>(n, 2)</code> probability matrices, posterior draws — ingestion is
   duck-typed with zero hard dependencies on any of those libraries.</li>
@@ -1230,6 +1260,8 @@ figure above, where the true curve escapes the parametric band entirely.
 <li><a href="guide/reading-the-band/">Reading the band</a> — what "simultaneous" buys
   you, and what the vacuous region at tiny FPR means.</li>
 <li><a href="method/envelope/">The envelope method</a> — how the band is built.</li>
+<li><a href="method/simulations/">Simulations and validation</a> — the evidence that the
+  method works where the classical bands fail.</li>
 <li><a href="method/verification/">How rocci is verified</a> — the case for trusting the
   numbers.</li>
 <li><a href="api/">API reference</a> — the full public surface (it's small).</li>

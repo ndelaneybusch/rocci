@@ -845,6 +845,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../simulations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulations and validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../verification/" class="md-nav__link">
         
   
@@ -1277,9 +1305,10 @@
 
 <h1 id="the-envelope-method">The envelope method<a class="headerlink" href="#the-envelope-method" title="Permanent link">&para;</a></h1>
 <p>This page describes what <code>roc_band(..., normal=False)</code> — the default —
-actually computes. The normative reference (exact algorithms, edge and tie
-semantics) is the specification appendix in the repository; this is the
-readable tour. Throughout, <span class="arithmatex">\(n_0\)</span> and <span class="arithmatex">\(n_1\)</span> are the negative/positive class
+actually computes. The exact algorithms, including every edge and tie
+convention, are the implementation in <code>python/rocci/band/</code>, held in place by
+the golden-master and oracle test suites (see
+<a href="../verification/">How rocci is verified</a>); this is the readable tour. Throughout, <span class="arithmatex">\(n_0\)</span> and <span class="arithmatex">\(n_1\)</span> are the negative/positive class
 sizes, <span class="arithmatex">\(\alpha = 1 - \text{confidence}\)</span>, and <span class="arithmatex">\(R(t)\)</span> is the population TPR at
 FPR <span class="arithmatex">\(t\)</span>.</p>
 <h2 id="1-grid-and-empirical-curve">1. Grid and empirical curve<a class="headerlink" href="#1-grid-and-empirical-curve" title="Permanent link">&para;</a></h2>
@@ -1353,8 +1382,10 @@ exists at all; the lower arm is 0 there and the boundary is reported as
 (<code>band.attribution</code>), which is what the
 <a href="../../guide/diagnostics/">diagnostics figure</a> renders.</p>
 <p>The assembled pipeline is locked by <strong>golden-master tests</strong>: committed
-fixtures recorded from the validated research implementation, which every
-build must reproduce within <span class="arithmatex">\(10^{-6}\)</span>. The statistics cannot silently drift.</p>
+fixtures recorded from the
+<a href="https://github.com/ndelaneybusch/studroc_paper">validated research implementation</a>,
+which every build must reproduce within <span class="arithmatex">\(10^{-6}\)</span>. The statistics cannot
+silently drift.</p>
 <h2 id="7-auc">7. AUC<a class="headerlink" href="#7-auc" title="Permanent link">&para;</a></h2>
 <p><code>band.auc</code> is the exact Mann–Whitney statistic (ties weighted ½ — identical
 to <code>sklearn.roc_auc_score</code>), and <code>band.auc_ci</code> is a bootstrap percentile

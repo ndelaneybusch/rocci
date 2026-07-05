@@ -719,6 +719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../method/simulations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulations and validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../method/verification/" class="md-nav__link">
         
   
@@ -4613,7 +4641,7 @@ your own figures. matplotlib is an optional extra (<code>pip install
 
         <p>Plot the confidence band, the empirical ROC, and the chance diagonal.</p>
 <p>Both the band arms and the empirical curve are drawn as right-continuous
-steps — the same convention (A13) used by :meth:<code>~rocci.RocBand.at</code> — so
+steps — the same convention used by :meth:<code>~rocci.RocBand.at</code> — so
 the figure shows exactly what the band certifies.</p>
 
 
@@ -4894,7 +4922,7 @@ where no distribution-free lower bound exists.</p>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot the confidence band, the empirical ROC, and the chance diagonal.</span>
 
 <span class="sd">    Both the band arms and the empirical curve are drawn as right-continuous</span>
-<span class="sd">    steps — the same convention (A13) used by :meth:`~rocci.RocBand.at` — so</span>
+<span class="sd">    steps — the same convention used by :meth:`~rocci.RocBand.at` — so</span>
 <span class="sd">    the figure shows exactly what the band certifies.</span>
 
 <span class="sd">    Args:</span>
@@ -4993,7 +5021,7 @@ where no distribution-free lower bound exists.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Render the two-panel "why did my band do that here" figure (spec §7.3).</p>
+        <p>Render the two-panel "why did my band do that here" figure.</p>
 <p>Envelope path: panel 1 is the band with the lower arm color-coded by
 floor attribution (yellow Beta floor, green Wilson rectangle floor) and
 jurisdiction boundaries marked; panel 2 shows the variance channels that
@@ -5178,7 +5206,7 @@ diagnostics payload (i.e. it was not produced by <code>roc_band</code>).</p>
 <span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_diagnostics</span><span class="p">(</span><span class="n">band</span><span class="p">:</span> <span class="n">RocBand</span><span class="p">,</span> <span class="n">fig</span><span class="p">:</span> <span class="n">Figure</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Figure</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the two-panel &quot;why did my band do that here&quot; figure (spec §7.3).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the two-panel &quot;why did my band do that here&quot; figure.</span>
 
 <span class="sd">    Envelope path: panel 1 is the band with the lower arm color-coded by</span>
 <span class="sd">    floor attribution (yellow Beta floor, green Wilson rectangle floor) and</span>

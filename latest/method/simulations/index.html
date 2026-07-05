@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://ndelaneybusch.github.io/rocci/latest/method/verification/">
+        <link rel="canonical" href="https://ndelaneybusch.github.io/rocci/latest/method/simulations/">
       
       
-        <link rel="prev" href="../simulations/">
+        <link rel="prev" href="../theory/">
       
       
-        <link rel="next" href="../../vignettes/01-quickstart-sklearn/">
+        <link rel="next" href="../verification/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>How rocci is verified - rocci</title>
+        <title>Simulations and validation - rocci</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-rocci-is-verified" class="md-skip">
+        <a href="#simulations-and-validation-of-the-method" class="md-skip">
           Skip to content
         </a>
       
@@ -122,7 +122,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              How rocci is verified
+              Simulations and validation
             
           </span>
         </div>
@@ -718,34 +718,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../simulations/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Simulations and validation
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -765,7 +737,7 @@
   <span class="md-ellipsis">
     
   
-    How rocci is verified
+    Simulations and validation
   
 
     
@@ -783,7 +755,7 @@
   <span class="md-ellipsis">
     
   
-    How rocci is verified
+    Simulations and validation
   
 
     
@@ -809,10 +781,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#it-matches-the-validated-reference-exactly" class="md-nav__link">
+  <a href="#the-problem-with-the-methods-we-have" class="md-nav__link">
     <span class="md-ellipsis">
       
-        It matches the validated reference, exactly
+        The problem with the methods we have
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The problem with the methods we have">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-alternative-distributions-is-the-realistic-case-not-the-exotic-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why "alternative distributions" is the realistic case, not the exotic one
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-badly-the-classical-bands-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How badly the classical bands fail
       
     </span>
   </a>
@@ -820,10 +820,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#every-component-is-checked-against-an-independent-oracle" class="md-nav__link">
+  <a href="#coverage-and-tightness-on-every-family" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Every component is checked against an independent oracle
+        Coverage and tightness, on every family
       
     </span>
   </a>
@@ -831,10 +831,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-assembled-band-is-calibrated-against-ground-truth" class="md-nav__link">
+  <a href="#the-properties-that-make-it-trustworthy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The assembled band is calibrated against ground truth
+        The properties that make it trustworthy
       
     </span>
   </a>
@@ -842,10 +842,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#invariants-hold-on-inputs-nobody-chose" class="md-nav__link">
+  <a href="#ablations-every-component-is-load-bearing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Invariants hold on inputs nobody chose
+        Ablations: every component is load-bearing
       
     </span>
   </a>
@@ -853,10 +853,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#two-independent-implementations-agree" class="md-nav__link">
+  <a href="#what-the-theory-predicted-and-simulation-confirmed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Two independent implementations agree
+        What the theory predicted — and simulation confirmed
       
     </span>
   </a>
@@ -864,43 +864,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#it-is-reproducible-and-robust-at-the-boundary" class="md-nav__link">
+  <a href="#from-the-study-to-this-package" class="md-nav__link">
     <span class="md-ellipsis">
       
-        It is reproducible and robust at the boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance-is-gated-not-hoped-for" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance is gated, not hoped for
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#it-stays-verified" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        It stays verified
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-honest-edges-are-part-of-the-case" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The honest edges are part of the case
+        From the study to this package
       
     </span>
   </a>
@@ -911,6 +878,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How rocci is verified
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1229,10 +1224,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#it-matches-the-validated-reference-exactly" class="md-nav__link">
+  <a href="#the-problem-with-the-methods-we-have" class="md-nav__link">
     <span class="md-ellipsis">
       
-        It matches the validated reference, exactly
+        The problem with the methods we have
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The problem with the methods we have">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-alternative-distributions-is-the-realistic-case-not-the-exotic-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why "alternative distributions" is the realistic case, not the exotic one
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-badly-the-classical-bands-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How badly the classical bands fail
       
     </span>
   </a>
@@ -1240,10 +1263,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#every-component-is-checked-against-an-independent-oracle" class="md-nav__link">
+  <a href="#coverage-and-tightness-on-every-family" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Every component is checked against an independent oracle
+        Coverage and tightness, on every family
       
     </span>
   </a>
@@ -1251,10 +1274,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-assembled-band-is-calibrated-against-ground-truth" class="md-nav__link">
+  <a href="#the-properties-that-make-it-trustworthy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The assembled band is calibrated against ground truth
+        The properties that make it trustworthy
       
     </span>
   </a>
@@ -1262,10 +1285,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#invariants-hold-on-inputs-nobody-chose" class="md-nav__link">
+  <a href="#ablations-every-component-is-load-bearing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Invariants hold on inputs nobody chose
+        Ablations: every component is load-bearing
       
     </span>
   </a>
@@ -1273,10 +1296,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#two-independent-implementations-agree" class="md-nav__link">
+  <a href="#what-the-theory-predicted-and-simulation-confirmed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Two independent implementations agree
+        What the theory predicted — and simulation confirmed
       
     </span>
   </a>
@@ -1284,43 +1307,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#it-is-reproducible-and-robust-at-the-boundary" class="md-nav__link">
+  <a href="#from-the-study-to-this-package" class="md-nav__link">
     <span class="md-ellipsis">
       
-        It is reproducible and robust at the boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance-is-gated-not-hoped-for" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance is gated, not hoped for
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#it-stays-verified" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        It stays verified
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-honest-edges-are-part-of-the-case" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The honest edges are part of the case
+        From the study to this package
       
     </span>
   </a>
@@ -1347,111 +1337,174 @@
   
 
 
-<h1 id="how-rocci-is-verified">How rocci is verified<a class="headerlink" href="#how-rocci-is-verified" title="Permanent link">&para;</a></h1>
-<p>A confidence band is only as trustworthy as the code that computes it. The
-statistical case for the method lives in
-<a href="../simulations/">Simulations and validation</a> and
-<a href="../theory/">Theoretical behavior</a>; this page is the <em>engineering</em> case — the
-evidence that the implementation faithfully realizes that method and keeps
-doing so.</p>
-<p>The short version: <strong>no layer is trusted on its own.</strong> The band you get back has
-been checked from four independent directions — against the validated reference
-implementation, against hand-derived oracles component by component, against
-known ground truth as a whole, and against itself under adversarial and
-cross-implementation stress — and every one of those checks runs in CI on every
-change. What follows is the case in totality, and where to look for each part.</p>
-<h2 id="it-matches-the-validated-reference-exactly">It matches the validated reference, exactly<a class="headerlink" href="#it-matches-the-validated-reference-exactly" title="Permanent link">&para;</a></h2>
-<p>The strongest bar rocci clears is not a property test but an <em>identity</em> test.
-The reference implementation from the
-<a href="https://github.com/ndelaneybusch/studroc_paper">method validation study</a> was
-run once to record golden-master fixtures; given the exact inputs it recorded,
-rocci's assembly must reproduce its band to <code>atol=1e-6</code>. The precedence rule is
-absolute: if the code and a fixture ever disagree, <strong>the fixture wins</strong> —
-fixtures are never regenerated to make new code pass. This turns "we reproduce
-the validated numbers" from a claim into a gate.</p>
-<p><em>See:</em> <code>tests/test_golden_master.py</code>, and the recording provenance in
-<code>tests/fixtures/golden/PROVENANCE.md</code>.</p>
-<h2 id="every-component-is-checked-against-an-independent-oracle">Every component is checked against an independent oracle<a class="headerlink" href="#every-component-is-checked-against-an-independent-oracle" title="Permanent link">&para;</a></h2>
-<p>Self-consistent code can be consistently wrong. So each primitive is compared
-not to itself but to a definition derived independently:</p>
+<h1 id="simulations-and-validation-of-the-method">Simulations and validation of the method<a class="headerlink" href="#simulations-and-validation-of-the-method" title="Permanent link">&para;</a></h1>
+<p>The envelope method was validated in a <strong>2.25-million-evaluation simulation
+study</strong> spanning seven data-generating processes, six sample sizes, and three
+confidence levels, before rocci existed. This page marches through the
+study's conclusions — the case that the default band is the right default.
+The full study — figures, theory reports, simulation drivers, and the
+reference implementation the golden-master fixtures were recorded from —
+lives in the
+<a href="https://github.com/ndelaneybusch/studroc_paper">studroc_paper repository</a>.</p>
+<h2 id="the-problem-with-the-methods-we-have">The problem with the methods we have<a class="headerlink" href="#the-problem-with-the-methods-we-have" title="Permanent link">&para;</a></h2>
+<p>If you want a band around an ROC curve today, you essentially choose between
+two families, and both have a fatal flaw.</p>
+<p><strong>Working–Hotelling (and its refinements) assume the scores are binormal.</strong>
+The construction parametrizes the ROC as
+<span class="arithmatex">\(\text{TPR} = \Phi(a + b\,\Phi^{-1}(\text{FPR}))\)</span> and lays a hyperbolic
+regression band around it in probit–probit space. When both class score
+distributions really are Gaussian, this is excellent: tight bands, correct
+coverage. When they are not, the band converges confidently to <em>the wrong
+curve</em>. Worse, the failure scales with sample size — more data tightens the
+band around a biased estimate, so coverage drops toward zero exactly when you
+trust the result most.</p>
+<p><strong>The Kolmogorov–Smirnov / DKW fixed-width band is distribution-free but
+uninformative.</strong> It places a constant-width strip of half-width
+<span class="arithmatex">\(\varepsilon = \sqrt{\ln(2/\alpha)/(2n)}\)</span> around the curve. It never fails to
+cover — but it covers <em>too much</em>. The 50% band is nearly as wide as the 95%
+band, the strip has the same width at the steep low-FPR corner as in the flat
+interior, and it tells you almost nothing about <em>where</em> the true curve
+actually lies. It is a safety benchmark, not an answer.</p>
+<p>What is actually needed is a band that is (i) <strong>distribution-free</strong>, like KS,
+making no parametric commitment about the score distributions; (ii)
+<strong>substantially more informative than KS</strong>, with width that adapts to where
+the uncertainty really is; and (iii) <strong>well calibrated across diverse
+distribution families</strong>, holding coverage near nominal whether the scores are
+Gaussian, heavy-tailed, skewed, or multimodal.</p>
+<h3 id="why-alternative-distributions-is-the-realistic-case-not-the-exotic-one">Why "alternative distributions" is the realistic case, not the exotic one<a class="headerlink" href="#why-alternative-distributions-is-the-realistic-case-not-the-exotic-one" title="Permanent link">&para;</a></h3>
+<p>Binormality is the exception, not the rule, for modern classifiers:</p>
 <ul>
-<li>the fast empirical ROC matches a naive <span class="arithmatex">\(O(n^2)\)</span> threshold-and-count reference
-  bit-for-bit, including under ties and <span class="arithmatex">\(\pm\infty\)</span>;</li>
-<li>the NumPy bootstrap kernel is checked <strong>bit-for-bit</strong> against a brute-force
-  oracle that expands the resamples and counts by hand off the <em>same</em> RNG
-  stream — the one test that can see an off-by-one or tie bug the statistics
-  would hide;</li>
-<li><code>auc</code> matches a literal pairwise Mann–Whitney count (ties weighted ½);</li>
-<li>the Wilson bounds are held to the score-test inversion they solve,
-  <span class="arithmatex">\((\hat p - p)^2 = z^2 p(1-p)/n\)</span>, not to a library round-trip;</li>
-<li>the Beta floor is checked through the Beta/Binomial survival identity, which
-  catches swapped distribution parameters that a quantile round-trip cannot;</li>
-<li>the Working–Hotelling band reproduces an independent transcription of its
-  closed forms to float precision.</li>
+<li><strong>Heavy tails.</strong> Deep network logits and many calibrated probability
+  outputs have far heavier tails than a Gaussian; a handful of
+  extreme-confidence predictions dominate the low-FPR corner of the ROC,
+  which is precisely where parametric bands are most fragile.</li>
+<li><strong>Skew and bounded support.</strong> Probability outputs live in <span class="arithmatex">\([0, 1]\)</span> and pile
+  up near the boundaries; risk scores are often right-skewed. Neither is
+  Gaussian on any scale.</li>
+<li><strong>Multimodality.</strong> When a population mixes subgroups — easy vs. hard cases,
+  multiple disease subtypes, distinct fraud patterns — the negative or
+  positive score distribution is multimodal, producing genuine inflections in
+  the ROC that no binormal model can represent.</li>
 </ul>
-<p><em>See:</em> <code>tests/test_grids.py</code>, <code>tests/test_fallback_kernel.py</code>,
-<code>tests/test_envelope.py</code>, <code>tests/test_floors.py</code>, <code>tests/test_normal.py</code>.</p>
-<h2 id="the-assembled-band-is-calibrated-against-ground-truth">The assembled band is calibrated against ground truth<a class="headerlink" href="#the-assembled-band-is-calibrated-against-ground-truth" title="Permanent link">&para;</a></h2>
-<p>Components that each match their formula can still assemble into a band that
-misses the true curve. The end-to-end calibration gate rules this out: it draws
-from data-generating processes with <em>closed-form</em> population ROCs chosen to be
-unkind — binormal, heavy-tailed <span class="arithmatex">\(t_3\)</span>, bimodal-negative mixtures, and
-discretized heavy-tie scores — at sample sizes as small as 30 per class, and
-requires two things at once. Coverage must sit at or above nominal (an
-undercovering band fails), <strong>and</strong> the mean width must be strictly below the
-proven KS/DKW reference band — so a band cannot pass by being trivially wide.</p>
-<p><em>See:</em> <code>tests/test_calibration.py</code> (the full multi-DGP gate, marked <code>slow</code>) and
-<code>tests/test_statistics.py</code> (its fast single-draw companions: true-ROC
-containment, the KS-width win, and correct response to confidence and <span class="arithmatex">\(n\)</span>).</p>
-<h2 id="invariants-hold-on-inputs-nobody-chose">Invariants hold on inputs nobody chose<a class="headerlink" href="#invariants-hold-on-inputs-nobody-chose" title="Permanent link">&para;</a></h2>
-<p>Curated examples only prove behavior on inputs someone thought of.
-Property-based tests attack the same invariants with random sizes, shifts, and
-four distribution families, and confirm the band is always well-formed (ordered,
-monotone, pinned, vacuous-below-<span class="arithmatex">\(q_1\)</span>) and exactly rank-invariant under
-monotone rescaling. The kernel gets the same treatment with a fuzzer that
-includes <span class="arithmatex">\(\pm\infty\)</span> and massive tie pressure.</p>
-<p><em>See:</em> <code>tests/test_properties.py</code>, <code>tests/test_fallback_kernel.py</code>.</p>
-<h2 id="two-independent-implementations-agree">Two independent implementations agree<a class="headerlink" href="#two-independent-implementations-agree" title="Permanent link">&para;</a></h2>
-<p>rocci ships two kernels — compiled Rust and vectorized NumPy — written
-separately, with different RNG streams. A CI contract holds them to
-distributional agreement at 8 000 replicates, so a bug would have to exist
-<em>identically</em> in both to go unnoticed. Each kernel is independently reproducible
-bit-for-bit across thread counts and repeated runs.</p>
-<p><em>See:</em> <code>tests/test_rust_backend.py</code>, <code>tests/test_backend.py</code>.</p>
-<h2 id="it-is-reproducible-and-robust-at-the-boundary">It is reproducible and robust at the boundary<a class="headerlink" href="#it-is-reproducible-and-robust-at-the-boundary" title="Permanent link">&para;</a></h2>
-<p>The reproducibility contract — same seed, backend, and version yields a
-bit-identical band regardless of thread count — is itself tested, not just
-documented. The package boundary is guarded too: ingestion is red-teamed across
-every container and label/score edge case it accepts, and a clean-subprocess
-test enforces that the runtime dependencies really are numpy + scipy only, with
-every optional-feature path failing as an actionable <code>RocciError</code> rather than a
-raw import traceback.</p>
-<p><em>See:</em> <code>tests/test_api.py</code>, <code>tests/test_ingest.py</code>, <code>tests/test_optional_deps.py</code>.</p>
-<h2 id="performance-is-gated-not-hoped-for">Performance is gated, not hoped for<a class="headerlink" href="#performance-is-gated-not-hoped-for" title="Permanent link">&para;</a></h2>
-<p>Speed is held to absolute budgets, enforced by a benchmark job in CI (2 000
-replicates on 100 000 samples in well under half a second; see
-<a href="../../guide/performance/">Performance</a> for the table). Memory stays bounded, and
-because the RNG is keyed per replicate rather than per thread, the numbers do not
-depend on scheduling.</p>
-<p><em>See:</em> <code>benchmarks/</code>, and the <code>just bench</code> recipe.</p>
-<h2 id="it-stays-verified">It stays verified<a class="headerlink" href="#it-stays-verified" title="Permanent link">&para;</a></h2>
-<p>None of the above is a one-time audit. CI runs the same <code>just</code> recipes a
-developer runs locally — the fast suite, the full cross-backend and <code>slow</code>
-statistical matrix, the Rust tests, doctests on every public example, <code>mkdocs
-build --strict</code> with the vignettes <em>executed</em> (so documentation cannot silently
-rot), plus lint, format, and type checks. You can reproduce the whole thing with
-<code>just test-all</code>.</p>
-<p><em>See:</em> the <code>justfile</code> and <a href="../../contributing/">Contributing</a>.</p>
-<h2 id="the-honest-edges-are-part-of-the-case">The honest edges are part of the case<a class="headerlink" href="#the-honest-edges-are-part-of-the-case" title="Permanent link">&para;</a></h2>
-<p>Confidence is strengthened, not weakened, by naming where the guarantee stops.
-The envelope's finite-sample simultaneous coverage is <em>calibrated</em> rather than
-proven — which is exactly why the calibration gate and the proven KS/DKW
-yardstick exist. The vacuous region at tiny FPR is a theorem, not a
-shortcoming: no distribution-free lower bound exists there, and rocci reports the
-boundary instead of drawing an unjustifiable curve. The parametric
-<code>normal=True</code> band degrades under misspecification, so it is diagnosed and
-warned rather than certified. These edges are characterized and surfaced to the
-user; <a href="../theory/">Theoretical behavior</a> is where they are spelled out.</p>
+<p>A clarifying non-example: choosing to build the band on <strong>logit</strong> scores
+rather than <strong>probability</strong> scores is <em>not</em> a reason to worry about
+distributional assumptions. The ROC curve is invariant to any monotone
+rescaling of the score, so the probability-vs-logit choice does not move the
+curve at all and cannot, by itself, motivate a distribution-free method. The
+motivation is the genuine shape of the underlying class-conditional
+distributions — heavy tails, skew, multimodality — not the coordinate system
+you happen to plot them in.</p>
+<h2 id="how-badly-the-classical-bands-fail">How badly the classical bands fail<a class="headerlink" href="#how-badly-the-classical-bands-fail" title="Permanent link">&para;</a></h2>
+<p>The contrast is stark. Across the study's coverage heatmaps, the studentized
+envelope is at or slightly above nominal for <strong>every</strong> distribution at
+<strong>every</strong> sample size. Working–Hotelling is fine on the two
+binormal-compatible families (binormal, heteroscedastic Gaussian) but fails
+everywhere else, and the failure <em>deepens with n</em>: on Student-t data its
+coverage falls to 0.02 at n = 10,000, on logit-normal to 0.13, on bimodal
+negatives to 0.23. The parametric band does not merely lose efficiency
+off-model — it loses validity, catastrophically and irreversibly.</p>
+<p>This is not a knife-edge that only trips on pathological data. It is a
+smooth, continuous collapse as the data drift away from binormality: as
+Student-t tails get heavier or the negative class becomes more clearly
+bimodal, Working–Hotelling coverage slides continuously from acceptable to
+near zero, and larger sample sizes make it <em>worse</em>. The envelope and KS bands
+ride flat along the top throughout. There is no safe operating region for the
+parametric band defined by a simple diagnostic — any departure from
+binormality is paid for in coverage. (This is why rocci's
+<a href="../../guide/diagnostics/">normality diagnostics</a> warn rather than certify.)</p>
+<h2 id="coverage-and-tightness-on-every-family">Coverage <em>and</em> tightness, on every family<a class="headerlink" href="#coverage-and-tightness-on-every-family" title="Permanent link">&para;</a></h2>
+<p>The right way to judge a band is jointly: coverage must be at or above
+nominal, and among the bands that clear that bar, smaller width is better.
+Plotting per-DGP coverage against mean band area, the competitors each fail a
+requirement:</p>
+<ul>
+<li><strong>KS</strong> is always at ~1.0 coverage but always the widest — safe but
+  uninformative, exactly as designed.</li>
+<li><strong>Working–Hotelling</strong> is competitive only on Gaussian-like data, and even
+  there its coverage falls off the bottom of the plot as n grows; on
+  heavy-tailed and non-standard data it is near the floor.</li>
+<li><strong>Wilson rectangles</strong> are tight and well-calibrated at small n but drift
+  below nominal as n increases (the Šidák correction mishandles many
+  correlated grid points).</li>
+<li><strong>A pointwise bootstrap</strong> ignores multiplicity entirely and under-covers
+  everywhere.</li>
+</ul>
+<p>Only the studentized envelope occupies the desirable corner — high coverage,
+modest width — across Gaussian-like, heavy-tailed/skewed, and
+non-standard-shape families alike, at every sample size.</p>
+<h2 id="the-properties-that-make-it-trustworthy">The properties that make it trustworthy<a class="headerlink" href="#the-properties-that-make-it-trustworthy" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Stable across AUC.</strong> Coverage holds near or above nominal across the full
+  range of true AUC, for every DGP and sample size — it does not degrade as
+  the curve gets steeper.</li>
+<li><strong>Stable across distribution shape.</strong> Sweeping each DGP's shape parameter —
+  tail heaviness, skew strength, variance ratio, mode separation, mixture
+  weight — leaves coverage essentially flat above the nominal line.</li>
+<li><strong>Stable across sample size, where competitors are not.</strong> The envelope
+  holds calibration across all six sample sizes on all seven families, while
+  Working–Hotelling collapses with n on every non-binormal family and the
+  Wilson rectangles drift down everywhere.</li>
+<li><strong>Far tighter than KS, while staying calibrated.</strong> The envelope's band area
+  falls from 90% of the KS band's at n = 10 to 31% at n = 10,000 — it buys
+  most of KS's safety at roughly a third of the width — while its calibration
+  error stays flat near the ideal.</li>
+<li><strong>When it misses, it misses small.</strong> No finite-sample method is perfect,
+  but the envelope's residual violations are tiny: the conditional miss depth
+  is almost always well under a few points of TPR, and the 99th-percentile
+  worst violation stays near zero across all sample sizes, where
+  Working–Hotelling and the rectangles climb to 0.7–0.85.</li>
+</ul>
+<h2 id="ablations-every-component-is-load-bearing">Ablations: every component is load-bearing<a class="headerlink" href="#ablations-every-component-is-load-bearing" title="Permanent link">&para;</a></h2>
+<p>The hybrid construction (<a href="../envelope/">The envelope method</a>) is not
+over-engineered — the study removed each piece in turn, and each removal
+breaks the band in a specific, predictable way:</p>
+<ul>
+<li><strong>Without the floors, the bare bootstrap envelope is not a valid band at
+  all.</strong> It fails at both corners — the collapsed-variance plateau and the
+  steep low-FPR corner — covering only ~25–35% of the time.</li>
+<li><strong>The two floors own different corners.</strong> Dropping the Beta floor reopens
+  the steep low-FPR corner (and the damage concentrates at high AUC, where
+  that corner matters); dropping the Wilson floor reopens the plateau corner,
+  with violation rates there climbing to ~0.7.</li>
+<li><strong>Neither floor alone suffices.</strong> A Beta-only band leaves an unprotected
+  gap just beyond the Beta floor's fixed-<span class="arithmatex">\(j\)</span> jurisdiction; a Wilson-only band
+  buys low-FPR coverage only by inflating the band to vacuous widths there.
+  The hybrid is the one configuration that is neither leaky nor vacuous.</li>
+<li><strong>The bootstrap interior earns its place too.</strong> Replacing it with the
+  floors alone yields a band that is safe at 95% but neither tight nor
+  tunable — it over-covers badly at the 50% level and runs wider than the
+  full method. The studentized bootstrap is what gives the interior its
+  adaptive, informative width.</li>
+</ul>
+<h2 id="what-the-theory-predicted-and-simulation-confirmed">What the theory predicted — and simulation confirmed<a class="headerlink" href="#what-the-theory-predicted-and-simulation-confirmed" title="Permanent link">&para;</a></h2>
+<p>The study's theoretical account (<a href="../theory/">Theoretical behavior</a> is the
+condensed version) made predictions the simulations then bore out:</p>
+<ul>
+<li>Asymptotic validity in the interior, with exact finite-sample floors at
+  the boundary grid points where the Gaussian approximation does not apply.</li>
+<li>The two corners are governed by two different, complementary uncertainty
+  models — binomial variance at the TPR plateau, order-statistic geometry at
+  the steep low-FPR corner — which is why a single mechanism cannot work.</li>
+<li>The real coverage risk factor is early slope: a steep low-FPR rise converts
+  threshold-location error into large vertical misses. The Beta floor targets
+  exactly this regime, raising coverage on the previously failing high-AUC
+  strata from ~0.77–0.84 to 0.95–0.99.</li>
+<li>It is a high-confidence tool: sup-norm simultaneity is inherently
+  insensitive to <span class="arithmatex">\(\alpha\)</span>, so the band over-covers at low confidence levels.
+  Use it near 95%, not at 50%.</li>
+<li>The honest limitation is informativeness, not validity: the lower band is
+  vacuous at extreme low FPR because no distribution-free lower bound exists
+  there — the band declines to certify what cannot be certified.</li>
+</ul>
+<h2 id="from-the-study-to-this-package">From the study to this package<a class="headerlink" href="#from-the-study-to-this-package" title="Permanent link">&para;</a></h2>
+<p>rocci carries the validation forward rather than assuming it:
+<a href="../verification/">golden-master fixtures</a> recorded from the study's reference
+implementation pin the assembled band bit-for-bit, and a distilled version of
+the coverage-and-width evaluation runs as a required
+<a href="../verification/">calibration gate</a> on every pull request. The figures behind
+every claim on this page, and the code to reproduce the full simulation grid,
+are in the
+<a href="https://github.com/ndelaneybusch/studroc_paper">studroc_paper repository</a>.</p>
 
 
 
@@ -1487,7 +1540,7 @@ user; <a href="../theory/">Theoretical behavior</a> is where they are spelled ou
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../simulations/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Simulations and validation">
+          <a href="../theory/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Theoretical behavior">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1497,20 +1550,20 @@ user; <a href="../theory/">Theoretical behavior</a> is where they are spelled ou
                 Previous
               </span>
               <div class="md-ellipsis">
-                Simulations and validation
+                Theoretical behavior
               </div>
             </div>
           </a>
         
         
           
-          <a href="../../vignettes/01-quickstart-sklearn/" class="md-footer__link md-footer__link--next" aria-label="Next: Quickstart with scikit-learn">
+          <a href="../verification/" class="md-footer__link md-footer__link--next" aria-label="Next: How rocci is verified">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Quickstart with scikit-learn
+                How rocci is verified
               </div>
             </div>
             <div class="md-footer__button md-icon">

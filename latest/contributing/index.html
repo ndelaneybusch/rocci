@@ -717,6 +717,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../method/simulations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulations and validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../method/verification/" class="md-nav__link">
         
   
@@ -1108,6 +1136,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#golden-master-fixtures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golden-master fixtures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#branch-model-commits" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1247,6 +1286,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#golden-master-fixtures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golden-master fixtures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#branch-model-commits" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1358,6 +1408,18 @@ distributional agreement at B=8000 and, the calibration suite).
 <code>just test</code> excludes them;
 <code>just test-all</code> and CI run
 everything.</p>
+<h2 id="golden-master-fixtures">Golden-master fixtures<a class="headerlink" href="#golden-master-fixtures" title="Permanent link">&para;</a></h2>
+<p><code>tests/fixtures/golden/</code> holds band outputs recorded once from the validated
+research implementation (recording details:
+<code>tests/fixtures/golden/PROVENANCE.md</code>), and <code>tests/test_golden_master.py</code>
+requires every build to reproduce them to <code>atol=1e-6</code>. They are the ground
+truth for the band assembly, and the precedence rule is absolute: if code and
+fixture disagree, the fixture wins — <strong>never regenerate fixtures to make new
+code pass</strong>. A fixture changes only through a PR that explains the intended
+statistical delta and why coverage is preserved, with maintainer sign-off;
+<code>just fixtures</code> then re-records them from a checkout of
+<a href="https://github.com/ndelaneybusch/studroc_paper">studroc_paper</a>, the method
+validation study the fixtures come from.</p>
 <h2 id="branch-model-commits">Branch model &amp; commits<a class="headerlink" href="#branch-model-commits" title="Permanent link">&para;</a></h2>
 <p>Trunk-based. <code>main</code> is protected: every CI job is a required check, linear
 history, no direct pushes. Short-lived feature branches, <strong>squash merge</strong>.
