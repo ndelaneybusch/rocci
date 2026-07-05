@@ -53,6 +53,8 @@ figure above, where the true curve escapes the parametric band entirely.
 - [Reading the band](guide/reading-the-band.md) — what "simultaneous" buys
   you, and what the vacuous region at tiny FPR means.
 - [The envelope method](method/envelope.md) — how the band is built.
+- [How rocci is verified](method/verification.md) — the case for trusting the
+  numbers.
 - [API reference](api.md) — the full public surface (it's small).
 
 ## Citing
