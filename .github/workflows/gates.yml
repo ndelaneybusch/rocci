@@ -13,8 +13,37 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  changes:
+    # Docs-only detection must live at the job level, not in workflow-level
+    # `paths-ignore`: branch protection counts a job skipped by `if:` as
+    # satisfied, but a workflow that never triggers never reports its checks,
+    # leaving required checks "Expected" and blocking the merge forever.
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          # With `every`, a changed file counts as code only if it matches
+          # all patterns, i.e. is none of the documentation shapes below;
+          # `code` is true when at least one such file changed.
+          predicate-quantifier: every
+          filters: |
+            code:
+              - "!docs/**"
+              - "!**.md"
+              - "!LICENSE"
+              - "!CITATION.cff"
+
   calibration:
     name: calibration
+    needs: changes
+    # Pushes to main always run (the filter step is PR-only, so its output
+    # is empty there); PRs run only when non-docs files changed.
+    if: github.event_name != 'pull_request' || needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     # Sized to finish well inside 15 min (spec §14.2); ~16 s on a desktop, so
     # the timeout is a hang backstop, not headroom.
@@ -32,6 +61,8 @@ jobs:
 
   perf:
     name: perf
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
