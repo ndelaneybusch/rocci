@@ -232,12 +232,10 @@ def mann_whitney_auc(neg: FloatArray, pos: FloatArray) -> float:
     pairs the scores order correctly, counting ties as half-correct. It is
     the point estimate reported as ``RocBand.auc``.
 
-    Documented departure from the recorded paper implementation, which
-    reported a trapezoid over the empirical ROC vertex list. That equals
-    ``MW - h_last / (2 * n_neg)`` for continuous scores — systematically
-    below what every other library reports. rocci reports exact MW instead;
-    the golden-master fixtures do not record AUC, so nothing validated
-    changes.
+    A trapezoid integrated over the empirical ROC vertex list would instead
+    equal ``MW - h_last / (2 * n_neg)`` for continuous scores (``h_last`` the
+    final TPR jump) — systematically below what other libraries report — so
+    exact Mann-Whitney is reported to stay comparable.
 
     Args:
         neg: Negative-class scores, any order.

@@ -66,6 +66,9 @@ def hero_figure() -> None:
         wh = roc_band(y_true, logits, normal=True)
 
     grid = envelope.fpr
+    # True ROC for a pure location shift: pos ~ t3 + 1.6, neg ~ t3, so at a
+    # threshold c the operating point is (1 - F(c), 1 - F(c - 1.6)). Eliminating
+    # c via c = F^{-1}(1 - fpr) gives tpr = 1 - F(F^{-1}(1 - fpr) - 1.6).
     true_roc = 1.0 - student_t.cdf(
         student_t.ppf(1.0 - np.clip(grid, 1e-12, 1), df=3) - 1.6, df=3
     )

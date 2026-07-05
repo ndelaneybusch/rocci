@@ -16,7 +16,7 @@ def binormal_scores(
     """Draw binormal class scores with a target population AUC.
 
     ``tie_step`` rounds scores to that granularity, producing the heavy-ties
-    regime (the paper's discretized-binormal cell).
+    regime (a discretized binormal, used to stress tie handling).
     """
     d = np.sqrt(2.0) * norm.ppf(auc)
     rng = np.random.default_rng(seed)

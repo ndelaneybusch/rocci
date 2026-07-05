@@ -13,6 +13,10 @@ from numpy.typing import NDArray
 
 FloatArray = NDArray[np.float64]
 
+# Cap on int64 count-matrix memory per batch of replicates. Module-level so
+# tests can shrink it to force multi-batch runs on small inputs.
+_BATCH_BYTES = 256e6
+
 
 def bootstrap_tpr_matrix_numpy(
     neg_sorted: FloatArray,
@@ -67,8 +71,7 @@ def bootstrap_tpr_matrix_numpy(
     out[:, n_resolved:] = 1.0
     ks = k_indices[:n_resolved]
 
-    # cap batch memory at ~256 MB of int64 count matrices
-    batch = max(1, min(n_boot, int(256e6 / (8 * (n0 + n1)))))
+    batch = max(1, min(n_boot, int(_BATCH_BYTES / (8 * (n0 + n1)))))
     p_neg = np.full(n0, 1.0 / n0)
     p_pos = np.full(n1, 1.0 / n1)
 
