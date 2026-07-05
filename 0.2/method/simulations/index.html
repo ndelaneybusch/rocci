@@ -1,0 +1,1616 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Distribution-free simultaneous confidence bands for ROC curves">
+      
+      
+      
+        <link rel="canonical" href="https://ndelaneybusch.github.io/rocci/0.2/method/simulations/">
+      
+      
+        <link rel="prev" href="../theory/">
+      
+      
+        <link rel="next" href="../verification/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Simulations and validation - rocci</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="https://unpkg.com/katex@0.16/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#simulations-and-validation-of-the-method" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="rocci" class="md-header__button md-logo" aria-label="rocci" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            rocci
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Simulations and validation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ndelaneybusch/rocci" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ndelaneybusch/rocci
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="rocci" class="md-nav__button md-logo" aria-label="rocci" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    rocci
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ndelaneybusch/rocci" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ndelaneybusch/rocci
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/which-band/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Which band should I use?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/your-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using rocci with your data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/reading-the-band/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading the band
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/diagnostics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnostics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Method
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Method
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../envelope/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The envelope method
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../theory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theoretical behavior
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulations and validation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulations and validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-with-the-methods-we-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem with the methods we have
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The problem with the methods we have">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-alternative-distributions-is-the-realistic-case-not-the-exotic-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why "alternative distributions" is the realistic case, not the exotic one
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-badly-the-classical-bands-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How badly the classical bands fail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-and-tightness-on-every-family" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage and tightness, on every family
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-properties-that-make-it-trustworthy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The properties that make it trustworthy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ablations-every-component-is-load-bearing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablations: every component is load-bearing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-theory-predicted-and-simulation-confirmed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the theory predicted — and simulation confirmed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-the-study-to-this-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From the study to this package
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How rocci is verified
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vignettes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vignettes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vignettes/01-quickstart-sklearn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart with scikit-learn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vignettes/02-deep-learning-scores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deep-learning scores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vignettes/03-bayesian-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bayesian workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vignettes/04-anatomy-of-the-band/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anatomy of the band
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-with-the-methods-we-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem with the methods we have
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The problem with the methods we have">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-alternative-distributions-is-the-realistic-case-not-the-exotic-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why "alternative distributions" is the realistic case, not the exotic one
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-badly-the-classical-bands-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How badly the classical bands fail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-and-tightness-on-every-family" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage and tightness, on every family
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-properties-that-make-it-trustworthy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The properties that make it trustworthy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ablations-every-component-is-load-bearing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablations: every component is load-bearing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-theory-predicted-and-simulation-confirmed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the theory predicted — and simulation confirmed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-the-study-to-this-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From the study to this package
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="simulations-and-validation-of-the-method">Simulations and validation of the method<a class="headerlink" href="#simulations-and-validation-of-the-method" title="Permanent link">&para;</a></h1>
+<p>The envelope method was validated in a <strong>2.25-million-evaluation simulation
+study</strong> spanning seven data-generating processes, six sample sizes, and three
+confidence levels, before rocci existed. This page marches through the
+study's conclusions — the case that the default band is the right default.
+The full study — figures, theory reports, simulation drivers, and the
+reference implementation the golden-master fixtures were recorded from —
+lives in the
+<a href="https://github.com/ndelaneybusch/studroc_paper">studroc_paper repository</a>.</p>
+<h2 id="the-problem-with-the-methods-we-have">The problem with the methods we have<a class="headerlink" href="#the-problem-with-the-methods-we-have" title="Permanent link">&para;</a></h2>
+<p>If you want a band around an ROC curve today, you essentially choose between
+two families, and both have a fatal flaw.</p>
+<p><strong>Working–Hotelling (and its refinements) assume the scores are binormal.</strong>
+The construction parametrizes the ROC as
+<span class="arithmatex">\(\text{TPR} = \Phi(a + b\,\Phi^{-1}(\text{FPR}))\)</span> and lays a hyperbolic
+regression band around it in probit–probit space. When both class score
+distributions really are Gaussian, this is excellent: tight bands, correct
+coverage. When they are not, the band converges confidently to <em>the wrong
+curve</em>. Worse, the failure scales with sample size — more data tightens the
+band around a biased estimate, so coverage drops toward zero exactly when you
+trust the result most.</p>
+<p><strong>The Kolmogorov–Smirnov / DKW fixed-width band is distribution-free but
+uninformative.</strong> It places a constant-width strip of half-width
+<span class="arithmatex">\(\varepsilon = \sqrt{\ln(2/\alpha)/(2n)}\)</span> around the curve. It never fails to
+cover — but it covers <em>too much</em>. The 50% band is nearly as wide as the 95%
+band, the strip has the same width at the steep low-FPR corner as in the flat
+interior, and it tells you almost nothing about <em>where</em> the true curve
+actually lies. It is a safety benchmark, not an answer.</p>
+<p>What is actually needed is a band that is (i) <strong>distribution-free</strong>, like KS,
+making no parametric commitment about the score distributions; (ii)
+<strong>substantially more informative than KS</strong>, with width that adapts to where
+the uncertainty really is; and (iii) <strong>well calibrated across diverse
+distribution families</strong>, holding coverage near nominal whether the scores are
+Gaussian, heavy-tailed, skewed, or multimodal.</p>
+<h3 id="why-alternative-distributions-is-the-realistic-case-not-the-exotic-one">Why "alternative distributions" is the realistic case, not the exotic one<a class="headerlink" href="#why-alternative-distributions-is-the-realistic-case-not-the-exotic-one" title="Permanent link">&para;</a></h3>
+<p>Binormality is the exception, not the rule, for modern classifiers:</p>
+<ul>
+<li><strong>Heavy tails.</strong> Deep network logits and many calibrated probability
+  outputs have far heavier tails than a Gaussian; a handful of
+  extreme-confidence predictions dominate the low-FPR corner of the ROC,
+  which is precisely where parametric bands are most fragile.</li>
+<li><strong>Skew and bounded support.</strong> Probability outputs live in <span class="arithmatex">\([0, 1]\)</span> and pile
+  up near the boundaries; risk scores are often right-skewed. Neither is
+  Gaussian on any scale.</li>
+<li><strong>Multimodality.</strong> When a population mixes subgroups — easy vs. hard cases,
+  multiple disease subtypes, distinct fraud patterns — the negative or
+  positive score distribution is multimodal, producing genuine inflections in
+  the ROC that no binormal model can represent.</li>
+</ul>
+<p>A clarifying non-example: choosing to build the band on <strong>logit</strong> scores
+rather than <strong>probability</strong> scores is <em>not</em> a reason to worry about
+distributional assumptions. The ROC curve is invariant to any monotone
+rescaling of the score, so the probability-vs-logit choice does not move the
+curve at all and cannot, by itself, motivate a distribution-free method. The
+motivation is the genuine shape of the underlying class-conditional
+distributions — heavy tails, skew, multimodality — not the coordinate system
+you happen to plot them in.</p>
+<h2 id="how-badly-the-classical-bands-fail">How badly the classical bands fail<a class="headerlink" href="#how-badly-the-classical-bands-fail" title="Permanent link">&para;</a></h2>
+<p>The contrast is stark. Across the study's coverage heatmaps, the studentized
+envelope is at or slightly above nominal for <strong>every</strong> distribution at
+<strong>every</strong> sample size. Working–Hotelling is fine on the two
+binormal-compatible families (binormal, heteroscedastic Gaussian) but fails
+everywhere else, and the failure <em>deepens with n</em>: on Student-t data its
+coverage falls to 0.02 at n = 10,000, on logit-normal to 0.13, on bimodal
+negatives to 0.23. The parametric band does not merely lose efficiency
+off-model — it loses validity, catastrophically and irreversibly.</p>
+<p>This is not a knife-edge that only trips on pathological data. It is a
+smooth, continuous collapse as the data drift away from binormality: as
+Student-t tails get heavier or the negative class becomes more clearly
+bimodal, Working–Hotelling coverage slides continuously from acceptable to
+near zero, and larger sample sizes make it <em>worse</em>. The envelope and KS bands
+ride flat along the top throughout. There is no safe operating region for the
+parametric band defined by a simple diagnostic — any departure from
+binormality is paid for in coverage. (This is why rocci's
+<a href="../../guide/diagnostics/">normality diagnostics</a> warn rather than certify.)</p>
+<h2 id="coverage-and-tightness-on-every-family">Coverage <em>and</em> tightness, on every family<a class="headerlink" href="#coverage-and-tightness-on-every-family" title="Permanent link">&para;</a></h2>
+<p>The right way to judge a band is jointly: coverage must be at or above
+nominal, and among the bands that clear that bar, smaller width is better.
+Plotting per-DGP coverage against mean band area, the competitors each fail a
+requirement:</p>
+<ul>
+<li><strong>KS</strong> is always at ~1.0 coverage but always the widest — safe but
+  uninformative, exactly as designed.</li>
+<li><strong>Working–Hotelling</strong> is competitive only on Gaussian-like data, and even
+  there its coverage falls off the bottom of the plot as n grows; on
+  heavy-tailed and non-standard data it is near the floor.</li>
+<li><strong>Wilson rectangles</strong> are tight and well-calibrated at small n but drift
+  below nominal as n increases (the Šidák correction mishandles many
+  correlated grid points).</li>
+<li><strong>A pointwise bootstrap</strong> ignores multiplicity entirely and under-covers
+  everywhere.</li>
+</ul>
+<p>Only the studentized envelope occupies the desirable corner — high coverage,
+modest width — across Gaussian-like, heavy-tailed/skewed, and
+non-standard-shape families alike, at every sample size.</p>
+<h2 id="the-properties-that-make-it-trustworthy">The properties that make it trustworthy<a class="headerlink" href="#the-properties-that-make-it-trustworthy" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Stable across AUC.</strong> Coverage holds near or above nominal across the full
+  range of true AUC, for every DGP and sample size — it does not degrade as
+  the curve gets steeper.</li>
+<li><strong>Stable across distribution shape.</strong> Sweeping each DGP's shape parameter —
+  tail heaviness, skew strength, variance ratio, mode separation, mixture
+  weight — leaves coverage essentially flat above the nominal line.</li>
+<li><strong>Stable across sample size, where competitors are not.</strong> The envelope
+  holds calibration across all six sample sizes on all seven families, while
+  Working–Hotelling collapses with n on every non-binormal family and the
+  Wilson rectangles drift down everywhere.</li>
+<li><strong>Far tighter than KS, while staying calibrated.</strong> The envelope's band area
+  falls from 90% of the KS band's at n = 10 to 31% at n = 10,000 — it buys
+  most of KS's safety at roughly a third of the width — while its calibration
+  error stays flat near the ideal.</li>
+<li><strong>When it misses, it misses small.</strong> No finite-sample method is perfect,
+  but the envelope's residual violations are tiny: the conditional miss depth
+  is almost always well under a few points of TPR, and the 99th-percentile
+  worst violation stays near zero across all sample sizes, where
+  Working–Hotelling and the rectangles climb to 0.7–0.85.</li>
+</ul>
+<h2 id="ablations-every-component-is-load-bearing">Ablations: every component is load-bearing<a class="headerlink" href="#ablations-every-component-is-load-bearing" title="Permanent link">&para;</a></h2>
+<p>The hybrid construction (<a href="../envelope/">The envelope method</a>) is not
+over-engineered — the study removed each piece in turn, and each removal
+breaks the band in a specific, predictable way:</p>
+<ul>
+<li><strong>Without the floors, the bare bootstrap envelope is not a valid band at
+  all.</strong> It fails at both corners — the collapsed-variance plateau and the
+  steep low-FPR corner — covering only ~25–35% of the time.</li>
+<li><strong>The two floors own different corners.</strong> Dropping the Beta floor reopens
+  the steep low-FPR corner (and the damage concentrates at high AUC, where
+  that corner matters); dropping the Wilson floor reopens the plateau corner,
+  with violation rates there climbing to ~0.7.</li>
+<li><strong>Neither floor alone suffices.</strong> A Beta-only band leaves an unprotected
+  gap just beyond the Beta floor's fixed-<span class="arithmatex">\(j\)</span> jurisdiction; a Wilson-only band
+  buys low-FPR coverage only by inflating the band to vacuous widths there.
+  The hybrid is the one configuration that is neither leaky nor vacuous.</li>
+<li><strong>The bootstrap interior earns its place too.</strong> Replacing it with the
+  floors alone yields a band that is safe at 95% but neither tight nor
+  tunable — it over-covers badly at the 50% level and runs wider than the
+  full method. The studentized bootstrap is what gives the interior its
+  adaptive, informative width.</li>
+</ul>
+<h2 id="what-the-theory-predicted-and-simulation-confirmed">What the theory predicted — and simulation confirmed<a class="headerlink" href="#what-the-theory-predicted-and-simulation-confirmed" title="Permanent link">&para;</a></h2>
+<p>The study's theoretical account (<a href="../theory/">Theoretical behavior</a> is the
+condensed version) made predictions the simulations then bore out:</p>
+<ul>
+<li>Asymptotic validity in the interior, with exact finite-sample floors at
+  the boundary grid points where the Gaussian approximation does not apply.</li>
+<li>The two corners are governed by two different, complementary uncertainty
+  models — binomial variance at the TPR plateau, order-statistic geometry at
+  the steep low-FPR corner — which is why a single mechanism cannot work.</li>
+<li>The real coverage risk factor is early slope: a steep low-FPR rise converts
+  threshold-location error into large vertical misses. The Beta floor targets
+  exactly this regime, raising coverage on the previously failing high-AUC
+  strata from ~0.77–0.84 to 0.95–0.99.</li>
+<li>It is a high-confidence tool: sup-norm simultaneity is inherently
+  insensitive to <span class="arithmatex">\(\alpha\)</span>, so the band over-covers at low confidence levels.
+  Use it near 95%, not at 50%.</li>
+<li>The honest limitation is informativeness, not validity: the lower band is
+  vacuous at extreme low FPR because no distribution-free lower bound exists
+  there — the band declines to certify what cannot be certified.</li>
+</ul>
+<h2 id="from-the-study-to-this-package">From the study to this package<a class="headerlink" href="#from-the-study-to-this-package" title="Permanent link">&para;</a></h2>
+<p>rocci carries the validation forward rather than assuming it:
+<a href="../verification/">golden-master fixtures</a> recorded from the study's reference
+implementation pin the assembled band bit-for-bit, and a distilled version of
+the coverage-and-width evaluation runs as a required
+<a href="../verification/">calibration gate</a> on every pull request. The figures behind
+every claim on this page, and the code to reproduce the full simulation grid,
+are in the
+<a href="https://github.com/ndelaneybusch/studroc_paper">studroc_paper repository</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../theory/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Theoretical behavior">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Theoretical behavior
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../verification/" class="md-footer__link md-footer__link--next" aria-label="Next: How rocci is verified">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                How rocci is verified
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/katex.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/katex.min.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/contrib/auto-render.min.js"></script>
+      
+    
+  </body>
+</html>
