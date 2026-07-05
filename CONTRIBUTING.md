@@ -41,6 +41,18 @@ distributional agreement at B=8000 and, the calibration suite).
 `just test-all` and CI run
 everything.
 
+## Golden-master fixtures
+
+`tests/fixtures/golden/` holds band outputs recorded once from the validated
+research implementation (recording details:
+`tests/fixtures/golden/PROVENANCE.md`), and `tests/test_golden_master.py`
+requires every build to reproduce them to `atol=1e-6`. They are the ground
+truth for the band assembly, and the precedence rule is absolute: if code and
+fixture disagree, the fixture wins — **never regenerate fixtures to make new
+code pass**. A fixture changes only through a PR that explains the intended
+statistical delta and why coverage is preserved, with maintainer sign-off;
+`just fixtures` then re-records them from a `studroc_paper` checkout.
+
 ## Branch model & commits
 
 Trunk-based. `main` is protected: every CI job is a required check, linear

@@ -2,8 +2,9 @@
 
 Recorded outputs of the validated `studroc_paper` implementation
 (`envelope_bootstrap_band(boundary_method='wilson')` and
-`envelope_band_suite`). These fixtures are the arbiters of the spec
-5.7 equivalence test. **Never regenerate them to match new code.**
+`envelope_band_suite`). These fixtures are the arbiters of the
+golden-master equivalence suite (`tests/test_golden_master.py`).
+**Never regenerate them to match new code.**
 
 - Recorded: 2026-07-03
 - Recorder: `scripts/record_golden_masters.py` (rocci repo)

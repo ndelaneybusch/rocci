@@ -232,8 +232,8 @@ def mann_whitney_auc(neg: FloatArray, pos: FloatArray) -> float:
     pairs the scores order correctly, counting ties as half-correct. It is
     the point estimate reported as ``RocBand.auc``.
 
-    Documented delta (spec §5.6 / appendix A10): the recorded paper
-    implementation used a trapezoid over the A1 vertex list, which equals
+    Documented departure from the recorded paper implementation, which
+    reported a trapezoid over the empirical ROC vertex list. That equals
     ``MW - h_last / (2 * n_neg)`` for continuous scores — systematically
     below what every other library reports. rocci reports exact MW instead;
     the golden-master fixtures do not record AUC, so nothing validated
@@ -271,7 +271,7 @@ def kernel_grid_auc(
 
     Evaluates exactly the functional each bootstrap replicate computes —
     TPR = fraction of positives **strictly greater** than the negative order
-    statistic at index ``k_t`` (A14), trapezoid-integrated over the grid —
+    statistic at index ``k_t``, trapezoid-integrated over the grid —
     on the original (unresampled) data. This is the natural center of the
     bootstrap AUC distribution and anchors the recentering in
     :func:`bootstrap_auc_ci`.
@@ -315,7 +315,7 @@ def bootstrap_auc_ci(
     ``mann_whitney_auc - kernel_grid_auc`` and clipped to ``[0, 1]``.
 
     The shift is load-bearing: the kernel resamples the strictly-greater
-    functional (A2/A14), whose plug-in value sits below the Mann-Whitney
+    functional, whose plug-in value sits below the Mann-Whitney
     point estimate — negligibly for continuous scores, but by roughly half
     the tie mass ``P(pos = neg)`` under heavy ties, where a raw percentile
     CI can exclude the reported AUC entirely. Recentering keeps the

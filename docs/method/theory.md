@@ -1,8 +1,9 @@
 # Theoretical behavior
 
 What can be *guaranteed*, what is *calibrated*, and where the honest edges
-are. (Condensed from the method paper's theory; the spec appendix in the
-repository is the normative statement of every routine.)
+are. (Condensed from the method paper's theory. [The envelope
+method](envelope.md) describes what is computed; [How rocci is
+verified](verification.md) shows how the implementation is held to it.)
 
 ## Exact, distribution-free ingredients
 

@@ -1,9 +1,10 @@
 # The envelope method
 
 This page describes what `roc_band(..., normal=False)` — the default —
-actually computes. The normative reference (exact algorithms, edge and tie
-semantics) is the specification appendix in the repository; this is the
-readable tour. Throughout, $n_0$ and $n_1$ are the negative/positive class
+actually computes. The exact algorithms, including every edge and tie
+convention, are the implementation in `python/rocci/band/`, held in place by
+the golden-master and oracle test suites (see
+[How rocci is verified](verification.md)); this is the readable tour. Throughout, $n_0$ and $n_1$ are the negative/positive class
 sizes, $\alpha = 1 - \text{confidence}$, and $R(t)$ is the population TPR at
 FPR $t$.
 

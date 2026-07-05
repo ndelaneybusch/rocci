@@ -14,6 +14,6 @@
 Statistical core — extra requirements:
 
 - [ ] Golden-master tests pass **unchanged** (fixtures are never regenerated to
-      match new code; spec §5.7 precedence rule)
-- [ ] If the spec changed, this PR links the spec delta and explains the
-      statistical consequences
+      match new code — if code and fixture disagree, the fixture wins)
+- [ ] Any deliberate statistical change is explained in the PR description:
+      what changed, and why coverage is preserved

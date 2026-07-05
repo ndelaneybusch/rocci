@@ -2,7 +2,7 @@
 
 Deterministic (fixed seeds). The vignettes deliberately consume *pre-saved*
 arrays (docs/vignettes/data/) so the docs build depends on neither torch nor
-PyMC (spec §13.3); this script is their provenance.
+PyMC; this script is their provenance.
 
 Usage: uv run python scripts/make_docs_assets.py
 """

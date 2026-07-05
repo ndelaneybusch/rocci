@@ -3,8 +3,9 @@
 This is the white-box core: it pins the exact numerical behavior of the three
 statistical primitives that the public band is built from, on inputs small enough
 to reason about by hand. Where ``test_calibration.py`` asks "does the whole
-method cover?", this file asks "does each mechanism do precisely what the spec
-says, including at the tie and boundary cases that hide off-by-ones?".
+method cover?", this file asks "does each mechanism compute exactly the value
+it is defined to, including at the tie and boundary cases that hide
+off-by-ones?".
 
 Guaranteed. Retention keeps exactly ``ceil((1 - alpha) * B)`` curves — verified
 on hand-built offset ladders, including the integral-quantile off-by-one and the
@@ -18,7 +19,8 @@ ever widen, and the per-point ``attribution`` code truthfully identifies which
 mechanism set each lower value (bootstrap / Wilson / Beta / pinned). ``auc``
 matches a literal pairwise Mann-Whitney oracle (ties 1/2) to 1e-12, obeys
 complement symmetry and rank invariance, and the bootstrap AUC CI brackets the
-point estimate — including the heavy-tie recentering of appendix A10.
+point estimate — including the heavy-tie recentering that anchors the CI to
+the Mann-Whitney estimator.
 
 Limitations. These are exact single-input checks with small ``n_boot``; they fix
 *what* each primitive computes, not its coverage or its cross-backend agreement
@@ -233,11 +235,11 @@ class TestAuc:
         )
 
     def test_vertex_trapezoid_equals_mw_minus_tail_correction(self):
-        # first-principles identity linking A1 and A10 for continuous scores:
-        # the trapezoid over the empirical vertex list equals the Mann-Whitney
-        # AUC minus h_last / (2 n_neg), where h_last is the fraction of
-        # positives at or above the smallest negative (spec A10 delta note).
-        # A drift in either the vertex construction or the MW counting breaks it.
+        # first-principles identity for continuous scores: the trapezoid over
+        # the empirical vertex list equals the Mann-Whitney AUC minus
+        # h_last / (2 n_neg), where h_last is the fraction of positives at or
+        # above the smallest negative. A drift in either the vertex
+        # construction or the MW counting breaks it.
         from rocci.band.envelope import _trapezoid
 
         neg, pos = binormal_scores(120, 90, seed=21)
@@ -271,7 +273,7 @@ class TestAuc:
     def test_ci_brackets_point_estimate_under_heavy_ties(self, tie_step):
         # the raw percentile CI of strictly-greater grid AUCs sits below the
         # Mann-Whitney point estimate by ~half the tie mass; the recentering
-        # must repair exactly this failure (appendix A10 delta note)
+        # must repair exactly this failure
         neg, pos = binormal_scores(150, 150, seed=11, tie_step=tie_step)
         neg, pos = np.sort(neg), np.sort(pos)
         grid = make_grid(150)

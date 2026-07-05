@@ -22,9 +22,8 @@ absolute: if the code and a fixture ever disagree, **the fixture wins** —
 fixtures are never regenerated to make new code pass. This turns "we reproduce
 the validated numbers" from a claim into a gate.
 
-*See:* `tests/test_golden_master.py`; the normative `rocci_spec.md` and
-`rocci_spec_appendix.md` (routines A1–A16, with tie/edge semantics marked
-**EXACT**).
+*See:* `tests/test_golden_master.py`, and the recording provenance in
+`tests/fixtures/golden/PROVENANCE.md`.
 
 ## Every component is checked against an independent oracle
 
@@ -42,8 +41,8 @@ not to itself but to a definition derived independently:
   $(\hat p - p)^2 = z^2 p(1-p)/n$, not to a library round-trip;
 - the Beta floor is checked through the Beta/Binomial survival identity, which
   catches swapped distribution parameters that a quantile round-trip cannot;
-- the Working–Hotelling band reproduces the appendix's closed forms to float
-  precision.
+- the Working–Hotelling band reproduces an independent transcription of its
+  closed forms to float precision.
 
 *See:* `tests/test_grids.py`, `tests/test_fallback_kernel.py`,
 `tests/test_envelope.py`, `tests/test_floors.py`, `tests/test_normal.py`.

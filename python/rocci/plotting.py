@@ -1,4 +1,4 @@
-"""Matplotlib visualization of :class:`~rocci._result.RocBand` (spec §7).
+"""Matplotlib visualization of :class:`~rocci._result.RocBand`.
 
 matplotlib is an optional extra (``pip install 'rocci[plot]'``) and is imported
 lazily inside each function, so importing :mod:`rocci.plotting` — or rocci
@@ -71,7 +71,7 @@ def plot_band(
     """Plot the confidence band, the empirical ROC, and the chance diagonal.
 
     Both the band arms and the empirical curve are drawn as right-continuous
-    steps — the same convention (A13) used by :meth:`~rocci.RocBand.at` — so
+    steps — the same convention used by :meth:`~rocci.RocBand.at` — so
     the figure shows exactly what the band certifies.
 
     Args:
@@ -149,7 +149,7 @@ def plot_band(
 
 
 def plot_diagnostics(band: RocBand, fig: Figure | None = None) -> Figure:
-    """Render the two-panel "why did my band do that here" figure (spec §7.3).
+    """Render the two-panel "why did my band do that here" figure.
 
     Envelope path: panel 1 is the band with the lower arm color-coded by
     floor attribution (yellow Beta floor, green Wilson rectangle floor) and
