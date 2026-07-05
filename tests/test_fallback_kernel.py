@@ -30,6 +30,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from rocci.backend import _fallback
 from rocci.backend._fallback import bootstrap_tpr_matrix_numpy
 from rocci.band.grids import grid_k_indices, make_grid
 from tests.conftest import binormal_scores
@@ -40,7 +41,9 @@ def oracle_bootstrap(neg_sorted, pos_sorted, k_indices, n_boot, seed):
     n0, n1 = len(neg_sorted), len(pos_sorted)
     rng = np.random.default_rng(seed)
     out = np.empty((n_boot, len(k_indices)))
-    batch = max(1, min(n_boot, int(256e6 / (8 * (n0 + n1)))))
+    # read the cap at call time so a test that shrinks it re-batches the
+    # oracle and the kernel identically (splits change the draw interleaving)
+    batch = max(1, min(n_boot, int(_fallback._BATCH_BYTES / (8 * (n0 + n1)))))
     rows = []
     for start in range(0, n_boot, batch):
         m = min(batch, n_boot - start)
@@ -87,7 +90,8 @@ def test_fallback_matches_bruteforce_oracle(n_neg, n_pos, grid_size, tie_step, s
 @st.composite
 def kernel_cases(draw):
     """Adversarial tiny inputs: massive tie pressure (a 6-value score pool
-    including ±inf), duplicated/unsorted-free k sets, both sentinel and k=0."""
+    including ±inf) and sorted k index sets that may repeat indices and may
+    include both the k=n_neg sentinel and k=0."""
     pool = st.sampled_from([-np.inf, -1.5, 0.0, 0.25, 1.0, np.inf])
     n_neg = draw(st.integers(min_value=1, max_value=8))
     n_pos = draw(st.integers(min_value=1, max_value=8))
@@ -115,15 +119,22 @@ def test_sentinel_column_pins_tpr_to_one():
     assert (out[:, 2] == 1.0).all()
 
 
-def test_batching_boundary_preserves_stream():
-    # force multiple batches by using a size where the cap formula splits;
-    # results must be identical to a single logical stream regardless
+def test_batching_boundary_matches_oracle(monkeypatch):
+    # The default ~256 MB cap never splits small inputs, so shrink it until
+    # 50 replicates run as batches of 7 (the last one partial). Batch splits
+    # are not stream-transparent — each batch interleaves a neg draw and a
+    # pos draw from one generator — so a differently-batched run is a
+    # different (equally valid) sample. The invariants to pin are that a
+    # fixed (inputs, seed) pair stays deterministic and that boundary
+    # indexing lands every row where the identically-batched oracle puts it.
     neg, pos = binormal_scores(20, 20, seed=3)
     neg, pos = np.sort(neg), np.sort(pos)
     k = grid_k_indices(make_grid(20), 20)
-    full = bootstrap_tpr_matrix_numpy(neg, pos, k, n_boot=50, seed=4)
+    monkeypatch.setattr(_fallback, "_BATCH_BYTES", 7 * 8 * 40)  # batch = 7
+    out = bootstrap_tpr_matrix_numpy(neg, pos, k, n_boot=50, seed=4)
     again = bootstrap_tpr_matrix_numpy(neg, pos, k, n_boot=50, seed=4)
-    np.testing.assert_array_equal(full, again)
+    np.testing.assert_array_equal(out, again)
+    np.testing.assert_array_equal(out, oracle_bootstrap(neg, pos, k, 50, 4))
 
 
 def test_unsorted_or_nan_scores_rejected():

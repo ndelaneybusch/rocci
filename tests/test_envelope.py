@@ -10,10 +10,10 @@ off-by-ones?".
 Guaranteed. Retention keeps exactly ``ceil((1 - alpha) * B)`` curves — verified
 on hand-built offset ladders, including the integral-quantile off-by-one and the
 tie-at-threshold rule that keeps every curve sharing the cutoff distance. The
-collapse guard scores deviations against ``eps = 1/(n_neg + n_pos)`` rather than
-dividing by a ~0 standard deviation, so numerical noise is retained and a real
-deviation above eps is trimmed. The envelope is clipped to [0, 1]. Assembly
-produces an ordered, monotone band with pinned endpoints in the load-bearing
+collapse guard scores deviations against ``eps = min(1/(n_neg + n_pos), 1e-6)``
+rather than dividing by a ~0 standard deviation, so numerical noise is retained
+and a real deviation above eps is trimmed. The envelope is clipped to [0, 1].
+Assembly produces an ordered, monotone band with pinned endpoints in the load-bearing
 order (envelope -> Wilson rectangle floor -> Beta floor -> pins), the floors only
 ever widen, and the per-point ``attribution`` code truthfully identifies which
 mechanism set each lower value (bootstrap / Wilson / Beta / pinned). ``auc``
@@ -109,14 +109,17 @@ class TestStudentizedEnvelope:
         assert lo[0] <= 0.5 <= hi[0]
 
     def test_collapse_guard_scores_real_deviation_against_eps(self):
+        # n_pos=0 zeroes the Wilson floor; eps = min(1/50, 1e-6) = 1e-6. A
+        # single 5e-6 deviant among 100 rows keeps the column sd (~5e-7)
+        # under eps while the deviation itself exceeds eps, so the guard
+        # scores it against eps rather than dismissing it as noise
         tpr_hat = np.array([0.5, 0.5])
         boot = np.full((100, 2), 0.5)
-        # eps = 1/(50+0) = 0.02; a 0.03 deviation in a 100-row column keeps
-        # the column sd (~0.003) under eps, forcing the eps-branch scoring
-        boot[0, 0] = 0.53
+        boot[0, 0] = 0.5 + 5e-6
         _lo, hi, _, _ = studentized_envelope(boot, tpr_hat, 0.05, 50, 0)
-        # that replicate scores 0.03/eps = 1.5 > 0 and is trimmed
-        assert hi[0] == pytest.approx(0.5)
+        # that replicate scores 5e-6/eps = 5 > 0 and is trimmed, so the
+        # retained max is exactly the constant 0.5
+        assert hi[0] == 0.5
 
     def test_envelope_clipped_to_unit_interval(self):
         tpr_hat = np.full(3, 0.5)
