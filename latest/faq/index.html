@@ -1343,7 +1343,7 @@ probability zero under a binormal model.</p>
 <h2 id="why-does-roc_band-refuse-my-multiclass-problem">Why does <code>roc_band</code> refuse my multiclass problem?<a class="headerlink" href="#why-does-roc_band-refuse-my-multiclass-problem" title="Permanent link">&para;</a></h2>
 <p>There is no single ROC curve for m &gt; 2 classes — any single curve would hide
 an arbitrary choice of reduction. Use
-<a class="autorefs autorefs-internal" href="../api/#rocci.roc_band_ovr"><code>roc_band_ovr</code></a>: one-vs-rest bands for every class at a
+<a class="autorefs autorefs-internal" title="            roc_band_ovr" href="../api/#rocci.roc_band_ovr"><code>roc_band_ovr</code></a>: one-vs-rest bands for every class at a
 Bonferroni-split level, which gives an exact (conservative) family-wise
 guarantee — all m curves covered jointly at your requested confidence, no
 independence assumptions. And why does <code>roc_band_ovr</code> refuse <code>normal=True</code>?
