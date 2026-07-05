@@ -91,4 +91,6 @@ version:
 
 Owner-only, and required once per machine/account rather than per release:
 PyPI/TestPyPI trusted publishers, `release` environment approval rights,
-Zenodo webhook, conda-forge feedstock (and merging its autotick PRs).
+Zenodo webhook. There is deliberately no conda package (see
+CONTRIBUTING.md §Releasing) — do not offer to create a feedstock unless the
+owner raises it.

@@ -17,9 +17,9 @@ just test      # fast suite
 ## Everyday commands
 
 `justfile` is the single answer to "how do I run X" — CI calls the same
-recipes. Highlights: 
-- `just test-all` (full matrix including a `ROCCI_BACKEND=numpy` pass) 
-- `just rust-test` 
+recipes. Highlights:
+- `just test-all` (full matrix including a `ROCCI_BACKEND=numpy` pass)
+- `just rust-test`
 - `just bench`
 - `just lint`
 - `just fix`
@@ -29,15 +29,15 @@ recipes. Highlights:
 
 `ROCCI_BACKEND=numpy` forces the pure-NumPy kernel;
 `ROCCI_BACKEND=rust` forces the Rust core (raises if the extension is
-missing). 
-The two backends agree statistically but produce different RNG streams, 
+missing).
+The two backends agree statistically but produce different RNG streams,
 so bands are not bit-identical across backends at the same seed.
 
 ## Slow statistical suite
 
 `pytest -m slow` runs the heavy statistical tests (cross-backend
-distributional agreement at B=8000 and, the calibration suite). 
-`just test` excludes them; 
+distributional agreement at B=8000 and, the calibration suite).
+`just test` excludes them;
 `just test-all` and CI run
 everything.
 
@@ -70,11 +70,12 @@ can be reconstructed from scratch.
 - **Zenodo webhook** (zenodo.org → GitHub integration): flip the repository
   on so each GitHub Release mints a DOI. Must be enabled *before* the
   release is created to get a DOI for it.
-- **conda-forge feedstock**: after the first PyPI release, submit a recipe
-  to [staged-recipes](https://github.com/conda-forge/staged-recipes)
-  (standard Rust/maturin pattern, built from the PyPI sdist). Afterwards
-  new releases arrive as automatic regro-cf-autotick-bot PRs on the
-  feedstock — merging them is the only recurring conda maintenance.
+- **conda: intentionally not packaged.** The wheel is self-contained
+  (statically linked Rust kernel; deps are only numpy/scipy), so
+  pip-inside-conda is the supported path and a feedstock would add
+  recurring maintenance for no technical gain. If user demand appears, a
+  recipe can be added to conda-forge's staged-recipes at any time (standard
+  Rust/maturin pattern, built from the PyPI sdist) without touching rocci.
 
 ### Per release
 
@@ -106,8 +107,7 @@ can be reconstructed from scratch.
    is live, re-installs it in clean environments on Linux/macOS/Windows and
    re-runs an end-to-end band, then creates the GitHub Release from the
    changelog section (which triggers the Zenodo DOI). The docs workflow
-   deploys the versioned site and moves the `stable` alias. If the
-   feedstock exists, merge the conda-forge autotick PR when it appears.
+   deploys the versioned site and moves the `stable` alias.
 
 A failed run before the approval gate publishes nothing and is safe to
 retry: fix, merge, and move the tag to the fixed commit
@@ -115,7 +115,7 @@ retry: fix, merge, and move the tag to the fixed commit
 
 ## Code guidelines
 
-- Lint/format: ruff. Type check: ty. Config lives in `pyproject.toml`; 
+- Lint/format: ruff. Type check: ty. Config lives in `pyproject.toml`;
   run `just fix` to apply autofixes.
 - Google docstrings on every public object, each with a runnable
   `Examples:` block (doctests run in CI).
