@@ -2683,8 +2683,9 @@ conservative, no independence needed). <code>"none"</code> → each band at
             <td>
               <div class="doc-md-description">
                 <p>If <code>normal=True</code> (the rest class is a mixture — the
-Working-Hotelling failure mode), if <code>m &lt;= 2</code>, on a column/class
-count mismatch, or on an invalid <code>family</code>.</p>
+Working-Hotelling failure mode), if <code>m &lt;= 2</code>, on duplicate or
+absent class labels, on a column/class count mismatch, or on an
+invalid <code>family</code>.</p>
               </div>
             </td>
           </tr>
@@ -2807,7 +2808,8 @@ count mismatch, or on an invalid <code>family</code>.</p>
 <span class="normal">283</span>
 <span class="normal">284</span>
 <span class="normal">285</span>
-<span class="normal">286</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">roc_band_ovr</span><span class="p">(</span>
+<span class="normal">286</span>
+<span class="normal">287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">roc_band_ovr</span><span class="p">(</span>
     <span class="n">y_true</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">y_score</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -2838,8 +2840,9 @@ count mismatch, or on an invalid <code>family</code>.</p>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        RocciError: If ``normal=True`` (the rest class is a mixture — the</span>
-<span class="sd">            Working-Hotelling failure mode), if ``m &lt;= 2``, on a column/class</span>
-<span class="sd">            count mismatch, or on an invalid ``family``.</span>
+<span class="sd">            Working-Hotelling failure mode), if ``m &lt;= 2``, on duplicate or</span>
+<span class="sd">            absent class labels, on a column/class count mismatch, or on an</span>
+<span class="sd">            invalid ``family``.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
@@ -3110,8 +3113,7 @@ during ingestion), otherwise <code>decision_function(X)</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>python/rocci/_api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">289</span>
-<span class="normal">290</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">290</span>
 <span class="normal">291</span>
 <span class="normal">292</span>
 <span class="normal">293</span>
@@ -3171,7 +3173,8 @@ during ingestion), otherwise <code>decision_function(X)</code>.</p>
 <span class="normal">347</span>
 <span class="normal">348</span>
 <span class="normal">349</span>
-<span class="normal">350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">from_estimator</span><span class="p">(</span>
+<span class="normal">350</span>
+<span class="normal">351</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">from_estimator</span><span class="p">(</span>
     <span class="n">estimator</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>  <span class="c1"># noqa: N803 — sklearn convention (feature matrix)</span>
     <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
@@ -5546,8 +5549,7 @@ absent.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>python/rocci/_api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">353</span>
-<span class="normal">354</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">354</span>
 <span class="normal">355</span>
 <span class="normal">356</span>
 <span class="normal">357</span>
@@ -5578,7 +5580,8 @@ absent.</p>
 <span class="normal">382</span>
 <span class="normal">383</span>
 <span class="normal">384</span>
-<span class="normal">385</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">show_versions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">385</span>
+<span class="normal">386</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">show_versions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Print an environment report for bug reports.</span>
 
 <span class="sd">    Reports the rocci version, active backend, core dependency versions, OS,</span>
