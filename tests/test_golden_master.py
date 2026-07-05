@@ -12,13 +12,14 @@ Guaranteed. The assembled lower and upper arms match the recorded outputs to
 at three stages — pre-floor (studentization + retention + envelope), the
 rectangle-floored arm, and the fully assembled band — so a divergence is
 localized to the stage that introduced it. The one deliberate, documented
-departure is pinned: rocci additionally sets ``lower[-1] = 1.0`` (spec 5.6 / A9,
-zero coverage cost), so that single endpoint is asserted separately and every
-other grid point must still match exactly.
+departure is pinned: rocci additionally sets ``lower[-1] = 1.0`` (the true ROC
+at FPR 1 is identically 1, so the pin costs zero coverage), so that single
+endpoint is asserted separately and every other grid point must still match
+exactly.
 
 Precedence. If this test disagrees with the implementation, the committed fixture
-wins — never regenerate fixtures to match new code; a fixture changes only with a
-spec change and a PR explaining the statistical delta.
+wins — never regenerate fixtures to match new code; a fixture changes only via a
+PR explaining the statistical delta and its coverage consequences.
 
 Limitations. Coverage depends on which fixtures are committed (the suite skips
 when none are present, and stage-specific checks skip fixtures lacking those
@@ -65,8 +66,8 @@ class TestGoldenMasters:
             pos,
             float(fx["alpha"]),
         )
-        # Documented statistical delta from the recorded implementation
-        # (spec §5.6 / appendix A9): rocci additionally pins lower[-1] = 1.0
+        # Documented statistical delta from the recorded implementation:
+        # rocci additionally pins lower[-1] = 1.0
         # because the true ROC at FPR = 1 is identically 1, so the pin
         # tightens the band at zero coverage cost. The fixtures are NOT
         # regenerated; every other grid point must still match the validated

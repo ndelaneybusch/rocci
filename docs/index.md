@@ -24,10 +24,12 @@ That is the whole quickstart. See it annotated in
 ## Why rocci
 
 - **Correct by default.** The default band is a studentized bootstrap
-  envelope with exact small-sample floors — distribution-free, calibrated
-  across score distributions, and honest where no distribution-free bound
-  exists. No normality assumption; heavy ties and discrete scores are safe
-  (conservative, and tested).
+  envelope with exact small-sample floors — distribution-free,
+  [validated in a 2.25M-evaluation simulation study](method/simulations.md)
+  across Gaussian, heavy-tailed, skewed, and multimodal score distributions,
+  and honest where no distribution-free bound exists. No normality
+  assumption; heavy ties and discrete scores are safe (conservative, and
+  tested).
 - **Just works.** NumPy arrays, pandas/polars Series, torch/JAX tensors,
   Python lists, `(n, 2)` probability matrices, posterior draws — ingestion is
   duck-typed with zero hard dependencies on any of those libraries.
@@ -53,6 +55,8 @@ figure above, where the true curve escapes the parametric band entirely.
 - [Reading the band](guide/reading-the-band.md) — what "simultaneous" buys
   you, and what the vacuous region at tiny FPR means.
 - [The envelope method](method/envelope.md) — how the band is built.
+- [Simulations and validation](method/simulations.md) — the evidence that the
+  method works where the classical bands fail.
 - [How rocci is verified](method/verification.md) — the case for trusting the
   numbers.
 - [API reference](api.md) — the full public surface (it's small).

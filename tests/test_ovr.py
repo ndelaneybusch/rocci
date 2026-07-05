@@ -11,8 +11,9 @@ Guaranteed. The family-wise correction is exact: each per-class band is built at
 ``family="none"``. Column-to-class routing follows the ``classes`` key, not the
 sorted-unique order (checked with a permuted order and string labels), and each
 class gets its own spawned seed so runs are reproducible from ``random_state``.
-The strongest check rebuilds the entire reduction independently from the spec 3.6
-contract — one-vs-rest labels, column selection, per-class confidence and seeds —
+The strongest check rebuilds the entire reduction independently from the
+documented contract — one-vs-rest labels, column selection, per-class confidence
+and seeds —
 and demands bit-identical band arrays, so a wrong column, an alpha that is
 displayed but not actually used, or a drifted seed derivation each fail. Malformed
 calls (bad ``family``, column-count mismatch, ``m <= 2``, a ``classes`` entry
@@ -159,7 +160,7 @@ class TestNormalRefused:
 def test_ovr_is_bitwise_a_manual_bonferroni_loop():
     """The OvR reduction is exactly the documented manual loop, bit for bit.
 
-    Rebuilds every ingredient independently from the spec §3.6 contract —
+    Rebuilds every ingredient of the documented OvR contract independently —
     one-vs-rest labels ``y == cls``, column ``j`` for ``classes[j]``,
     per-class confidence ``1 - alpha/m``, and per-class seeds via
     ``SeedSequence(random_state).spawn(m)`` — and demands identical band

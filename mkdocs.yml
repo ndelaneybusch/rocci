@@ -44,6 +44,7 @@ nav:
   - Method:
       - The envelope method: method/envelope.md
       - Theoretical behavior: method/theory.md
+      - Simulations and validation: method/simulations.md
       - How rocci is verified: method/verification.md
   - Vignettes:
       - Quickstart with scikit-learn: vignettes/01-quickstart-sklearn.md
@@ -82,7 +83,7 @@ plugins:
             inherited_members: false
             merge_init_into_class: true
   # Vignettes are jupytext Markdown notebooks, executed at build time so they
-  # can never silently rot (spec §13.3); a failure here fails `--strict`.
+  # can never silently rot; a failure here fails `--strict`.
   - mkdocs-jupyter:
       include: ["vignettes/*.md"]
       execute: true

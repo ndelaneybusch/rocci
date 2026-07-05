@@ -52,7 +52,7 @@ def oracle_bootstrap(neg_sorted, pos_sorted, k_indices, n_boot, seed):
         pos_resamp = np.repeat(pos_sorted, cp)
         for j, k in enumerate(k_indices):
             if int(k) == n0:
-                # A14 sentinel: TPR is 1 by definition at k == n_neg. This is
+                # k == n_neg is the -inf sentinel: TPR is 1 by definition. This is
                 # deliberately not a literal `pos > -inf` comparison — scores
                 # of -inf are legal, and -inf > -inf would give 0 where the
                 # contract pins the ROC endpoint at 1.

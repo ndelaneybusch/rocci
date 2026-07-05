@@ -6,8 +6,9 @@ coverage failure when it does not. So the guarantee here has two halves: the ban
 is the correct parametric object, and its diagnostics make the assumption's
 failure *visible* to the user rather than swallowing it.
 
-Guaranteed. The band reproduces the normative A11 closed forms to float
-precision, its probit-space width scales as ``sqrt(chi2.ppf(1-alpha, 2))`` (right
+Guaranteed. The band reproduces its closed forms — independently transcribed in
+the oracle test — to float precision, its probit-space width scales as
+``sqrt(chi2.ppf(1-alpha, 2))`` (right
 df, not a z substitution), and on a deterministic quantile-grid "sample" it
 contains the true binormal ROC and shrinks at the exact delta-method rate (width
 halves when n quadruples). Provenance is distinct from the envelope path
@@ -83,10 +84,10 @@ def true_binormal_roc(grid: np.ndarray, d: float) -> np.ndarray:
 
 
 class TestWorkingHotellingExactness:
-    def test_matches_a11_transcription_oracle(self):
-        # independent transcription of the normative A11 closed forms; any
-        # refactor of working_hotelling_band must reproduce them to float
-        # precision
+    def test_matches_closed_form_transcription_oracle(self):
+        # independent transcription of the method-of-moments binormal closed
+        # forms; any refactor of working_hotelling_band must reproduce them
+        # to float precision
         neg, pos = binormal_scores(150, 130, seed=3)
         grid = np.linspace(0, 1, 65)
         alpha = 0.05

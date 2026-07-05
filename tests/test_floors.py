@@ -13,7 +13,7 @@ breaks the defining identity (and the one-sided lower bound uses the one-sided
 z). The variance-gated rectangle floor leaves healthy-variance points untouched,
 only ever widens deficient ones, keeps the output monotone, uses the Sidak
 correction only when the effective count ``k_eff > 1`` (and the uncorrected alpha
-otherwise), and matches a hand-transcribed A7 oracle under full collapse. The
+otherwise), and matches a hand-transcribed Sidak oracle under full collapse. The
 Beta order-statistic floor is provably vacuous below ``q_1`` (with
 ``q_1 = 1 - (alpha/(2 j_max))^(1/n_neg)`` confirmed in closed form and via the
 Beta/Binomial survival identity that catches swapped parameters), never raises
@@ -224,7 +224,8 @@ class TestRectangleFloorGate:
         # var_raw = 0 everywhere gives deficiency 1 at every grid point, so
         # k_eff = K and alpha_w = 1 - (1-alpha)^(1/K) exactly; the floored
         # band must equal min/max against the rectangle band at alpha_w
-        # followed by the monotonicity pass — transcribed here from A7
+        # followed by the monotonicity pass — transcribed here independently
+        # of the implementation
         neg, pos, grid, tpr, wilson_var = self._setup(seed=13)
         lo_env = np.clip(tpr - 0.02, 0, 1)
         hi_env = np.clip(tpr + 0.02, 0, 1)

@@ -26,11 +26,11 @@ Single test: `uv run pytest tests/test_envelope.py -k name_fragment`. Slow stati
 
 After editing Rust, rebuild the extension with `uv run maturin develop --release` before running Python tests.
 
-## Normative spec — read before changing statistics
+## Statistical semantics are locked — read before changing statistics
 
-`rocci_spec.md` and `rocci_spec_appendix.md` fully determine the implementation. Appendix routines are labeled A1–A16; ones marked **EXACT** encode validated tie/edge semantics and must be implemented as written.
+The tie and edge semantics in `band/` and both kernels (`searchsorted` sides, strict-vs-non-strict comparisons, sentinel handling, endpoint pins) encode validated statistical behavior. Any edit that changes one of them is a statistical change, not a cleanup, no matter how much it looks like a simplification.
 
-- **Golden-master fixtures** (`tests/fixtures/golden`, checked by `test_golden_master.py`) were recorded once from the validated paper implementation. Precedence: if a golden test disagrees with an appendix routine, **the fixture wins** — never regenerate fixtures to match new code. Fixtures change only with a spec change and a PR explaining the statistical delta (spec §5.7); `just fixtures` regenerates them from a `studroc_paper` checkout.
+- **Golden-master fixtures** (`tests/fixtures/golden`, checked by `test_golden_master.py`) were recorded once from the validated paper implementation and are the ground truth for the band assembly. Precedence: if a golden test disagrees with the code, **the fixture wins** — never regenerate fixtures to match new code. Fixtures change only through a PR that explains the statistical delta and its coverage consequences (see CONTRIBUTING.md §Golden-master fixtures); `just fixtures` regenerates them from a `studroc_paper` checkout.
 - The band assembly order (envelope → Wilson rectangle floor + monotonicity → Beta floor → pinned endpoints) in `band/envelope.py` is load-bearing; do not reorder.
 - Reproducibility contract: same seed + same backend + same version → bit-identical output, independent of thread count. Rust and NumPy backends use different RNG streams — they agree statistically, not bit-wise.
 

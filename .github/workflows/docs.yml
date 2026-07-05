@@ -1,6 +1,6 @@
 name: docs
 
-# Deploys the versioned docs site with mike (spec §13.1 / §14.1):
+# Deploys the versioned docs site with mike:
 # - push to main   -> deploy the `latest` alias
 # - release tag vX.Y.Z -> deploy version X.Y and move the `stable` alias
 # PRs never deploy — they only build, via the docs-build job in ci.yml.

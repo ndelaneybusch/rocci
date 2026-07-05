@@ -18,7 +18,7 @@ else: a healthy call is silent; ``confidence < 0.90`` warns; ``n_boot < 100``
 raises, ``[100, 1000)`` warns, ``>= 1000`` is silent; malformed
 ``confidence`` / ``random_state`` / ``n_threads`` / ``grid_size`` raise
 ``RocciError`` naming the offending argument. Results are frozen; ``.at()`` is
-the right-continuous step of appendix A13 (NaN and out-of-range queries raise).
+the documented right-continuous step lookup (NaN and out-of-range queries raise).
 Exotic-but-legal inputs stay valid: float32 is bit-identical to its float64
 widening, integer-rank scores reproduce the band (rank invariance), +/-inf is
 handled, and the minimal ``n_neg = n_pos = 2`` problem yields the closed-form
@@ -224,7 +224,7 @@ class TestResultMethods:
 
     def test_at_between_grid_points_is_right_continuous_step(self):
         # a query strictly between grid points must return the value at the
-        # grid point to its *left* (right-continuous step, appendix A13)
+        # grid point to its *left* (right-continuous step convention)
         band = self._band()
         mid = (band.fpr[:-1] + band.fpr[1:]) / 2.0
         lo, tp, up = band.at(mid)

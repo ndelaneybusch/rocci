@@ -39,11 +39,11 @@ rust-test:
     cargo test
 
 # benchmarks/ perf gates, prints table vs thresholds; fails on breach so
-# release-prep's absolute-budget verification (spec §14.5) has teeth
+# release-prep's absolute-budget verification has teeth
 bench:
     uv run python benchmarks/run_benchmarks.py --strict
 
-# Slow deterministic calibration suite from spec §11.5 / appendix A15.
+# Slow deterministic calibration suite: coverage + width gates over four DGPs.
 calibration:
     uv run pytest -q -m slow tests/test_calibration.py
 
@@ -60,12 +60,13 @@ docs-build:
     uv run mkdocs build --strict
 
 # Regenerate golden masters (requires a studroc_paper checkout; prints provenance).
-# Policy: fixtures change ONLY with a spec change and a PR explaining the
-# statistical delta (spec §5.7). Pass the paper repo's python explicitly.
+# Policy: fixtures are never regenerated to make new code pass; they change
+# ONLY via a PR explaining the statistical delta (CONTRIBUTING.md §Golden-master
+# fixtures). Pass the paper repo's python explicitly.
 fixtures paper_python="../studroc_paper/.venv/Scripts/python.exe":
     {{ paper_python }} scripts/record_golden_masters.py --out tests/fixtures/golden
 
-# Version bump + git-cliff changelog + absolute perf check (spec §14.5)
+# Version bump + git-cliff changelog + absolute perf check
 release-prep version:
     uv run python scripts/release_prep.py {{ version }}
     just bench

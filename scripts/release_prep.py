@@ -1,4 +1,4 @@
-"""Release preparation: version bump + changelog regeneration (spec §14.5).
+"""Release preparation: version bump + changelog regeneration.
 
 Invoked as ``just release-prep X.Y.Z`` (which also runs the absolute perf
 gates via ``just bench`` afterwards). This script:

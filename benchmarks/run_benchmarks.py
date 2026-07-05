@@ -13,7 +13,7 @@ Exit code 1 on any breach with --strict. Two modes:
   `just bench` and release-prep on developer hardware.
 - relative (--compare-json): used by the per-PR CI perf job to absorb
   runner variance. A timing fails on a regression past --relative-tolerance
-  (spec: 30%) versus the baseline, or on breaching 2x the absolute release
+  (default 30%) versus the baseline, or on breaching 2x the absolute release
   gate — the backstop that stops a slow-runner baseline from laundering a
   real regression.
 """
@@ -129,7 +129,8 @@ def compare_relative(
     """Return True when the current suite regresses past the baseline or backstop.
 
     A timing breaches on either criterion: slower than baseline by more than
-    ``tolerance``, or above 2x its absolute release gate (spec §14.2).
+    ``tolerance``, or above 2x its absolute release gate (the backstop
+    described in the module docstring).
     """
     breached = False
     print(f"\nrelative tolerance: {tolerance:.0%}; absolute backstop: 2x release gates")
@@ -168,7 +169,7 @@ def main() -> int:
         "--relative-tolerance",
         type=float,
         default=0.30,
-        help="allowed relative slowdown when --compare-json is used (spec §14.2)",
+        help="allowed relative slowdown when --compare-json is used",
     )
     args = parser.parse_args()
 

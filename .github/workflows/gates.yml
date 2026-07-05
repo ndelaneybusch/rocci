@@ -45,7 +45,7 @@ jobs:
     # is empty there); PRs run only when non-docs files changed.
     if: github.event_name != 'pull_request' || needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
-    # Sized to finish well inside 15 min (spec §14.2); ~16 s on a desktop, so
+    # The suite runs in ~16 s on a desktop, so
     # the timeout is a hang backstop, not headroom.
     timeout-minutes: 20
     steps:

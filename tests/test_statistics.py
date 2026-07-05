@@ -3,13 +3,13 @@
 A band can be built from primitives that each match their formula and still fail
 as a whole — miss the true ROC, be wider than the trivial construction it exists
 to beat, or stop responding to its knobs. This suite checks those whole-band
-properties against ground truth (DGPs with closed-form population ROCs, appendix
-A15) on single fast draws, as the quick companion to the full multi-DGP coverage
+properties against ground truth (DGPs with closed-form population ROCs) on
+single fast draws, as the quick companion to the full multi-DGP coverage
 gate in ``test_calibration.py``.
 
 Guaranteed. On the recorded draws the band contains the true binormal ROC (the
 reason it exists), and it is strictly narrower than the KS/DKW reference band
-(appendix A16) on both binormal and heavy-tailed data — the paper's headline
+on both binormal and heavy-tailed data — the paper's headline
 "tighter than the trivial valid band" claim, and the distribution-free part of it.
 The band responds correctly to its two knobs: raising confidence nests the bands
 pointwise (more confidence never buys a narrower bound) and grows the vacuous
@@ -39,7 +39,7 @@ from rocci._warnings import RocciWarning
 from rocci.band.grids import empirical_roc_on_grid
 from tests.conftest import binormal_dataset
 
-#: Binormal shift solving AUC = 0.8 (A15 DGP 1).
+#: Binormal shift solving AUC = 0.8 for the equal-variance binormal DGP.
 D_08 = math.sqrt(2.0) * norm.ppf(0.8)
 
 
@@ -54,7 +54,7 @@ def true_binormal_roc(grid: np.ndarray, d: float) -> np.ndarray:
 def ks_reference_band(
     neg: np.ndarray, pos: np.ndarray, grid: np.ndarray, alpha: float
 ) -> tuple[np.ndarray, np.ndarray]:
-    """A16 KS/DKW fixed-width reference band — the width yardstick."""
+    """KS/DKW fixed-width reference band — the width yardstick."""
     alpha_m = 1.0 - math.sqrt(1.0 - alpha)  # Sidak across the two ECDFs
     c = math.sqrt(math.log(2.0 / alpha_m) / 2.0)
     d0 = c / math.sqrt(len(neg))

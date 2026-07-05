@@ -3,14 +3,14 @@
 This is the closest the suite comes to validating the headline claim — that the
 band achieves *simultaneous* coverage — end to end. Over four data-generating
 processes with closed-form population ROCs (binormal, Student-t3, a bimodal
-mixture, and a discretized/heavy-tie binormal; appendix A15) at two sample sizes,
+mixture, and a discretized/heavy-tie binormal) at two sample sizes,
 it Monte-Carlo estimates the fraction of draws whose band fully contains the true
 ROC and checks that estimate against a floor.
 
 Guaranteed. Empirical simultaneous coverage stays at or above 0.906 (the lower
-edge of the appendix's central 99.9% band for a 95% target), and it does so
-without cheating on width: the mean band is required to be narrower than the
-KS/DKW reference band (appendix A16) on the same draws, so an all-covering
+edge of the central 99.9% binomial interval around a 95% target at 250 sims),
+and it does so without cheating on width: the mean band is required to be
+narrower than the KS/DKW reference band on the same draws, so an all-covering
 vacuous band cannot pass. Because the seed sequences are fixed, a regression that
 erodes coverage or inflates width changes the numbers deterministically.
 
@@ -47,7 +47,7 @@ CONFIDENCE = 0.95
 ALPHA = 1.0 - CONFIDENCE
 N_SIMS = int(os.environ.get("ROCCI_CALIBRATION_SIMS", "250"))
 N_BOOT = int(os.environ.get("ROCCI_CALIBRATION_BOOT", "2000"))
-# The appendix's central 99.9% interval is [0.906, 0.988]. The current
+# The central 99.9% interval of Binomial(250, 0.95)/250 is [0.906, 0.988]. The current
 # small-n floor stack can be more conservative than the upper edge; make
 # undercoverage a hard failure and let the KS width yardstick reject vacuous
 # all-covering bands.

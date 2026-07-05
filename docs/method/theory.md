@@ -1,8 +1,12 @@
 # Theoretical behavior
 
 What can be *guaranteed*, what is *calibrated*, and where the honest edges
-are. (Condensed from the method paper's theory; the spec appendix in the
-repository is the normative statement of every routine.)
+are. (Condensed from the theory reports in the
+[method validation study](https://github.com/ndelaneybusch/studroc_paper).
+[The envelope method](envelope.md) describes what is computed;
+[Simulations and validation](simulations.md) is the empirical evidence;
+[How rocci is verified](verification.md) shows how the implementation is
+held to it.)
 
 ## Exact, distribution-free ingredients
 
