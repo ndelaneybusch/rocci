@@ -7,9 +7,9 @@
           {
             "type": "agent",
             "if": "Bash(gh pr create*)",
-            "prompt": "A pull request is about to be opened with `gh pr create`. Perform a focused, high-signal security review of this branch's changes BEFORE the PR is created.\n\nSteps:\n1. Find the base branch (default `main`) and gather the full diff: `git diff main...HEAD` plus `git diff HEAD` and `git diff --staged` for any uncommitted work.\n2. Review ONLY these changes for HIGH-CONFIDENCE, genuinely exploitable vulnerabilities: command/SQL/NoSQL injection, RCE via deserialization (pickle/yaml.load), path traversal, hardcoded secrets or credentials, authentication/authorization bypass, and unsafe eval/exec. Ignore documentation-only and test-only changes, DoS/resource-exhaustion, dependency-version issues, and theoretical or style concerns.\n3. Only flag an issue if you are >80% confident it is real and exploitable.\n\nDecision: if you find one or more high-confidence vulnerabilities, BLOCK and report each as file:line, severity, and a one-line fix. If there are none, APPROVE so the PR can proceed. Hook input: $ARGUMENTS",
+            "prompt": "A pull request is about to be opened with `gh pr create`. Before it is created, run the `/security-review` skill to review the pending changes on this branch. Invoke `/security-review`, let it complete its full analysis of the branch diff, and act on its result:\n\n- If it reports one or more high-confidence, exploitable vulnerabilities, BLOCK the PR and surface them (file:line, severity, one-line fix).\n- If the review comes back clean, APPROVE so the changes are cleared and the PR proceeds.\n\nHook input: $ARGUMENTS",
             "model": "claude-sonnet-5",
-            "timeout": 180,
+            "timeout": 600,
             "statusMessage": "Security-reviewing branch before opening PR..."
           }
         ]
