@@ -1339,9 +1339,9 @@ just test      # fast suite
 ("Desktop development with C++" workload from the Visual Studio installer).</p>
 <h2 id="everyday-commands">Everyday commands<a class="headerlink" href="#everyday-commands" title="Permanent link">&para;</a></h2>
 <p><code>justfile</code> is the single answer to "how do I run X" — CI calls the same
-recipes. Highlights: 
-- <code>just test-all</code> (full matrix including a <code>ROCCI_BACKEND=numpy</code> pass) 
-- <code>just rust-test</code> 
+recipes. Highlights:
+- <code>just test-all</code> (full matrix including a <code>ROCCI_BACKEND=numpy</code> pass)
+- <code>just rust-test</code>
 - <code>just bench</code>
 - <code>just lint</code>
 - <code>just fix</code>
@@ -1349,13 +1349,13 @@ recipes. Highlights:
 <h2 id="backend-override">Backend override<a class="headerlink" href="#backend-override" title="Permanent link">&para;</a></h2>
 <p><code>ROCCI_BACKEND=numpy</code> forces the pure-NumPy kernel;
 <code>ROCCI_BACKEND=rust</code> forces the Rust core (raises if the extension is
-missing). 
-The two backends agree statistically but produce different RNG streams, 
+missing).
+The two backends agree statistically but produce different RNG streams,
 so bands are not bit-identical across backends at the same seed.</p>
 <h2 id="slow-statistical-suite">Slow statistical suite<a class="headerlink" href="#slow-statistical-suite" title="Permanent link">&para;</a></h2>
 <p><code>pytest -m slow</code> runs the heavy statistical tests (cross-backend
-distributional agreement at B=8000 and, the calibration suite). 
-<code>just test</code> excludes them; 
+distributional agreement at B=8000 and, the calibration suite).
+<code>just test</code> excludes them;
 <code>just test-all</code> and CI run
 everything.</p>
 <h2 id="branch-model-commits">Branch model &amp; commits<a class="headerlink" href="#branch-model-commits" title="Permanent link">&para;</a></h2>
@@ -1382,11 +1382,12 @@ can be reconstructed from scratch.</p>
 <li><strong>Zenodo webhook</strong> (zenodo.org → GitHub integration): flip the repository
   on so each GitHub Release mints a DOI. Must be enabled <em>before</em> the
   release is created to get a DOI for it.</li>
-<li><strong>conda-forge feedstock</strong>: after the first PyPI release, submit a recipe
-  to <a href="https://github.com/conda-forge/staged-recipes">staged-recipes</a>
-  (standard Rust/maturin pattern, built from the PyPI sdist). Afterwards
-  new releases arrive as automatic regro-cf-autotick-bot PRs on the
-  feedstock — merging them is the only recurring conda maintenance.</li>
+<li><strong>conda: intentionally not packaged.</strong> The wheel is self-contained
+  (statically linked Rust kernel; deps are only numpy/scipy), so
+  pip-inside-conda is the supported path and a feedstock would add
+  recurring maintenance for no technical gain. If user demand appears, a
+  recipe can be added to conda-forge's staged-recipes at any time (standard
+  Rust/maturin pattern, built from the PyPI sdist) without touching rocci.</li>
 </ul>
 <h3 id="per-release">Per release<a class="headerlink" href="#per-release" title="Permanent link">&para;</a></h3>
 <ol>
@@ -1416,14 +1417,13 @@ can be reconstructed from scratch.</p>
    is live, re-installs it in clean environments on Linux/macOS/Windows and
    re-runs an end-to-end band, then creates the GitHub Release from the
    changelog section (which triggers the Zenodo DOI). The docs workflow
-   deploys the versioned site and moves the <code>stable</code> alias. If the
-   feedstock exists, merge the conda-forge autotick PR when it appears.</p>
+   deploys the versioned site and moves the <code>stable</code> alias.</p>
 <p>A failed run before the approval gate publishes nothing and is safe to
 retry: fix, merge, and move the tag to the fixed commit
 (<code>git push origin :refs/tags/vX.Y.Z</code> then re-tag and push).</p>
 <h2 id="code-guidelines">Code guidelines<a class="headerlink" href="#code-guidelines" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Lint/format: ruff. Type check: ty. Config lives in <code>pyproject.toml</code>; 
+<li>Lint/format: ruff. Type check: ty. Config lives in <code>pyproject.toml</code>;
   run <code>just fix</code> to apply autofixes.</li>
 <li>Google docstrings on every public object, each with a runnable
   <code>Examples:</code> block (doctests run in CI).</li>

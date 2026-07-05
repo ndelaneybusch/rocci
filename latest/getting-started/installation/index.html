@@ -1234,12 +1234,19 @@ uv pip install 'rocci[plot]'    # or into the active environment
 </code></pre>
 <p>=== "conda"</p>
 <pre><code>```bash
-conda install -c conda-forge rocci
+conda activate myenv
+pip install rocci
 ```
 
-The conda-forge feedstock follows the first PyPI release; until it
-lands, use `pip install rocci` inside the conda environment (the wheel
-is self-contained and coexists cleanly with conda-managed numpy/scipy).
+rocci is not on conda-forge at present, deliberately: the usual reason
+to want a conda build — coordinating shared native libraries across
+packages — does not apply here. The wheel is lightweight and
+self-contained (the Rust kernel is statically linked; the only
+dependencies are numpy and scipy), so pip-inside-conda is safe and is
+the supported path: pip reuses the conda-managed numpy/scipy when they
+satisfy the requirements and touches nothing else in the environment.
+If a conda-forge package would matter for your setup, open an issue —
+demand is what would change the decision.
 </code></pre>
 <p>=== "from source"</p>
 <pre><code>```bash
