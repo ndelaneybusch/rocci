@@ -64,9 +64,22 @@ plugins:
           options:
             docstring_style: google
             members_order: source
+            filters: ["!^_"]
+            # Every documented object gets its own titled heading (h3, under
+            # the h2 section headings in api.md), so class members nest one
+            # level deeper and the page ToC mirrors the actual hierarchy.
+            heading_level: 3
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
             separate_signature: true
             show_signature_annotations: true
+            signature_crossrefs: true
+            line_length: 80
             show_source: true
+            show_bases: true
+            inherited_members: false
             merge_init_into_class: true
   # Vignettes are jupytext Markdown notebooks, executed at build time so they
   # can never silently rot (spec §13.3); a failure here fails `--strict`.
