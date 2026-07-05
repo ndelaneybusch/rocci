@@ -51,7 +51,9 @@ truth for the band assembly, and the precedence rule is absolute: if code and
 fixture disagree, the fixture wins — **never regenerate fixtures to make new
 code pass**. A fixture changes only through a PR that explains the intended
 statistical delta and why coverage is preserved, with maintainer sign-off;
-`just fixtures` then re-records them from a `studroc_paper` checkout.
+`just fixtures` then re-records them from a checkout of
+[studroc_paper](https://github.com/ndelaneybusch/studroc_paper), the method
+validation study the fixtures come from.
 
 ## Branch model & commits
 

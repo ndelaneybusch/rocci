@@ -34,6 +34,11 @@ Two exact small-sample repairs handle the places the bootstrap is blind
 calibrated across score distributions with **no assumptions on the score
 distribution at all**.
 
+The numbers behind all three verdicts — coverage heatmaps, joint
+coverage-vs-width comparisons, and component ablations from a
+2.25-million-evaluation simulation study — are in
+[Simulations and validation](../method/simulations.md).
+
 ## Properties worth knowing
 
 **Rank invariance.** The envelope band depends on the scores only through

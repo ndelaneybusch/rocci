@@ -44,6 +44,7 @@ nav:
   - Method:
       - The envelope method: method/envelope.md
       - Theoretical behavior: method/theory.md
+      - Simulations and validation: method/simulations.md
       - How rocci is verified: method/verification.md
   - Vignettes:
       - Quickstart with scikit-learn: vignettes/01-quickstart-sklearn.md

@@ -1,7 +1,8 @@
 # Golden-master provenance
 
-Recorded outputs of the validated `studroc_paper` implementation
-(`envelope_bootstrap_band(boundary_method='wilson')` and
+Recorded outputs of the validated
+[`studroc_paper`](https://github.com/ndelaneybusch/studroc_paper)
+implementation (`envelope_bootstrap_band(boundary_method='wilson')` and
 `envelope_band_suite`). These fixtures are the arbiters of the
 golden-master equivalence suite (`tests/test_golden_master.py`).
 **Never regenerate them to match new code.**

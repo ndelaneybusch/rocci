@@ -32,8 +32,12 @@ capturing the _entire_ true (population) ROC.
 By default, `rocci` uses a distribution-free method that provides informative
 bands without burdensome assumptions about the data. It maintains nominal
 coverage in a huge variety of contexts and the rare violations tend to be small
-misses. If you are comfortable adding a normality assumption to get tighter
-bands, `rocci` yields a "Working-Hotelling" band, but also carefully checks the
+misses — validated in a 2.25M-evaluation simulation study across Gaussian,
+heavy-tailed, skewed, and multimodal score distributions (see
+[the validation repository](https://github.com/ndelaneybusch/studroc_paper) and
+[the docs' walkthrough of its conclusions](https://ndelaneybusch.github.io/rocci/method/simulations/)).
+If you are comfortable adding a normality assumption to get tighter bands,
+`rocci` yields a "Working-Hotelling" band, but also carefully checks the
 normality assumption and warns you when it looks dicey.
 
 ## Installation

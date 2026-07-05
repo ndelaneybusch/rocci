@@ -1,9 +1,11 @@
 # How rocci is verified
 
 A confidence band is only as trustworthy as the code that computes it. The
-statistical case for the method lives in [Theoretical behavior](theory.md); this
-page is the *engineering* case — the evidence that the implementation faithfully
-realizes that method and keeps doing so.
+statistical case for the method lives in
+[Simulations and validation](simulations.md) and
+[Theoretical behavior](theory.md); this page is the *engineering* case — the
+evidence that the implementation faithfully realizes that method and keeps
+doing so.
 
 The short version: **no layer is trusted on its own.** The band you get back has
 been checked from four independent directions — against the validated reference
@@ -15,8 +17,9 @@ change. What follows is the case in totality, and where to look for each part.
 ## It matches the validated reference, exactly
 
 The strongest bar rocci clears is not a property test but an *identity* test.
-The reference implementation used to validate the method in the paper was run
-once to record golden-master fixtures; given the exact inputs it recorded,
+The reference implementation from the
+[method validation study](https://github.com/ndelaneybusch/studroc_paper) was
+run once to record golden-master fixtures; given the exact inputs it recorded,
 rocci's assembly must reproduce its band to `atol=1e-6`. The precedence rule is
 absolute: if the code and a fixture ever disagree, **the fixture wins** —
 fixtures are never regenerated to make new code pass. This turns "we reproduce

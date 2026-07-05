@@ -96,8 +96,10 @@ Each grid point of the lower arm records which stage produced it
 [diagnostics figure](../guide/diagnostics.md) renders.
 
 The assembled pipeline is locked by **golden-master tests**: committed
-fixtures recorded from the validated research implementation, which every
-build must reproduce within $10^{-6}$. The statistics cannot silently drift.
+fixtures recorded from the
+[validated research implementation](https://github.com/ndelaneybusch/studroc_paper),
+which every build must reproduce within $10^{-6}$. The statistics cannot
+silently drift.
 
 ## 7. AUC
 
