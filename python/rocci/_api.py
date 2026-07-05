@@ -215,8 +215,9 @@ def roc_band_ovr(
 
     Raises:
         RocciError: If ``normal=True`` (the rest class is a mixture — the
-            Working-Hotelling failure mode), if ``m <= 2``, on a column/class
-            count mismatch, or on an invalid ``family``.
+            Working-Hotelling failure mode), if ``m <= 2``, on duplicate or
+            absent class labels, on a column/class count mismatch, or on an
+            invalid ``family``.
 
     Examples:
         >>> import numpy as np

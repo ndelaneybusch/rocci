@@ -157,7 +157,8 @@ def grid_k_indices(grid: FloatArray, n_neg: int) -> NDArray[np.uint64]:
         n_neg: Number of negative-class samples.
 
     Returns:
-        ``uint64`` array of descending 0-based order-statistic indices.
+        ``uint64`` array of 0-based indices into the descending-sorted
+        negatives (``k = 0`` is the largest negative).
 
     Examples:
         >>> import numpy as np

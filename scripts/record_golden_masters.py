@@ -104,6 +104,9 @@ def record(name, spec, out_dir):
         alphas=[ALPHA],
         include_pre_floor_arm=True,
     )[ALPHA]
+    # Sanity check that the reference's two entry points agree before we trust
+    # either: the suite's "envelope" arm must reproduce envelope_bootstrap_band
+    # bit-for-bit (tighter than the 1e-6 the golden test later holds rocci to).
     s_lower, s_upper = suite["envelope"]
     np.testing.assert_allclose(s_lower, lower, atol=1e-7)
     np.testing.assert_allclose(s_upper, upper, atol=1e-7)
