@@ -27,6 +27,7 @@ material for the docs.
 | Plotting                               | `matplotlib` via optional extra `rocci[plot]`             | Lazy import with actionable error message                                                                                                       |
 | License                                | MIT                                                       | Maximize adoption (owner may override)                                                                                                          |
 | Versioning                             | SemVer, start at `0.1.0`, `1.0.0` when out of beta        |                                                                                                                                                 |
+| Distribution                           | PyPI wheels + sdist only; **no conda-forge package**      | The abi3 wheel is self-contained (static Rust kernel; deps = numpy/scipy), so pip-inside-conda is safe — a feedstock is recurring maintenance for no technical gain. Revisit on user demand. |
 
 ---
 
@@ -786,7 +787,7 @@ version picker in the header). Math via KaTeX (`pymdownx.arithmatex`).
 ```
 Home                      # hero figure + 5-line quickstart + "why rocci"
 Getting started
-├── Installation          # pip / conda-forge / fallback-backend note
+├── Installation          # pip / pip-inside-conda note / fallback-backend note
 └── Quickstart            # the 5-line example, annotated output figure
 User guide
 ├── Which band should I use?    # condensed paper §1–3: WH failure modes, KS vacuity, envelope;
@@ -843,7 +844,6 @@ services exist — no manual upkeep):
 | ------------------- | -------------------------------------------------------------------------------------------- |
 | PyPI version        | `img.shields.io/pypi/v/rocci` → pypi.org/project/rocci                                       |
 | Python versions     | `img.shields.io/pypi/pyversions/rocci` (driven by classifiers)                               |
-| conda-forge version | `img.shields.io/conda/vn/conda-forge/rocci` (appears once the feedstock lands)               |
 | CI                  | `github.com/ndelaneybusch/rocci/actions/workflows/ci.yml/badge.svg`                          |
 | Merge gates         | `.../workflows/gates.yml/badge.svg` (calibration + perf — the "the science is tested" badge) |
 | Coverage            | shields.io endpoint badge fed by a gist the `test` job writes from `coverage.xml` (no third-party service) |
@@ -979,13 +979,13 @@ release cannot ship half-done or inconsistent.
 7. **Announce artifacts**: GitHub Release created with the changelog section
   (this triggers Zenodo's DOI webhook); `docs.yml` runs
    `mike deploy X.Y stable`.
-8. **conda-forge**: after the first PyPI release, submit the feedstock via
-  staged-recipes (standard Rust/maturin pattern: `{{ compiler('rust') }}` +
-   `{{ stdlib('c') }}` in build, `maturin` + `pip` in host; build from the
-   PyPI sdist). Subsequent releases arrive as automatic regro-cf-autotick-bot
-   PRs — merging them is the only recurring conda maintenance. Acceptance for
-   "conda-ready": `conda install -c conda-forge rocci` works on
-   linux-64/aarch64, osx-64/arm64, win-64.
+8. **conda: intentionally not packaged** (§1 locked decision). The
+   self-contained wheel makes pip-inside-conda the supported path, and the
+   docs say so explicitly. If user demand changes the decision, the path is
+   a staged-recipes submission (standard Rust/maturin pattern:
+   `{{ compiler('rust') }}` + `{{ stdlib('c') }}` in build, `maturin` +
+   `pip` in host; build from the PyPI sdist), addable at any time without
+   touching rocci itself.
 
 ---
 
@@ -1006,8 +1006,8 @@ release cannot ship half-done or inconsistent.
   into `gates.yml` as required PR checks (§14.2). DONE.
 8. **M7 — Release**: 0.1.0 to PyPI. DONE (released 2026-07-05: six abi3
    wheels + sdist, post-publish verified on all three OSes, GitHub Release,
-   versioned docs). conda-forge feedstock: deliberately deferred — see §14.5
-   step 8; revisit if user demand appears.
+   versioned docs). conda: intentionally not packaged — locked decision in
+   §1, rationale and revisit-path in §14.5 step 8.
 
 Definition of done for v0.1.0: all gates in §9 and §11 green; a user with only
 `pip` gets a correct, fast band and a paper-quality figure in ≤ 5 lines on

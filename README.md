@@ -2,7 +2,6 @@
 
 [![PyPI](https://img.shields.io/pypi/v/rocci)](https://pypi.org/project/rocci/)
 [![Python versions](https://img.shields.io/pypi/pyversions/rocci)](https://pypi.org/project/rocci/)
-[![conda-forge](https://img.shields.io/conda/vn/conda-forge/rocci)](https://anaconda.org/conda-forge/rocci)
 [![CI](https://github.com/ndelaneybusch/rocci/actions/workflows/ci.yml/badge.svg)](https://github.com/ndelaneybusch/rocci/actions/workflows/ci.yml)
 [![Merge gates](https://github.com/ndelaneybusch/rocci/actions/workflows/gates.yml/badge.svg)](https://github.com/ndelaneybusch/rocci/actions/workflows/gates.yml)
 [![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ndelaneybusch/c2865a0da1db40e24976b7c721a4ca97/raw/rocci-coverage.json)](https://github.com/ndelaneybusch/rocci/actions/workflows/ci.yml)
@@ -50,8 +49,9 @@ silicon), and Windows, for every Python ≥ 3.10; runtime dependencies are
 numpy and scipy only. On any other platform `pip` falls back to the sdist
 (requires a [Rust toolchain](https://rustup.rs)), and if no compiled kernel
 is present at runtime a pure-NumPy backend with identical statistical
-semantics takes over automatically. A conda-forge package
-(`conda install -c conda-forge rocci`) follows the first PyPI release.
+semantics takes over automatically. There is no conda package at present:
+the wheel is lightweight and self-contained, so `pip install rocci` works
+cleanly inside conda environments.
 Details: [installation guide](https://ndelaneybusch.github.io/rocci/getting-started/installation/).
 
 ## Quickstart
