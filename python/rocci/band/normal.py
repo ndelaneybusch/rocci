@@ -14,9 +14,10 @@ import math
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.stats import chi2, norm, normaltest, shapiro
+from scipy.stats import shapiro
 
 from rocci._result import NormalityReport
+from rocci.special import chi2_ppf, dagostino_k2, ndtr, ndtri
 
 FloatArray = NDArray[np.float64]
 
@@ -89,16 +90,16 @@ def working_hotelling_band(
     if not math.isfinite(cov_ab):
         cov_ab = 0.0
 
-    x = norm.ppf(np.clip(grid, _PROBIT_CLIP, 1.0 - _PROBIT_CLIP))  # probit FPR
+    x = ndtri(np.clip(grid, _PROBIT_CLIP, 1.0 - _PROBIT_CLIP))  # probit FPR
     var_probit = var_a + x * x * var_b + 2.0 * x * cov_ab
     bad = ~np.isfinite(var_probit) | (var_probit < 0.0)
     var_probit[bad] = 1.0 / n1
     se = np.sqrt(var_probit)
 
-    w = math.sqrt(chi2.ppf(1.0 - alpha, df=2))  # simultaneous critical value
+    w = math.sqrt(chi2_ppf(1.0 - alpha, df=2))  # simultaneous critical value
     center = a + b * x
-    lower = norm.cdf(center - w * se)
-    upper = norm.cdf(center + w * se)
+    lower = ndtr(center - w * se)
+    upper = ndtr(center + w * se)
     lower[0] = 0.0
     upper[-1] = 1.0
     return lower, upper
@@ -119,8 +120,8 @@ def _class_normality(x: FloatArray) -> tuple[str, float, float]:
     if n <= _SHAPIRO_MAX_N:
         stat, p = shapiro(x)
         return "shapiro", float(stat), float(p)
-    stat, p = normaltest(x)
-    return "normaltest", float(stat), float(p)
+    stat, p = dagostino_k2(x)
+    return "normaltest", stat, p
 
 
 def _probit_r2(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
@@ -143,8 +144,8 @@ def _probit_r2(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
     if len(pts) < _MIN_INTERIOR_VERTICES:
         return math.nan
 
-    xi = norm.ppf(pts[:, 0])
-    yi = norm.ppf(pts[:, 1])
+    xi = ndtri(pts[:, 0])
+    yi = ndtri(pts[:, 1])
     ss_tot = float(np.sum((yi - yi.mean()) ** 2))
     if ss_tot == 0.0:
         return math.nan
