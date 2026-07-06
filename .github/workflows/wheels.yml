@@ -140,7 +140,10 @@ jobs:
             --cov-report=term \
             --html=reports/pytest-report.html --self-contained-html
       - name: Performance report
+        # pipefail so a benchmark crash fails the step instead of tee masking
+        # it; gate FAILs still exit 0 (no --strict), keeping this report-only.
         run: |
+          set -o pipefail
           uv run python benchmarks/run_benchmarks.py --repeats 5 --json reports/perf.json \
             | tee reports/perf-stdout.txt
           {
@@ -163,6 +166,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: release-reports
+          if-no-files-found: error
           path: |
             reports/coverage.xml
             reports/coverage-html.zip
@@ -182,10 +186,19 @@ jobs:
       attestations: write
       contents: read
     steps:
+      # Download only the package artifacts: dist/ must hold nothing but
+      # wheels + sdist — the publish action rejects non-distribution files,
+      # and provenance is attested for everything in dist/. The report
+      # artifact stays out; github-release fetches it by name.
       - uses: actions/download-artifact@v8
         with:
+          pattern: wheels-*
           path: dist
           merge-multiple: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: sdist
+          path: dist
       - uses: actions/attest-build-provenance@v4
         with:
           subject-path: "dist/*"
