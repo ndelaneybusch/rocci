@@ -104,6 +104,15 @@ class TestContainerCoercion:
         with pytest.raises(RocciError, match="numeric"):
             ingest(np.array([0, 1, 0, 1]), np.array(["a", "b", "c", "d"]))
 
+    def test_uncoercible_input_raises_actionable_error(self):
+        # A ragged sequence exposes none of the fast-path protocols and makes
+        # ``np.asarray`` raise ValueError; the last coercion arm turns that into
+        # a RocciError that names the supported container types.
+        from rocci.ingest import _coerce
+
+        with pytest.raises(RocciError, match="could not be interpreted"):
+            _coerce([[1, 2], [3]], "y_score")
+
     def test_dlpack_non_cpu_without_transfer_raises(self):
         class OnlyDlpack:
             def __dlpack__(self, *a, **k):
