@@ -63,8 +63,9 @@ The diagnostics behind the warning are attached to the result:
 
 ```python
 r = wh.normality
-print(f"negative class: {r.neg_test} p = {r.neg_pvalue:.2e}")
-print(f"positive class: {r.pos_test} p = {r.pos_pvalue:.2e}")
+print(f"negative class: SF p = {r.neg_sf_pvalue:.2e}, K² p = {r.neg_k2_pvalue:.2e}")
+print(f"positive class: SF p = {r.pos_sf_pvalue:.2e}, K² p = {r.pos_k2_pvalue:.2e}")
+print(f"negative class: skew = {r.neg_skew:.2f}, excess kurtosis = {r.neg_excess_kurtosis:.2f}")
 print(f"probit-probit ROC linearity R² = {r.probit_r2:.4f}")
 ```
 

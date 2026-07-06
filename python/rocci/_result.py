@@ -34,15 +34,29 @@ class NormalityReport:
     """Normality diagnostics for the Working-Hotelling band.
 
     Populated only on the ``normal=True`` path; ``RocBand`` carries ``None``
-    on the envelope path.
+    on the envelope path. Each class gets two complementary checks —
+    Shapiro-Francia (QQ-plot straightness, run for ``5 <= n <= 5000``) and
+    D'Agostino K² (skewness + kurtosis, run for ``n >= 20``) — plus the moment
+    effect sizes themselves; a check that does not apply at the class size (or
+    to a constant class) reports ``nan`` and never creates suspicion. The
+    ``suspect`` flag is deliberately trigger-happy: *any* check tripping
+    flags the fit, because Working-Hotelling coverage pays for every
+    departure from binormality and there is no safe diagnostic region.
 
     Attributes:
-        neg_test: Test used on the negative class (``"shapiro"`` / ``"normaltest"``).
-        neg_stat: Its statistic.
-        neg_pvalue: Its p-value.
-        pos_test: Test used on the positive class.
-        pos_stat: Its statistic.
-        pos_pvalue: Its p-value.
+        neg_sf_stat: Shapiro-Francia W' for the negative class.
+        neg_sf_pvalue: Its p-value.
+        neg_k2_stat: D'Agostino K² for the negative class.
+        neg_k2_pvalue: Its p-value.
+        neg_skew: Negative-class sample skewness (Gaussian ~ 0).
+        neg_excess_kurtosis: Negative-class excess kurtosis (Gaussian ~ 0;
+            positive = heavy tails, negative = short tails/bimodal).
+        pos_sf_stat: Shapiro-Francia W' for the positive class.
+        pos_sf_pvalue: Its p-value.
+        pos_k2_stat: D'Agostino K² for the positive class.
+        pos_k2_pvalue: Its p-value.
+        pos_skew: Positive-class sample skewness.
+        pos_excess_kurtosis: Positive-class excess kurtosis.
         probit_r2: OLS R² of probit-TPR on probit-FPR over the ROC interior
             (``nan`` when too few interior vertices).
         suspect: Whether binormality looks doubtful.
@@ -51,21 +65,63 @@ class NormalityReport:
     Examples:
         >>> from rocci import NormalityReport
         >>> rep = NormalityReport(
-        ...     "shapiro", 0.99, 0.4, "shapiro", 0.98, 0.3, 0.995, False, ""
+        ...     neg_sf_stat=0.99,
+        ...     neg_sf_pvalue=0.4,
+        ...     neg_k2_stat=1.2,
+        ...     neg_k2_pvalue=0.55,
+        ...     neg_skew=0.05,
+        ...     neg_excess_kurtosis=-0.1,
+        ...     pos_sf_stat=0.98,
+        ...     pos_sf_pvalue=0.3,
+        ...     pos_k2_stat=2.0,
+        ...     pos_k2_pvalue=0.37,
+        ...     pos_skew=-0.02,
+        ...     pos_excess_kurtosis=0.2,
+        ...     probit_r2=0.995,
+        ...     suspect=False,
+        ...     warning="",
         ... )
         >>> rep.suspect
         False
+        >>> rep.neg_pvalue  # headline: smallest check p-value for the class
+        0.4
     """
 
-    neg_test: str
-    neg_stat: float
-    neg_pvalue: float
-    pos_test: str
-    pos_stat: float
-    pos_pvalue: float
+    neg_sf_stat: float
+    neg_sf_pvalue: float
+    neg_k2_stat: float
+    neg_k2_pvalue: float
+    neg_skew: float
+    neg_excess_kurtosis: float
+    pos_sf_stat: float
+    pos_sf_pvalue: float
+    pos_k2_stat: float
+    pos_k2_pvalue: float
+    pos_skew: float
+    pos_excess_kurtosis: float
     probit_r2: float
     suspect: bool
     warning: str
+
+    @property
+    def neg_pvalue(self) -> float:
+        """Smallest negative-class check p-value (``nan`` if none applied).
+
+        The value the suspect rule compares against its threshold — a
+        headline number, not a calibrated single-test p-value.
+        """
+        return _min_pvalue(self.neg_sf_pvalue, self.neg_k2_pvalue)
+
+    @property
+    def pos_pvalue(self) -> float:
+        """Smallest positive-class check p-value (``nan`` if none applied)."""
+        return _min_pvalue(self.pos_sf_pvalue, self.pos_k2_pvalue)
+
+
+def _min_pvalue(*pvalues: float) -> float:
+    """Smallest non-NaN p-value, or NaN when no check applied."""
+    valid = [p for p in pvalues if not np.isnan(p)]
+    return min(valid) if valid else float("nan")
 
 
 @dataclass(frozen=True)
