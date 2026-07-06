@@ -297,6 +297,24 @@ class TestResultMethods:
         assert (lo <= (1.0 - f) + 1e-12).all()
         assert ((1.0 - f) <= up + 1e-12).all()
 
+    def test_spec_at_sens_consistent_with_at_between_grid_points(self):
+        # the horizontal read inverts the same step function at() exposes: any
+        # FPR — grid point or not — whose at() interval brackets s must have
+        # its specificity inside spec_at_sens(s), and a nan interval must mean
+        # no FPR at all is consistent.
+        band = self._band()
+        f = np.linspace(0.0, 1.0, 401)
+        lo_f, _tp, up_f = band.at(f)
+        for s in (0.02, 0.3, 0.5, 0.8, 0.95):
+            slo, _sp, sup = band.spec_at_sens(s)
+            consistent = (lo_f <= s) & (s <= up_f)
+            if np.isnan(slo):
+                assert not consistent.any()
+                continue
+            spec = 1.0 - f[consistent]
+            assert (slo <= spec + 1e-12).all()
+            assert (spec <= sup + 1e-12).all()
+
     def test_query_shape_parity(self):
         # scalar -> 0-d, (M,) -> (M,), [] -> (0,), mirroring at()
         band = self._band()
@@ -363,7 +381,10 @@ class TestResultMethods:
             attribution=np.zeros(4, dtype=np.int8),
         )
         lo, sp, up = band.spec_at_sens(0.8)
-        assert lo == up == 0.5  # only the third column brackets 0.8
+        # only the third column brackets 0.8; its step runs to fpr = 1, so the
+        # consistent FPRs are [0.5, 1) and the specificity interval [0, 0.5].
+        assert lo == 0.0
+        assert up == 0.5
         assert sp == 0.5  # un-clipped empirical inverse would give 0.75
 
     def test_queries_on_working_hotelling_path(self):

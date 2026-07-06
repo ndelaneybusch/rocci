@@ -319,9 +319,12 @@ class RocBand:
         """Read the specificity (1 - FPR) band at given sensitivities.
 
         A horizontal read of the band: the true ROC attains sensitivity ``s`` at
-        some FPR, and the band's grid columns whose interval ``[lower, upper]``
-        brackets ``s`` are exactly the FPRs consistent with that sensitivity. The
-        specificity interval is the ``1 - fpr`` image of that set. This is a
+        some FPR, and the FPRs consistent with that sensitivity are those whose
+        band interval ``[lower, upper]`` brackets ``s``. Under the
+        right-continuous step convention of :meth:`at`, a bracketing grid column
+        covers every FPR up to the next grid point, so the consistent set runs
+        from the first bracketing column through the right edge of the last one.
+        The specificity interval is the ``1 - fpr`` image of that set. This is a
         projection of the same simultaneous region as :meth:`at`, so it inherits
         the joint coverage with no multiple-comparison correction.
 
@@ -375,8 +378,15 @@ class RocBand:
             s2[:, None] <= self.upper[None, :]
         )
         has = member.any(axis=1)
+        # Column i's interval applies over [fpr[i], fpr[i+1]) under the
+        # right-continuous step convention (see at()), so a bracketing column
+        # is consistent with every FPR up to its right edge, not only its own
+        # grid point: the left projection uses grid points, the right one uses
+        # right edges. The final column's edge is its own grid point — the
+        # grid ends at fpr = 1, where the step has zero width.
+        right_edge = np.append(self.fpr[1:], self.fpr[-1])
         f_lo = np.where(member, self.fpr[None, :], np.inf).min(axis=1)
-        f_hi = np.where(member, self.fpr[None, :], -np.inf).max(axis=1)
+        f_hi = np.where(member, right_edge[None, :], -np.inf).max(axis=1)
         # Empty rows leave f_lo=+inf, f_hi=-inf; report nan rather than garbage.
         spec_lo = np.where(has, 1.0 - f_hi, np.nan)
         spec_hi = np.where(has, 1.0 - f_lo, np.nan)
