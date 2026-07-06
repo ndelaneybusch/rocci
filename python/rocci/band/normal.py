@@ -36,11 +36,15 @@ _K2_MIN_N = 20
 _INTERIOR_LO, _INTERIOR_HI = 0.05, 0.95
 #: Minimum interior vertices required to estimate the probit-linearity R².
 _MIN_INTERIOR_VERTICES = 10
-#: A class-check p-value below this marks the binormal fit suspect. Four
-#: checks are OR-composed, and SF and K² on one class are positively
-#: correlated, so the false-alarm rate on truly binormal data is ~15%, not
-#: 4 x 5% (locked by the false-positive characterization test).
-_SUSPECT_P = 0.05
+#: A class-check p-value below this marks the binormal fit suspect. Treating
+#: the gate as a predictor of WH miscoverage, MCC(alpha) has a broad plateau
+#: over alpha in [0.0025, 0.02] at every class size; 0.02 is the plateau edge
+#: that best balances sensitivity against specificity (e.g. 0.80/0.78 at
+#: n=100, 0.91/0.86 at n=500 over a binormal/heavy/skew/bimodal mixture).
+#: Four checks are OR-composed and SF and K² on one class are positively
+#: correlated, so the false-alarm rate on truly binormal data lands at ~4-9%
+#: (locked by the false-positive characterization test).
+_SUSPECT_P = 0.02
 #: A probit-linearity R² below this marks the binormal fit suspect...
 _SUSPECT_R2 = 0.98
 #: ...but only when both classes have at least this many samples. Below it
@@ -234,12 +238,14 @@ def normality_report(
     ``suspect`` when **any one** of them trips — any check p-value below
     :data:`_SUSPECT_P`, or R² below :data:`_SUSPECT_R2` when both classes
     reach :data:`_R2_TRIGGER_MIN_N` (below that the fixed R² threshold is
-    noise on truly binormal data). The OR-composition is deliberately
-    sensitive: Working-Hotelling pays for every departure from binormality,
-    so a false alarm costs a warning while a miss costs coverage. The
-    calibration point is a ~15% false-alarm rate on truly binormal data,
-    roughly flat across class sizes and AUC (locked by the false-positive
-    characterization test). The warning text is populated only when suspect.
+    noise on truly binormal data). The operating point sits at the
+    MCC-optimal balance of sensitivity and specificity for predicting WH
+    miscoverage (see :data:`_SUSPECT_P`), with a ~4-8% false-alarm rate on
+    truly binormal data, roughly flat across class sizes and AUC (locked by
+    the false-positive characterization test). No operating point can
+    certify binormality: mild departures at moderate n pass every check a
+    meaningful fraction of the time while still costing coverage. The
+    warning text is populated only when suspect.
 
     Args:
         neg: Negative-class scores.

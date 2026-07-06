@@ -39,9 +39,11 @@ class NormalityReport:
     D'Agostino K² (skewness + kurtosis, run for ``n >= 20``) — plus the moment
     effect sizes themselves; a check that does not apply at the class size (or
     to a constant class) reports ``nan`` and never creates suspicion. The
-    ``suspect`` flag is deliberately trigger-happy: *any* check tripping
-    flags the fit, because Working-Hotelling coverage pays for every
-    departure from binormality and there is no safe diagnostic region.
+    ``suspect`` flag is the OR of every check: any one tripping flags the
+    fit, with thresholds tuned to the MCC-optimal balance of sensitivity and
+    specificity for predicting Working-Hotelling miscoverage. A quiet gate
+    is weak evidence, not a certificate — there is no safe diagnostic
+    region.
 
     Attributes:
         neg_sf_stat: Shapiro-Francia W' for the negative class.

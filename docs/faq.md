@@ -17,12 +17,12 @@ part of the motivation for rocci's distribution-free default.
 
 Quiet is weak evidence, not a certificate. The checks behind
 `band.normality` (Shapiro–Francia and D'Agostino K² per class, plus a
-probit-linearity check once both classes reach 1000 samples) are calibrated
-as a tripwire: they flag roughly 15% of *truly binormal* datasets — a
-deliberate cost, because a false alarm is just a warning while a missed
-departure is a silent coverage failure. Their detection power grows with
-sample size in rough proportion to how fast coverage damage accrues, so
-gross departures are caught essentially always. But in *mildly* non-normal
+probit-linearity check once both classes reach 1000 samples) are tuned to
+the balance point that maximizes agreement (Matthews correlation) with
+actual Working–Hotelling coverage failures, flagging roughly 4–8% of *truly
+binormal* datasets along the way. Their detection power grows with sample
+size in rough proportion to how fast coverage damage accrues, so gross
+departures are caught essentially always. But in *mildly* non-normal
 regimes at a few hundred samples per class, a meaningful share of datasets
 passes every check while the parametric band still misses the true curve —
 there is no diagnostic that can certify binormality from the sample. Use

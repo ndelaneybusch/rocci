@@ -425,11 +425,13 @@ class TestReportInvariants:
 class TestFalsePositiveRate:
     """The gate's false-alarm rate on truly binormal data stays under 20%.
 
-    The operating point: with four class checks OR-composed at p < 0.05 (SF
-    and K² are positively correlated within a class) and the R² trigger
-    gated on both classes reaching 1000 samples, the false-positive rate
-    measures ~0.11-0.15 across every class size and AUC — comfortably under
-    the 0.20 budget, with no sample-size domain excepted. If a cell here
+    The operating point: four class checks OR-composed at p < 0.02 — the
+    MCC-optimal balance of sensitivity and specificity for predicting WH
+    miscoverage, chosen from the broad MCC plateau over alpha in
+    [0.0025, 0.02] — with the R² trigger gated on both classes reaching
+    1000 samples. The false-positive rate measures ~0.04-0.07 across every
+    class size and AUC, comfortably under the 0.20 budget, with no
+    sample-size domain excepted. If a cell here
     crosses the budget, either a trigger was re-tuned (recalibrate against
     the budget) or a new check was added without accounting for the OR
     composition. The seeded sweeps are deterministic; the gap between
@@ -492,8 +494,8 @@ class TestSilentFailures:
     eliminating the silent failures, the "no safe diagnostic region" warning
     language should be revisited; if it makes the pass rate collapse to ~0,
     the gate has become so trigger-happy the WH path is effectively dead.
-    Thresholds sit far below the measured values (pass ~0.38/0.39,
-    miss-given-pass ~0.42/0.19 at these seeds) so they fail on real regime
+    Thresholds sit far below the measured values (pass ~0.51/0.62,
+    miss-given-pass ~0.44/0.20 at these seeds) so they fail on real regime
     change, not Monte-Carlo wiggle.
     """
 
