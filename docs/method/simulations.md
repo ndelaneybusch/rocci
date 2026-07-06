@@ -83,7 +83,8 @@ near zero, and larger sample sizes make it *worse*. The envelope and KS bands
 ride flat along the top throughout. There is no safe operating region for the
 parametric band defined by a simple diagnostic — any departure from
 binormality is paid for in coverage. (This is why rocci's
-[normality diagnostics](../guide/diagnostics.md) warn rather than certify.)
+[normality diagnostics](../guide/reading-the-band.md#normality-diagnostics)
+warn rather than certify.)
 
 ## Coverage *and* tightness, on every family
 

@@ -1,9 +1,8 @@
 # Performance
 
-rocci is fast enough that you should never have to think about it. The
-bootstrap kernel — the only heavy part — is compiled Rust, parallelized with
-replicate-indexed RNG streams so results are bit-identical regardless of
-thread count.
+The bootstrap kernel — the only computationally heavy part of a band — is
+compiled Rust, parallelized with replicate-indexed RNG streams so results are
+bit-identical regardless of thread count.
 
 ## Expected timings
 
@@ -28,9 +27,9 @@ $O(n)$ per thread.
 
 ## `n_threads`
 
-`None` (default) uses all cores; `-1` also means all cores (sklearn `n_jobs`
-muscle memory); any positive integer pins the pool size. Thread count never
-changes results, only wall-clock:
+`None` (default) uses all cores; `-1` also means all cores (matching
+sklearn's `n_jobs` convention); any positive integer pins the pool size.
+Thread count never changes results, only wall-clock time:
 
 ```python
 roc_band(y, s, n_threads=4)
@@ -53,8 +52,9 @@ roc_band(y, s, n_threads=4)
 | `numpy` | vectorized fallback, identical semantics | no wheel and no toolchain; `FallbackBackendWarning` once per process |
 
 The fallback is 10–30× slower than Rust — still far faster than naive
-sort-based bootstrapping, and fine for interactive n up to ~10⁵. Check
-`band.backend` or `rocci.show_versions()` if a run feels slow.
+sort-based bootstrapping, and adequate for interactive use up to n ≈ 10⁵.
+If a run is unexpectedly slow, check `band.backend` or
+`rocci.show_versions()`.
 
 ## Reproducibility contract
 

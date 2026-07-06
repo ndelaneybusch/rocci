@@ -1,9 +1,10 @@
 # Using rocci with your data
 
 Ingestion is duck-typed: rocci accepts what the ecosystem produces without
-importing any of the producing libraries. If it quacks like an array, it
-works; if something is ambiguous, rocci raises a `RocciError` that names the
-fix rather than guessing.
+importing any of the producing libraries. That means it works with all the usual
+scientific computing libraries, but also with custom types - just include an
+`__array__` or `.to_numpy()` method. Anything array-like works; anything
+ambiguous raises a `RocciError` that names the fix.
 
 ## Containers
 

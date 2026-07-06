@@ -45,10 +45,8 @@ rocci confidence band (envelope)
 
 Two lines deserve a first-time explanation:
 
-- **"95% simultaneous"** means the *whole* true curve stays inside the band
-  in 95% of datasets — strictly stronger than 95% pointwise intervals, which
-  are individually right but jointly almost surely wrong somewhere.
-  [Reading the band](../guide/reading-the-band.md) unpacks this.
+- **"95% simultaneous"** means the *whole* true curve stays inside the band in
+  95% of datasets. See [Reading the band](../guide/reading-the-band.md).
 - **The vacuous-region line** is rocci being honest: below an FPR of about
   `1/n_neg`-ish, *no method* can certify a distribution-free lower bound, so
   the lower band is 0 there rather than pretending otherwise.
