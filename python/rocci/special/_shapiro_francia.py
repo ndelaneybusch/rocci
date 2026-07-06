@@ -2,8 +2,8 @@
 
 W' is the squared Pearson correlation between the sorted sample and the Blom
 expected normal order statistics ``ndtri((i - 3/8) / (n + 1/4))`` — literally
-"how straight is the normal QQ plot". Royston (1993, Statistics and
-Computing 3, 175-190) gives a normal approximation for ``log(1 - W')`` whose
+"how straight is the normal QQ plot". Royston (1993, Statistics in
+Medicine 12, 181-184) gives a normal approximation for ``log(1 - W')`` whose
 mean and standard deviation are simple functions of ``log(n)``, validated for
 ``5 <= n <= 5000``; that window is enforced here. Power is close to
 Shapiro-Wilk overall and slightly better against heavy-tailed alternatives;

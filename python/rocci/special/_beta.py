@@ -7,10 +7,12 @@ Beta CDF is a finite binomial tail::
 
     I_x(a, b) = P(Bin(a + b - 1, x) >= a)
 
-which we evaluate as ``1`` minus a ``min(a, b)``-term sum in log space (using
-the symmetry ``I_x(a, b) = 1 - I_{1-x}(b, a)`` to always sum the shorter
-tail). The quantile inverts this CDF by bisection run to float adjacency, so
-accuracy is limited only by the CDF evaluation itself.
+which we evaluate in log space by summing whichever binomial tail is shorter:
+``1 - P(Bin(n, x) <= a - 1)`` (``a`` terms) when ``a <= b``, else the
+symmetric form ``P(Bin(n, 1 - x) <= b - 1)`` (``b`` terms, from
+``I_x(a, b) = 1 - I_{1-x}(b, a)``). The quantile inverts this CDF by
+bisection run to float adjacency, so accuracy is limited only by the CDF
+evaluation itself.
 """
 
 from __future__ import annotations

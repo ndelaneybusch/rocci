@@ -161,7 +161,7 @@ def _probit_r2(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
     Keeps vertices strictly inside ``(0.05, 0.95)`` on both axes, deduplicates
     identical points, and regresses ``probit(TPR)`` on ``probit(FPR)`` by OLS.
     Returns ``nan`` when fewer than :data:`_MIN_INTERIOR_VERTICES` interior
-    points remain or the predictor has no spread.
+    points remain or the probit-TPR responses have no spread (R² undefined).
     """
     fpr_v = np.asarray(fpr_v, dtype=np.float64)
     tpr_v = np.asarray(tpr_v, dtype=np.float64)

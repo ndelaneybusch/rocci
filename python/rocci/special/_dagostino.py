@@ -19,7 +19,7 @@ from numpy.typing import NDArray
 FloatArray = NDArray[np.float64]
 
 #: Below this the kurtosis normal approximation is unreliable (the usual
-#: published guidance); rocci only tests classes far larger.
+#: published guidance); the band diagnostics gate K² on the same minimum.
 _MIN_N = 20
 
 

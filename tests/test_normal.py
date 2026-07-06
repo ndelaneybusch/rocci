@@ -441,9 +441,9 @@ class TestSilentFailures:
     eliminating the silent failures, the "no safe diagnostic region" warning
     language should be revisited; if it makes the pass rate collapse to ~0,
     the gate has become so trigger-happy the WH path is effectively dead.
-    Thresholds sit at roughly half the measured values (pass ~0.14/0.22,
-    miss-given-pass ~0.39/0.21 at these seeds) so they fail on real regime
-    change, not Monte-Carlo wiggle.
+    Thresholds sit at a third to a half of the measured values (pass
+    ~0.14/0.22, miss-given-pass ~0.39/0.21 at these seeds) so they fail on
+    real regime change, not Monte-Carlo wiggle.
     """
 
     GRID = np.linspace(0.01, 0.99, 99)

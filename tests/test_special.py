@@ -4,9 +4,9 @@ These implementations exist so the band core does not need a general
 special-functions library; correctness is therefore defined as agreement with
 scipy to near machine precision. The equivalence sweeps below are the primary
 oracle. The non-scipy tests cover only what equivalence cannot: edge-value
-conventions, input validation, the accuracy of ``beta_ppf`` at quantiles far
-smaller than one ulp of 1 (where absolute comparisons against scipy say
-nothing about relative error), and Shapiro-Francia — which scipy lacks — whose
+conventions, input validation, the relative accuracy of ``beta_ppf`` at tiny
+tail quantiles (pinned to an exact closed form, so the claim does not lean on
+scipy's own accuracy there), and Shapiro-Francia — which scipy lacks — whose
 correctness rests on Monte-Carlo null calibration, power checks, agreement in
 ranking with Shapiro-Wilk, and hypothesis-swept invariances instead.
 """

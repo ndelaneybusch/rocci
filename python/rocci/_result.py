@@ -107,8 +107,8 @@ class NormalityReport:
     def neg_pvalue(self) -> float:
         """Smallest negative-class check p-value (``nan`` if none applied).
 
-        The value the suspect rule compares against its threshold — a
-        headline number, not a calibrated single-test p-value.
+        Falls below the suspect threshold exactly when one of the class's
+        checks does — a headline number, not a calibrated single-test p-value.
         """
         return _min_pvalue(self.neg_sf_pvalue, self.neg_k2_pvalue)
 

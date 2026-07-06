@@ -277,7 +277,7 @@ def _draw_variance_panel(band: RocBand, env: EnvelopeBand, ax: Axes) -> None:
 
 
 def _draw_qq_panel(scores: NDArray[np.float64], name: str, ax: Axes) -> None:
-    """Normal QQ plot of one class's scores against a moment-matched normal."""
+    """Normal QQ plot of one class's scores, with a moment-matched reference line."""
     n = len(scores)
     theoretical = ndtri((np.arange(1, n + 1) - 0.5) / n)
     ax.plot(
