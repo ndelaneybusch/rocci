@@ -1023,6 +1023,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-normality-diagnostics-stayed-quiet-is-normaltrue-safe-then" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The normality diagnostics stayed quiet — is normal=True safe, then?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-is-my-lower-band-0-at-small-fpr" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1210,6 +1221,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-normality-diagnostics-stayed-quiet-is-normaltrue-safe-then" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The normality diagnostics stayed quiet — is normal=True safe, then?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-is-my-lower-band-0-at-small-fpr" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1321,13 +1343,27 @@
 <h2 id="should-i-pass-logits-or-probabilities">Should I pass logits or probabilities?<a class="headerlink" href="#should-i-pass-logits-or-probabilities" title="Permanent link">&para;</a></h2>
 <p>Either, whichever is easiest. The envelope band is invariant to strictly
 monotone transforms of the scores, so logits and their sigmoid give the
-<em>identical</em> band. Don't calibrate first on rocci's account. </p>
+<em>identical</em> band. Don't calibrate first on rocci's account.</p>
 <p>This does not hold for <code>normal=True</code>. Binormal fits use the scores
 themselves. Typically the logits are the normally distributed piece, and
 probabilities will give the wrong thing. This may surprise, since logits and
 probabilities yield identical ROC curves — it's only the parametric band
 around that ROC that cares about normality. Gotchas of this sort are a big
 part of the motivation for rocci's distribution-free default.</p>
+<h2 id="the-normality-diagnostics-stayed-quiet-is-normaltrue-safe-then">The normality diagnostics stayed quiet — is <code>normal=True</code> safe, then?<a class="headerlink" href="#the-normality-diagnostics-stayed-quiet-is-normaltrue-safe-then" title="Permanent link">&para;</a></h2>
+<p>Quiet is weak evidence, not a certificate. The checks behind
+<code>band.normality</code> (Shapiro–Francia and D'Agostino K² per class, plus a
+probit-linearity check once both classes reach 1000 samples) are tuned to
+the balance point that maximizes agreement (Matthews correlation) with
+actual Working–Hotelling coverage failures, flagging roughly 4–8% of <em>truly
+binormal</em> datasets along the way. Their detection power grows with sample
+size in rough proportion to how fast coverage damage accrues, so gross
+departures are caught essentially always. But in <em>mildly</em> non-normal
+regimes at a few hundred samples per class, a meaningful share of datasets
+passes every check while the parametric band still misses the true curve —
+there is no diagnostic that can certify binormality from the sample. Use
+<code>normal=True</code> when you have prior grounds for binormality; when validity
+matters and you don't, the distribution-free default needs no such grounds.</p>
 <h2 id="why-is-my-lower-band-0-at-small-fpr">Why is my lower band 0 at small FPR?<a class="headerlink" href="#why-is-my-lower-band-0-at-small-fpr" title="Permanent link">&para;</a></h2>
 <p>Because no distribution-free lower bound exists there. Below FPR ≈
 <code>band.vacuous_below</code> (roughly <span class="arithmatex">\(\log(1/\alpha_e)/n_\text{neg}\)</span>), the truth is
@@ -1339,13 +1375,13 @@ negatives shrink the region; see
 <h2 id="my-scores-have-lots-of-ties-are-discrete-is-the-band-still-valid">My scores have lots of ties / are discrete. Is the band still valid?<a class="headerlink" href="#my-scores-have-lots-of-ties-are-discrete-is-the-band-still-valid" title="Permanent link">&para;</a></h2>
 <p>Yes. Every layer of the envelope is either tie-indifferent or conservative under
 ties. Discreteness widens the band but doesn't break it. You'll get a
-<code>TiesWarning</code> when fewer than half the pooled scores are distinct. </p>
+<code>TiesWarning</code> when fewer than half the pooled scores are distinct.</p>
 <p>Heavy ties <em>are</em> strong evidence against <code>normal=True</code>, though: ties have
 probability zero under a binormal model.</p>
 <h2 id="why-does-roc_band-refuse-my-multiclass-problem">Why does <code>roc_band</code> refuse my multiclass problem?<a class="headerlink" href="#why-does-roc_band-refuse-my-multiclass-problem" title="Permanent link">&para;</a></h2>
 <p>Use <a class="autorefs autorefs-internal" title="            roc_band_ovr" href="../api/#rocci.roc_band_ovr"><code>roc_band_ovr</code></a>: one-vs-rest bands for every class at a
 Bonferroni-split level, which gives an exact (conservative) family-wise
-guarantee: all m curves are covered jointly at your requested confidence. </p>
+guarantee: all m curves are covered jointly at your requested confidence.</p>
 <p>And why does <code>roc_band_ovr</code> refuse <code>normal=True</code>? Because every one-vs-rest
 "rest" class is a mixture of the remaining classes, which is structurally the
 regime where the binormal band's coverage collapses. We know the parametric

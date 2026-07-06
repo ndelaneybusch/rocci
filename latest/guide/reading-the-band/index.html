@@ -1490,17 +1490,25 @@ is a straight line; curvature is exactly the model failing.</p>
 <p>The same evidence is available programmatically on every Working–Hotelling
 band:</p>
 <div class="highlight"><pre><span></span><code><span class="n">band</span> <span class="o">=</span> <span class="n">roc_band</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">neg_pvalue</span>      <span class="c1"># per-class normality test p-values</span>
-<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">pos_pvalue</span>
+<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">neg_pvalue</span>      <span class="c1"># smallest per-class check p-value</span>
+<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">pos_pvalue</span>      <span class="c1"># (Shapiro-Francia and D&#39;Agostino K² each run</span>
+                               <span class="c1">#  where valid; *_sf_* / *_k2_* hold the details,</span>
+                               <span class="c1">#  *_skew / *_excess_kurtosis the effect sizes)</span>
 <span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">probit_r2</span>       <span class="c1"># OLS R² of the probit-probit ROC interior</span>
 <span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">suspect</span>         <span class="c1"># True =&gt; a NormalityWarning was emitted</span>
 <span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">warning</span>         <span class="c1"># the exact text</span>
 </code></pre></div>
-<p><code>suspect</code> fires when either class p-value drops below 0.10 or the probit R²
-falls below 0.98. The thresholds are deliberately blunt: Working–Hotelling
-coverage degrades <em>continuously</em> with departures from binormality and worsens
-with n, so there is no safe region the diagnostics could certify — they can
-only fail to reject. Heavy ties are flagged in the warning text as
+<p><code>suspect</code> fires when <strong>any</strong> check trips — a class-check p-value below 0.02,
+or the probit R² below 0.98 once both classes reach 1000 samples (below that
+the fixed R² threshold is noise on truly binormal data, so it is reported but
+never triggers). The thresholds sit at the balance point that maximizes the
+gate's agreement (Matthews correlation) with actual Working–Hotelling
+coverage failures across sample sizes and departure families, flagging
+roughly 4–8% of <em>truly binormal</em> datasets along the way. Even so, no
+operating point certifies binormality: coverage degrades <em>continuously</em> with
+departures and worsens with n, so the diagnostics can only fail to reject. A quiet gate is
+weak evidence: in mildly heavy-tailed regimes a meaningful share of datasets
+pass every check while the parametric band misses the true curve. Heavy ties are flagged in the warning text as
 structurally incompatible with the binormal model (ties have probability zero
 under it).</p>
 <p>For a worked failure — heavy-tailed logits where the diagnostics fire and the

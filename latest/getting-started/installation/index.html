@@ -1210,12 +1210,12 @@
 
 
 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>rocci<span class="w">            </span><span class="c1"># core: numpy + scipy only</span>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>rocci<span class="w">            </span><span class="c1"># core: numpy only</span>
 pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rocci[plot]&#39;</span><span class="w">    </span><span class="c1"># optional plotting support</span>
 </code></pre></div>
 <p>Binary wheels ship for Linux (x86-64, aarch64, musl), macOS (Intel and Apple
 silicon), and Windows, for every Python ≥ 3.10. This means that a <code>pip install
-rocci</code> never needs to compile the rust components on a supported platform. </p>
+rocci</code> never needs to compile the rust components on a supported platform.</p>
 <h2 id="supported-install-methods">Supported install methods<a class="headerlink" href="#supported-install-methods" title="Permanent link">&para;</a></h2>
 <p>=== "pip"</p>
 <pre><code>```bash
@@ -1225,7 +1225,7 @@ pip install rocci==0.2.0        # pin for reproducible environments
 </code></pre>
 <p>=== "uv"</p>
 <pre><code>```bash
-uv add rocci                    # core: numpy + scipy only
+uv add rocci                    # core: numpy only
 uv pip install 'rocci[plot]'    # optional plotting support
 ```
 </code></pre>
@@ -1239,8 +1239,8 @@ rocci is not on conda-forge at present. The usual reason
 to want a conda build is to coordinate shared native libraries across
 packages. That does not apply here. The wheel is lightweight and
 self-contained (the Rust kernel is statically linked; the only
-dependencies are numpy and scipy). Calling pip-inside-conda should suffice
- for most users. If a conda-forge package would matter for your setup, 
+dependency is numpy). Calling pip-inside-conda should suffice
+ for most users. If a conda-forge package would matter for your setup,
  open an issue — demand is what would change the decision.
 </code></pre>
 <p>=== "from source"</p>
@@ -1279,7 +1279,7 @@ but not bit-for-bit (different RNG streams — documented, tested).</p>
 </tr>
 <tr>
 <td>Hard dependencies</td>
-<td><code>numpy &gt;= 1.24</code>, <code>scipy &gt;= 1.10</code></td>
+<td><code>numpy &gt;= 1.24</code></td>
 </tr>
 <tr>
 <td>Optional</td>

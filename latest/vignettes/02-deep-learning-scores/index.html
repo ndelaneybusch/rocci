@@ -1908,7 +1908,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9f2e2e28">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c1b820e4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1925,7 +1925,7 @@ overconfident network produces.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=abe28a4e">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b7445744">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1985,7 +1985,7 @@ print(f"n = {len(y_true)}, positives = {int(y_true.sum())}")</div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a770bd65">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5fe7ff54">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1996,7 +1996,7 @@ print(f"n = {len(y_true)}, positives = {int(y_true.sum())}")</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2cb827de">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dd6269ad">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2047,7 +2047,7 @@ band.plot()</div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f0474d12">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=126a80e5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2059,7 +2059,7 @@ diagnostics fire — note the warning:</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=38e9efcb">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b1f592a4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2101,7 +2101,7 @@ print(caught[0].message)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>binormality looks doubtful (negative-class p=4.95e-16, positive-class p=1.99e-08, probit-linearity R^2=0.947): Working-Hotelling coverage degrades continuously with departures from binormality and worsens with n, so there is no safe diagnostic region. Prefer normal=False for the distribution-free envelope band.
+<pre>binormality looks doubtful (neg: SF p=1.63e-14, K2 p=1.72e-22, skew=-0.65, excess kurtosis=8.7; pos: SF p=5.73e-08, K2 p=4.69e-11, skew=-0.56, excess kurtosis=2.6; probit-linearity R^2=0.947; Gaussian classes have skew ~= 0 and excess kurtosis ~= 0): Working-Hotelling coverage degrades continuously with departures from binormality and worsens with n, so there is no safe diagnostic region. Prefer normal=False for the distribution-free envelope band.
 </pre>
 </div>
 </div>
@@ -2109,7 +2109,7 @@ print(caught[0].message)</div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=85b5094b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f44219e3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2120,7 +2120,7 @@ print(caught[0].message)</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=29bc76f8">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=749c1c99">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2139,13 +2139,15 @@ print(caught[0].message)</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">wh</span><span class="o">.</span><span class="n">normality</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"negative class: </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">neg_test</span><span class="si">}</span><span class="s2"> p = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">neg_pvalue</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"positive class: </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">pos_test</span><span class="si">}</span><span class="s2"> p = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">pos_pvalue</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"negative class: SF p = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">neg_sf_pvalue</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">, K² p = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">neg_k2_pvalue</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"positive class: SF p = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">pos_sf_pvalue</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">, K² p = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">pos_k2_pvalue</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"negative class: skew = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">neg_skew</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, excess kurtosis = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">neg_excess_kurtosis</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"probit-probit ROC linearity R² = </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">probit_r2</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4">r = wh.normality
-print(f"negative class: {r.neg_test} p = {r.neg_pvalue:.2e}")
-print(f"positive class: {r.pos_test} p = {r.pos_pvalue:.2e}")
+print(f"negative class: SF p = {r.neg_sf_pvalue:.2e}, K² p = {r.neg_k2_pvalue:.2e}")
+print(f"positive class: SF p = {r.pos_sf_pvalue:.2e}, K² p = {r.pos_k2_pvalue:.2e}")
+print(f"negative class: skew = {r.neg_skew:.2f}, excess kurtosis = {r.neg_excess_kurtosis:.2f}")
 print(f"probit-probit ROC linearity R² = {r.probit_r2:.4f}")</div>
 </div>
 </div>
@@ -2158,8 +2160,9 @@ print(f"probit-probit ROC linearity R² = {r.probit_r2:.4f}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>negative class: shapiro p = 4.95e-16
-positive class: shapiro p = 1.99e-08
+<pre>negative class: SF p = 1.63e-14, K² p = 1.72e-22
+positive class: SF p = 5.73e-08, K² p = 4.69e-11
+negative class: skew = -0.65, excess kurtosis = 8.72
 probit-probit ROC linearity R² = 0.9474
 </pre>
 </div>
@@ -2168,7 +2171,7 @@ probit-probit ROC linearity R² = 0.9474
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=73d2e0cc">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=12a04419">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2181,7 +2184,7 @@ band loses:</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9a1cebca">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=04d7b514">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2239,7 +2242,7 @@ ax.legend(loc="lower right", fontsize="small")</div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
 <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[5]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
-<pre>&lt;matplotlib.legend.Legend at 0x7f61c09f6060&gt;</pre>
+<pre>&lt;matplotlib.legend.Legend at 0x7f717d911ac0&gt;</pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
@@ -2252,7 +2255,7 @@ ax.legend(loc="lower right", fontsize="small")</div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0dc8242f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d1bafde2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2284,7 +2287,7 @@ the envelope band depends on scores only through ranks:</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a8572ea1">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1e0f6590">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2334,7 +2337,7 @@ print("envelope band from logits == envelope band from probabilities")</div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=059a7558">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f5a8dc9e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
