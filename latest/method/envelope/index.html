@@ -1276,12 +1276,12 @@
 
 
 <h1 id="the-envelope-method">The envelope method<a class="headerlink" href="#the-envelope-method" title="Permanent link">&para;</a></h1>
-<p>This page describes what <code>roc_band(..., normal=False)</code> — the default —
-actually computes. The exact algorithms, including every edge and tie
-convention, are the implementation in <code>python/rocci/band/</code>, held in place by
-the golden-master and oracle test suites (see
-<a href="../verification/">How rocci is verified</a>); this is the readable tour. Throughout, <span class="arithmatex">\(n_0\)</span> and <span class="arithmatex">\(n_1\)</span> are the negative/positive class
-sizes, <span class="arithmatex">\(\alpha = 1 - \text{confidence}\)</span>, and <span class="arithmatex">\(R(t)\)</span> is the population TPR at
+<p>What <code>roc_band(..., normal=False)</code> — the default — computes. The
+implementation in <code>python/rocci/band/</code> is the authority on every edge and
+tie convention, held in place by the golden-master and oracle suites
+(<a href="../verification/">How rocci is verified</a>); this page is the readable tour.
+Throughout, <span class="arithmatex">\(n_0\)</span> and <span class="arithmatex">\(n_1\)</span> are the negative/positive class sizes,
+<span class="arithmatex">\(\alpha = 1 - \text{confidence}\)</span>, and <span class="arithmatex">\(R(t)\)</span> is the population TPR at
 FPR <span class="arithmatex">\(t\)</span>.</p>
 <h2 id="1-grid-and-empirical-curve">1. Grid and empirical curve<a class="headerlink" href="#1-grid-and-empirical-curve" title="Permanent link">&para;</a></h2>
 <p>The band lives on a uniform FPR grid <span class="arithmatex">\(t_k = \text{linspace}(0, 1, K)\)</span> with

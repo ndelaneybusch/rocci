@@ -769,10 +769,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-vacuous-region-is-a-theorem-not-a-choice" class="md-nav__link">
+  <a href="#the-vacuous-region" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The vacuous region is a theorem, not a choice
+        The vacuous region
       
     </span>
   </a>
@@ -1223,10 +1223,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-vacuous-region-is-a-theorem-not-a-choice" class="md-nav__link">
+  <a href="#the-vacuous-region" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The vacuous region is a theorem, not a choice
+        The vacuous region
       
     </span>
   </a>
@@ -1276,13 +1276,12 @@
 
 
 <h1 id="theoretical-behavior">Theoretical behavior<a class="headerlink" href="#theoretical-behavior" title="Permanent link">&para;</a></h1>
-<p>What can be <em>guaranteed</em>, what is <em>calibrated</em>, and where the honest edges
-are. (Condensed from the theory reports in the
+<p>What is <em>proven</em>, what is <em>calibrated</em>, and where the guarantees stop —
+condensed from the theory reports in the
 <a href="https://github.com/ndelaneybusch/studroc_paper">method validation study</a>.
 <a href="../envelope/">The envelope method</a> describes what is computed;
 <a href="../simulations/">Simulations and validation</a> is the empirical evidence;
-<a href="../verification/">How rocci is verified</a> shows how the implementation is
-held to it.)</p>
+<a href="../verification/">How rocci is verified</a> holds the implementation to both.</p>
 <h2 id="exact-distribution-free-ingredients">Exact, distribution-free ingredients<a class="headerlink" href="#exact-distribution-free-ingredients" title="Permanent link">&para;</a></h2>
 <p>Two pieces of the band are exact for every score distribution, at every
 sample size:</p>
@@ -1312,9 +1311,9 @@ bands do not have this property.</p>
 is a bootstrap procedure: its simultaneous coverage is asymptotically correct
 and, at finite n, <em>calibrated</em> rather than proven — which is why the method
 ships with a calibration gate rather than a theorem alone. The gate runs the
-assembled band across score distributions chosen to be unkind — binormal,
-heavy-tailed (t₃), bimodal negatives, and discretized (heavy-ties) scores —
-at n as small as 30 per class, and requires coverage near nominal (from
+assembled band across binormal, heavy-tailed (t₃), bimodal-negative, and
+discretized heavy-tie scores at n as small as 30 per class, and requires
+coverage near nominal (from
 above, within Monte-Carlo tolerance) with mean width strictly below the
 KS/DKW reference band. Coverage <em>near</em> nominal is the target: closer is
 better, not higher — an over-wide band is a quieter failure than an
@@ -1339,7 +1338,7 @@ than the envelope across the operating range. The envelope trades the closed
 proof for calibrated, locally-adaptive width plus exact repairs where
 adaptivity is impossible; the gate enforces that this trade is won (mean
 width strictly below KS) while holding coverage.</p>
-<h2 id="the-vacuous-region-is-a-theorem-not-a-choice">The vacuous region is a theorem, not a choice<a class="headerlink" href="#the-vacuous-region-is-a-theorem-not-a-choice" title="Permanent link">&para;</a></h2>
+<h2 id="the-vacuous-region">The vacuous region<a class="headerlink" href="#the-vacuous-region" title="Permanent link">&para;</a></h2>
 <p>For any procedure that is valid for <strong>all</strong> continuous score distributions,
 the lower band below <span class="arithmatex">\(t \approx q_1 = \text{Beta}(1, n_0)^{-1}(1 - \alpha_e)\)</span>
 must be 0: with positive probability under some admissible distribution, the
@@ -1361,8 +1360,8 @@ characteristic failure mode, which is why <code>roc_band_ovr</code> refuses
 <p>The WH band's coverage is exact under binormality and degrades
 <em>continuously</em> with departure from it; because width shrinks as
 <span class="arithmatex">\(O(n^{-1/2})\)</span> while the parametric bias is fixed, coverage <strong>worsens as n
-grows</strong> — more data makes the wrong band more confidently wrong (bimodal
-negatives drive coverage far below half). This is the structural reason the
+grows</strong>; bimodal negatives drive it far below half. This is the structural
+reason the
 diagnostics carry a warning rather than a certificate, and the reason the
 distribution-free band is the default.</p>
 
