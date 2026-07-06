@@ -16,17 +16,22 @@ halves when n quadruples). Provenance is distinct from the envelope path
 ``random_state`` are ``None``, attribution all zero, a normality report attached),
 and ignored arguments (``random_state``, low ``n_boot``) genuinely change
 nothing. The diagnostics flag heavy-tailed data as suspect and stay silent on
-clean binormal data, choose the per-class test correctly (Shapiro up to n=5000,
-D'Agostino above; "insufficient" for constant/tiny classes, which never create
-false suspicion), and append the heavy-ties clause when relevant. The contrast
-test locks in the defining difference: the envelope is rank-invariant under a
-sigmoid transform while the WH band moves.
+clean binormal data, run each per-class check exactly on its validity window
+(Shapiro-Francia for 5 <= n <= 5000, D'Agostino K² for n >= 20, all-nan for
+constant/tiny classes, which never create false suspicion), OR-compose the
+triggers so any single check can flag the fit, and append the heavy-ties clause
+when relevant. A hypothesis sweep locks the report's internal consistency over
+arbitrary score arrays. The contrast test locks in the defining difference: the
+envelope is rank-invariant under a sigmoid transform while the WH band moves.
 
-Limitations. These tests certify that the WH machinery is correct and that its
-assumption-violation *warning* fires — they do not certify coverage when the
-binormal model is wrong (there is none to certify; that is the whole point of the
-diagnostic). Asymptotic-rate claims use noise-free quantile grids, not random
-draws.
+Limitations — tested as such. These tests certify that the WH machinery is
+correct and that its assumption-violation *warning* fires — they do not certify
+coverage when the binormal model is wrong (there is none to certify; that is
+the whole point of the diagnostic). The silent-failure suite pins the honest
+version of that statement: in mildly off-binormal regimes a meaningful fraction
+of datasets pass every check while the WH band misses the true ROC far above
+nominal, so a passing gate must never be read as a coverage certificate.
+Asymptotic-rate claims use noise-free quantile grids, not random draws.
 """
 
 from __future__ import annotations
@@ -36,12 +41,22 @@ import warnings
 
 import numpy as np
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from scipy.stats import chi2, norm
+from scipy.stats import t as student_t
 
 from rocci import roc_band
 from rocci._warnings import NormalityWarning
 from rocci.band.grids import empirical_roc_vertices
-from rocci.band.normal import _probit_r2, normality_report, working_hotelling_band
+from rocci.band.normal import (
+    _R2_TRIGGER_MIN_N,
+    _SUSPECT_P,
+    _SUSPECT_R2,
+    _probit_r2,
+    normality_report,
+    working_hotelling_band,
+)
 from tests.conftest import binormal_dataset, binormal_scores
 
 
@@ -170,27 +185,30 @@ class TestWorkingHotellingExactness:
 
 class TestDiagnosticsEdgeCases:
     def test_insufficient_classes_never_create_suspicion(self):
-        # classes too small (or constant) to test report ("insufficient",
-        # nan, nan) and must not flag the fit: nan < 0.10 is False and a nan
-        # R^2 is excluded from the suspect rule
+        # classes too small (or constant) to check report all-nan and must
+        # not flag the fit: nan < 0.10 is False and a nan R^2 is excluded
+        # from the suspect rule
         neg = np.array([0.0, 1.0])
         pos = np.array([2.0, 3.0])
         fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
         report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
-        assert report.neg_test == "insufficient"
-        assert report.pos_test == "insufficient"
-        assert math.isnan(report.neg_pvalue)
+        assert math.isnan(report.neg_sf_pvalue)
+        assert math.isnan(report.neg_k2_pvalue)
+        assert math.isnan(report.neg_skew)
+        assert math.isnan(report.neg_pvalue)  # headline property: no checks
         assert math.isnan(report.probit_r2)
         assert report.suspect is False
         assert report.warning == ""
 
-    def test_constant_class_reports_insufficient(self):
+    def test_constant_class_reports_no_checks(self):
         neg = np.zeros(100)
         pos = np.linspace(0, 1, 100)
         fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
         report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
-        assert report.neg_test == "insufficient"
-        assert report.pos_test == "shapiro"
+        assert math.isnan(report.neg_sf_pvalue)
+        assert math.isnan(report.neg_k2_pvalue)
+        assert not math.isnan(report.pos_sf_pvalue)
+        assert not math.isnan(report.pos_k2_pvalue)
 
     def test_probit_r2_nan_below_ten_interior_vertices(self):
         neg, pos = binormal_scores(6, 6, seed=5)
@@ -206,16 +224,30 @@ class TestDiagnosticsEdgeCases:
         assert _probit_r2(fpr_v, tpr_v) > 0.9999
 
     @pytest.mark.parametrize(
-        ("n", "expected"), [(5000, "shapiro"), (5001, "normaltest")]
+        ("n", "sf_runs", "k2_runs"),
+        [
+            (4, False, False),
+            (10, True, False),
+            (20, True, True),
+            (5000, True, True),
+            (5001, False, True),
+        ],
     )
-    def test_class_test_switches_at_shapiro_cap(self, n, expected):
+    def test_check_windows_by_class_size(self, n, sf_runs, k2_runs):
+        # Shapiro-Francia runs on Royston's validated 5 <= n <= 5000 window,
+        # D'Agostino K² from n = 20 up; outside a window the check is nan
         rng = np.random.default_rng(6)
         neg = rng.normal(0, 1, n)
         pos = rng.normal(1, 1, n)
         fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
         report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
-        assert report.neg_test == expected
-        assert report.pos_test == expected
+        assert math.isnan(report.neg_sf_pvalue) != sf_runs
+        assert math.isnan(report.pos_sf_pvalue) != sf_runs
+        assert math.isnan(report.neg_k2_pvalue) != k2_runs
+        assert math.isnan(report.pos_k2_pvalue) != k2_runs
+        # moment effect sizes exist whenever the class is testable at all
+        assert not math.isnan(report.neg_skew)
+        assert not math.isnan(report.pos_excess_kurtosis)
 
 
 class TestBandStructure:
@@ -273,7 +305,7 @@ class TestNormalityDiagnostics:
         assert band.normality is not None
         assert band.normality.suspect is False
         assert band.normality.warning == ""
-        assert band.normality.neg_test == "shapiro"
+        assert not np.isnan(band.normality.neg_sf_pvalue)
 
     def test_ties_clause_appended(self):
         y_true, y_score = heavy_tailed_dataset(400, 400, seed=7, tie_step=0.5)
@@ -293,7 +325,234 @@ class TestNormalityDiagnostics:
         report = band.normality
         assert report is not None
         assert not np.isnan(report.probit_r2)
-        assert report.pos_test in ("shapiro", "normaltest")
+        # both checks apply at n = 500, and the effect sizes come along
+        assert not np.isnan(report.pos_sf_pvalue)
+        assert not np.isnan(report.pos_k2_pvalue)
+        assert not np.isnan(report.pos_skew)
+        assert not np.isnan(report.pos_excess_kurtosis)
+
+
+class TestGateComposition:
+    def test_one_bad_class_suffices_negative(self):
+        # OR-composition: heavy-tailed negatives alone flag the fit even
+        # though the positives are cleanly normal
+        rng = np.random.default_rng(12)
+        neg = rng.standard_t(3, 300)
+        pos = rng.normal(2.0, 1.0, 300)
+        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+        report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+        assert report.suspect
+
+    def test_one_bad_class_suffices_positive(self):
+        rng = np.random.default_rng(13)
+        neg = rng.normal(0.0, 1.0, 300)
+        pos = rng.lognormal(0.8, 0.6, 300)
+        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+        report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+        assert report.suspect
+
+    def test_warning_reports_effect_sizes(self):
+        # the warning is the artifact users act on: it must carry the moment
+        # effect sizes, not just p-values
+        rng = np.random.default_rng(14)
+        neg = rng.standard_t(3, 400)
+        pos = rng.standard_t(3, 400) + 2.0
+        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+        report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+        assert report.suspect
+        assert "excess kurtosis" in report.warning
+        assert "skew" in report.warning
+        assert "SF p=" in report.warning
+        assert "K2 p=" in report.warning
+
+
+class TestReportInvariants:
+    """Hypothesis sweep: the report is internally consistent on any input."""
+
+    scores = st.lists(
+        st.floats(min_value=-1e6, max_value=1e6, allow_nan=False),
+        min_size=2,
+        max_size=120,
+    ).map(lambda v: np.asarray(v, dtype=np.float64))
+
+    @settings(max_examples=80, deadline=None)
+    @given(neg=scores, pos=scores)
+    def test_report_consistency(self, neg, pos):
+        fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+        report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+
+        # suspect is exactly the OR of the published triggers (nan never fires)
+        pvalues = (
+            report.neg_sf_pvalue,
+            report.neg_k2_pvalue,
+            report.pos_sf_pvalue,
+            report.pos_k2_pvalue,
+        )
+        r2_applies = min(len(neg), len(pos)) >= _R2_TRIGGER_MIN_N
+        expected = any(p < _SUSPECT_P for p in pvalues) or (
+            r2_applies
+            and not math.isnan(report.probit_r2)
+            and report.probit_r2 < _SUSPECT_R2
+        )
+        assert report.suspect == expected
+        assert (report.warning != "") == report.suspect
+
+        # every p-value is nan or a probability
+        for p in pvalues:
+            assert math.isnan(p) or 0.0 <= p <= 1.0
+
+        # check windows: SF on [5, 5000], K² from 20, nothing on a
+        # (numerically) constant class
+        for x, sf_p, k2_p in (
+            (neg, report.neg_sf_pvalue, report.neg_k2_pvalue),
+            (pos, report.pos_sf_pvalue, report.pos_k2_pvalue),
+        ):
+            testable = len(x) >= 3 and np.ptp(x) > 0
+            assert math.isnan(sf_p) == (not (testable and 5 <= len(x) <= 5000))
+            assert math.isnan(k2_p) == (not (testable and len(x) >= 20))
+
+        # the headline property is the smallest applicable check p-value
+        valid = [
+            p for p in (report.neg_sf_pvalue, report.neg_k2_pvalue) if not math.isnan(p)
+        ]
+        if valid:
+            assert report.neg_pvalue == min(valid)
+        else:
+            assert math.isnan(report.neg_pvalue)
+
+
+@pytest.mark.slow
+class TestFalsePositiveRate:
+    """The gate's false-alarm rate on truly binormal data stays under 20%.
+
+    The operating point: four class checks OR-composed at p < 0.02 — the
+    MCC-optimal balance of sensitivity and specificity for predicting WH
+    miscoverage, chosen from the broad MCC plateau over alpha in
+    [0.0025, 0.02] — with the R² trigger gated on both classes reaching
+    1000 samples. The false-positive rate measures ~0.04-0.07 across every
+    class size and AUC, comfortably under the 0.20 budget, with no
+    sample-size domain excepted. If a cell here
+    crosses the budget, either a trigger was re-tuned (recalibrate against
+    the budget) or a new check was added without accounting for the OR
+    composition. The seeded sweeps are deterministic; the gap between
+    measured rates and the asserted bound absorbs numpy stream changes, not
+    sampling noise.
+    """
+
+    #: The spec: at most this fraction of truly binormal datasets may be
+    #: flagged suspect, at every class size.
+    BUDGET = 0.20
+
+    @pytest.mark.parametrize("d", [0.6, 1.2, 2.0])  # AUC ~ 0.66 / 0.80 / 0.92
+    @pytest.mark.parametrize("n", [30, 100, 300, 1000, 3000, 10000])
+    def test_binormal_false_positive_rate_within_budget(self, n, d):
+        n_rep = 300
+        rng = np.random.default_rng(123)
+        false_positives = 0
+        for _ in range(n_rep):
+            neg, pos = rng.normal(0.0, 1.0, n), rng.normal(d, 1.0, n)
+            fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+            report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+            false_positives += report.suspect
+        assert false_positives / n_rep < self.BUDGET
+
+    def test_unequal_classes_within_budget(self):
+        # imbalanced designs straddle the R² trigger's class-size gate: the
+        # smaller class controls, so the trigger stays off here
+        n_rep = 300
+        rng = np.random.default_rng(123)
+        false_positives = 0
+        for _ in range(n_rep):
+            neg, pos = rng.normal(0.0, 1.0, 100), rng.normal(1.2, 1.0, 2000)
+            fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+            report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+            false_positives += report.suspect
+        assert false_positives / n_rep < self.BUDGET
+
+
+def _true_roc_t_shift(grid: np.ndarray, df: float, delta: float) -> np.ndarray:
+    """Population ROC of a location-shifted Student-t pair."""
+    g = np.clip(grid, 1e-12, 1.0 - 1e-12)
+    return 1.0 - student_t.cdf(student_t.ppf(1.0 - g, df) - delta, df)
+
+
+def _true_roc_bimodal_neg(grid: np.ndarray, d: float, mu: float) -> np.ndarray:
+    """Population ROC with symmetric-bimodal negatives and N(mu, 1) positives."""
+    c = np.linspace(-10.0, 10.0 + mu, 8001)
+    fpr = 1.0 - 0.5 * (norm.cdf(c - d) + norm.cdf(c + d))
+    tpr = 1.0 - norm.cdf(c - mu)
+    return np.interp(grid, fpr[::-1], tpr[::-1])
+
+
+@pytest.mark.slow
+class TestSilentFailures:
+    """The gate is a tripwire, not a certificate — and these tests keep it so.
+
+    In mildly off-binormal regimes a meaningful fraction of datasets pass
+    every check while the WH band misses the true ROC far above the nominal
+    5%. These tests pin that down: if a future change makes them fail by
+    eliminating the silent failures, the "no safe diagnostic region" warning
+    language should be revisited; if it makes the pass rate collapse to ~0,
+    the gate has become so trigger-happy the WH path is effectively dead.
+    Thresholds sit far below the measured values (pass ~0.51/0.62,
+    miss-given-pass ~0.44/0.20 at these seeds) so they fail on real regime
+    change, not Monte-Carlo wiggle.
+    """
+
+    GRID = np.linspace(0.01, 0.99, 99)
+
+    def _sweep(self, sampler, true_roc, n_rep=400, seed=42):
+        rng = np.random.default_rng(seed)
+        n_pass = miss_given_pass = 0
+        for _ in range(n_rep):
+            neg, pos = sampler(rng)
+            fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+            report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+            if report.suspect:
+                continue
+            n_pass += 1
+            lower, upper = working_hotelling_band(neg, pos, self.GRID, 0.05)
+            truth = true_roc(self.GRID)
+            covered = ((lower <= truth + 1e-12) & (truth <= upper + 1e-12)).all()
+            miss_given_pass += not covered
+        return n_pass / n_rep, miss_given_pass / max(n_pass, 1)
+
+    def test_mild_heavy_tails_slip_through(self):
+        # t(df=10) classes at n=150: tails too mild for the checks to see
+        # reliably, heavy enough to break WH coverage
+        df, n, delta = 10, 150, 1.5
+        pass_rate, miss_rate = self._sweep(
+            lambda rng: (rng.standard_t(df, n), rng.standard_t(df, n) + delta),
+            lambda grid: _true_roc_t_shift(grid, df, delta),
+        )
+        assert pass_rate > 0.05, "gate now rejects nearly everything here"
+        assert miss_rate > 0.15, "silent failures gone - revisit warning language"
+
+    def test_mild_bimodality_slips_through(self):
+        # weakly separated bimodal negatives at n=300: kurtosis barely moves,
+        # but the binormal fit converges to the wrong curve
+        d, n, mu = 1.0, 300, 2.0
+
+        def sampler(rng):
+            sign = np.where(rng.integers(0, 2, n) == 1, d, -d)
+            return rng.normal(0.0, 1.0, n) + sign, rng.normal(mu, 1.0, n)
+
+        pass_rate, miss_rate = self._sweep(
+            sampler, lambda grid: _true_roc_bimodal_neg(grid, d, mu)
+        )
+        assert pass_rate > 0.08, "gate now rejects nearly everything here"
+        assert miss_rate > 0.10, "silent failures gone - revisit warning language"
+
+    def test_gross_departures_are_caught(self):
+        # the tripwire half of the story: blatant heavy tails at real sample
+        # sizes must fire essentially always
+        df, n, delta = 3, 500, 2.0
+        pass_rate, _ = self._sweep(
+            lambda rng: (rng.standard_t(df, n), rng.standard_t(df, n) + delta),
+            lambda grid: _true_roc_t_shift(grid, df, delta),
+            n_rep=200,
+        )
+        assert pass_rate < 0.02
 
 
 class TestRankInvarianceContrast:

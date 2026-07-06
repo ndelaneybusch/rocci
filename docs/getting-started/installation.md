@@ -1,13 +1,13 @@
 # Installation
 
 ```bash
-pip install rocci            # core: numpy + scipy only
+pip install rocci            # core: numpy only
 pip install 'rocci[plot]'    # optional plotting support
 ```
 
 Binary wheels ship for Linux (x86-64, aarch64, musl), macOS (Intel and Apple
 silicon), and Windows, for every Python ≥ 3.10. This means that a `pip install
-rocci` never needs to compile the rust components on a supported platform. 
+rocci` never needs to compile the rust components on a supported platform.
 
 ## Supported install methods
 
@@ -21,7 +21,7 @@ rocci` never needs to compile the rust components on a supported platform.
 === "uv"
 
     ```bash
-    uv add rocci                    # core: numpy + scipy only
+    uv add rocci                    # core: numpy only
     uv pip install 'rocci[plot]'    # optional plotting support
     ```
 
@@ -36,8 +36,8 @@ rocci` never needs to compile the rust components on a supported platform.
     to want a conda build is to coordinate shared native libraries across
     packages. That does not apply here. The wheel is lightweight and
     self-contained (the Rust kernel is statically linked; the only
-    dependencies are numpy and scipy). Calling pip-inside-conda should suffice
-     for most users. If a conda-forge package would matter for your setup, 
+    dependency is numpy). Calling pip-inside-conda should suffice
+     for most users. If a conda-forge package would matter for your setup,
      open an issue — demand is what would change the decision.
 
 === "from source"
@@ -70,7 +70,7 @@ but not bit-for-bit (different RNG streams — documented, tested).
 | | |
 |---|---|
 | Python | ≥ 3.10 |
-| Hard dependencies | `numpy >= 1.24`, `scipy >= 1.10` |
+| Hard dependencies | `numpy >= 1.24` |
 | Optional | `matplotlib >= 3.7` (`rocci[plot]`), `pandas` (only for `to_dataframe()`) |
 
 ## For bug reports

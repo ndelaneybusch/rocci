@@ -11,26 +11,48 @@ suspect fit.
 from __future__ import annotations
 
 import math
+from typing import NamedTuple
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.stats import shapiro
 
 from rocci._result import NormalityReport
-from rocci.special import chi2_ppf, dagostino_k2, ndtr, ndtri
+from rocci.special import (
+    chi2_ppf,
+    dagostino_k2,
+    ndtr,
+    ndtri,
+    shapiro_francia,
+    skew_kurtosis,
+)
 
 FloatArray = NDArray[np.float64]
 
-#: Largest class size for which Shapiro-Wilk is used; above it, D'Agostino K².
-_SHAPIRO_MAX_N = 5000
+#: Shapiro-Francia window (Royston's validated p-value domain).
+_SF_MIN_N, _SF_MAX_N = 5, 5000
+#: Smallest class size for D'Agostino K² (its normal approximations need it).
+_K2_MIN_N = 20
 #: ROC interior kept for the probit-linearity check (open interval per axis).
 _INTERIOR_LO, _INTERIOR_HI = 0.05, 0.95
 #: Minimum interior vertices required to estimate the probit-linearity R².
 _MIN_INTERIOR_VERTICES = 10
-#: A class p-value below this marks the binormal fit suspect.
-_SUSPECT_P = 0.10
-#: A probit-linearity R² below this marks the binormal fit suspect.
+#: A class-check p-value below this marks the binormal fit suspect. Treating
+#: the gate as a predictor of WH miscoverage, MCC(alpha) has a broad plateau
+#: over alpha in [0.0025, 0.02] at every class size; 0.02 is the plateau edge
+#: that best balances sensitivity against specificity (e.g. 0.80/0.78 at
+#: n=100, 0.91/0.86 at n=500 over a binormal/heavy/skew/bimodal mixture).
+#: Four checks are OR-composed and SF and K² on one class are positively
+#: correlated, so the false-alarm rate on truly binormal data lands at ~4-9%
+#: (locked by the false-positive characterization test).
+_SUSPECT_P = 0.02
+#: A probit-linearity R² below this marks the binormal fit suspect...
 _SUSPECT_R2 = 0.98
+#: ...but only when both classes have at least this many samples. Below it
+#: the empirical ROC's step granularity makes R² < 0.98 routine on truly
+#: binormal data (50-97% of clean datasets at n <= 100), so the fixed
+#: threshold only discriminates at large n. R² is still *reported* at every
+#: n; only its suspect trigger is gated.
+_R2_TRIGGER_MIN_N = 1000
 #: Floor on class standard deviations, guarding degenerate (constant) classes.
 _STD_EPS = 1e-8
 #: Clip applied to grid FPRs before the probit transform (avoids +-inf).
@@ -105,23 +127,42 @@ def working_hotelling_band(
     return lower, upper
 
 
-def _class_normality(x: FloatArray) -> tuple[str, float, float]:
-    """Run the per-class normality test, returning ``(name, statistic, p)``.
+class _ClassChecks(NamedTuple):
+    """Per-class normality checks; ``nan`` marks a check that did not apply."""
 
-    Shapiro-Wilk is used for moderate class sizes and D'Agostino K² above
-    :data:`_SHAPIRO_MAX_N`. A class too small or with constant scores cannot
-    be tested and reports ``("insufficient", nan, nan)`` so it never
-    contributes false suspicion.
+    sf_stat: float
+    sf_pvalue: float
+    k2_stat: float
+    k2_pvalue: float
+    skew: float
+    excess_kurtosis: float
+
+
+_NO_CHECKS = _ClassChecks(*([math.nan] * 6))
+
+
+def _class_checks(x: FloatArray) -> _ClassChecks:
+    """Run every applicable normality check on one class's scores.
+
+    Shapiro-Francia (QQ straightness; strongest against heavy tails) runs for
+    ``5 <= n <= 5000``, D'Agostino K² (skew + kurtosis; its kurtosis leg also
+    catches short-tailed/bimodal shapes) for ``n >= 20`` — both where the
+    windows overlap. A class too small or with constant scores cannot be
+    checked at all and reports all-``nan``, which never creates suspicion
+    (``nan < threshold`` is False).
     """
     x = np.asarray(x, dtype=np.float64)
     n = len(x)
     if n < 3 or np.ptp(x) == 0.0:
-        return "insufficient", math.nan, math.nan
-    if n <= _SHAPIRO_MAX_N:
-        stat, p = shapiro(x)
-        return "shapiro", float(stat), float(p)
-    stat, p = dagostino_k2(x)
-    return "normaltest", stat, p
+        return _NO_CHECKS
+    skew, excess_kurtosis = skew_kurtosis(x)
+    sf_stat = sf_pvalue = math.nan
+    if _SF_MIN_N <= n <= _SF_MAX_N:
+        sf_stat, sf_pvalue = shapiro_francia(x)
+    k2_stat = k2_pvalue = math.nan
+    if n >= _K2_MIN_N:
+        k2_stat, k2_pvalue = dagostino_k2(x)
+    return _ClassChecks(sf_stat, sf_pvalue, k2_stat, k2_pvalue, skew, excess_kurtosis)
 
 
 def _probit_r2(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
@@ -130,7 +171,7 @@ def _probit_r2(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
     Keeps vertices strictly inside ``(0.05, 0.95)`` on both axes, deduplicates
     identical points, and regresses ``probit(TPR)`` on ``probit(FPR)`` by OLS.
     Returns ``nan`` when fewer than :data:`_MIN_INTERIOR_VERTICES` interior
-    points remain or the predictor has no spread.
+    points remain or the probit-TPR responses have no spread (R² undefined).
     """
     fpr_v = np.asarray(fpr_v, dtype=np.float64)
     tpr_v = np.asarray(tpr_v, dtype=np.float64)
@@ -154,11 +195,22 @@ def _probit_r2(fpr_v: FloatArray, tpr_v: FloatArray) -> float:
     return 1.0 - float(np.sum(resid**2)) / ss_tot
 
 
-def _warning_text(neg_p: float, pos_p: float, r2: float, *, heavy_ties: bool) -> str:
+def _class_clause(name: str, c: _ClassChecks) -> str:
+    """One class's warning clause: check p-values plus moment effect sizes."""
+    return (
+        f"{name}: SF p={c.sf_pvalue:.3g}, K2 p={c.k2_pvalue:.3g}, "
+        f"skew={c.skew:.2g}, excess kurtosis={c.excess_kurtosis:.2g}"
+    )
+
+
+def _warning_text(
+    neg: _ClassChecks, pos: _ClassChecks, r2: float, *, heavy_ties: bool
+) -> str:
     """Compose the suspect-binormality warning text."""
     text = (
-        f"binormality looks doubtful (negative-class p={neg_p:.3g}, "
-        f"positive-class p={pos_p:.3g}, probit-linearity R^2={r2:.3g}): "
+        f"binormality looks doubtful ({_class_clause('neg', neg)}; "
+        f"{_class_clause('pos', pos)}; probit-linearity R^2={r2:.3g}; "
+        "Gaussian classes have skew ~= 0 and excess kurtosis ~= 0): "
         "Working-Hotelling coverage degrades continuously with departures from "
         "binormality and worsens with n, so there is no safe diagnostic region. "
         "Prefer normal=False for the distribution-free envelope band."
@@ -181,9 +233,18 @@ def normality_report(
 ) -> NormalityReport:
     """Assemble the normality diagnostics for a Working-Hotelling band.
 
-    Combines a per-class normality test with the probit-linearity R² of the
-    empirical ROC. The fit is flagged ``suspect`` when either class p-value is
-    below :data:`_SUSPECT_P` or the R² is below :data:`_SUSPECT_R2`; the
+    Runs every applicable per-class check (Shapiro-Francia and D'Agostino K²)
+    plus the probit-linearity R² of the empirical ROC, and flags the fit
+    ``suspect`` when **any one** of them trips — any check p-value below
+    :data:`_SUSPECT_P`, or R² below :data:`_SUSPECT_R2` when both classes
+    reach :data:`_R2_TRIGGER_MIN_N` (below that the fixed R² threshold is
+    noise on truly binormal data). The operating point sits at the
+    MCC-optimal balance of sensitivity and specificity for predicting WH
+    miscoverage (see :data:`_SUSPECT_P`), with a ~4-8% false-alarm rate on
+    truly binormal data, roughly flat across class sizes and AUC (locked by
+    the false-positive characterization test). No operating point can
+    certify binormality: mild departures at moderate n pass every check a
+    meaningful fraction of the time while still costing coverage. The
     warning text is populated only when suspect.
 
     Args:
@@ -205,27 +266,43 @@ def normality_report(
         >>> neg, pos = rng.normal(0, 1, 300), rng.normal(1.5, 1, 300)
         >>> fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
         >>> rep = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
-        >>> rep.neg_test
-        'shapiro'
+        >>> bool(rep.neg_sf_pvalue > 0 and rep.neg_k2_pvalue > 0)
+        True
     """
-    neg_test, neg_stat, neg_p = _class_normality(neg)
-    pos_test, pos_stat, pos_p = _class_normality(pos)
+    neg_checks = _class_checks(neg)
+    pos_checks = _class_checks(pos)
     r2 = _probit_r2(fpr_v, tpr_v)
 
-    suspect = (
-        neg_p < _SUSPECT_P
-        or pos_p < _SUSPECT_P
-        or (not math.isnan(r2) and r2 < _SUSPECT_R2)
+    # nan p-values (check not applicable) compare False and never trigger
+    pvalues = (
+        neg_checks.sf_pvalue,
+        neg_checks.k2_pvalue,
+        pos_checks.sf_pvalue,
+        pos_checks.k2_pvalue,
     )
-    warning = _warning_text(neg_p, pos_p, r2, heavy_ties=heavy_ties) if suspect else ""
+    r2_trigger_applies = min(len(neg), len(pos)) >= _R2_TRIGGER_MIN_N
+    suspect = any(p < _SUSPECT_P for p in pvalues) or (
+        r2_trigger_applies and not math.isnan(r2) and r2 < _SUSPECT_R2
+    )
+    warning = (
+        _warning_text(neg_checks, pos_checks, r2, heavy_ties=heavy_ties)
+        if suspect
+        else ""
+    )
 
     return NormalityReport(
-        neg_test=neg_test,
-        neg_stat=neg_stat,
-        neg_pvalue=neg_p,
-        pos_test=pos_test,
-        pos_stat=pos_stat,
-        pos_pvalue=pos_p,
+        neg_sf_stat=neg_checks.sf_stat,
+        neg_sf_pvalue=neg_checks.sf_pvalue,
+        neg_k2_stat=neg_checks.k2_stat,
+        neg_k2_pvalue=neg_checks.k2_pvalue,
+        neg_skew=neg_checks.skew,
+        neg_excess_kurtosis=neg_checks.excess_kurtosis,
+        pos_sf_stat=pos_checks.sf_stat,
+        pos_sf_pvalue=pos_checks.sf_pvalue,
+        pos_k2_stat=pos_checks.k2_stat,
+        pos_k2_pvalue=pos_checks.k2_pvalue,
+        pos_skew=pos_checks.skew,
+        pos_excess_kurtosis=pos_checks.excess_kurtosis,
         probit_r2=r2,
         suspect=suspect,
         warning=warning,

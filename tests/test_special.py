@@ -3,10 +3,12 @@
 These implementations exist so the band core does not need a general
 special-functions library; correctness is therefore defined as agreement with
 scipy to near machine precision. The equivalence sweeps below are the primary
-oracle. The handful of non-scipy tests cover only what equivalence cannot:
-edge-value conventions, input validation, and the accuracy of ``beta_ppf`` at
-quantiles far smaller than one ulp of 1 (where absolute comparisons against
-scipy say nothing about relative error).
+oracle. The non-scipy tests cover only what equivalence cannot: edge-value
+conventions, input validation, the relative accuracy of ``beta_ppf`` at tiny
+tail quantiles (pinned to an exact closed form, so the claim does not lean on
+scipy's own accuracy there), and Shapiro-Francia — which scipy lacks — whose
+correctness rests on Monte-Carlo null calibration, power checks, agreement in
+ranking with Shapiro-Wilk, and hypothesis-swept invariances instead.
 """
 
 from __future__ import annotations
@@ -15,12 +17,26 @@ import math
 
 import numpy as np
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from scipy.stats import beta as scipy_beta
 from scipy.stats import chi2 as scipy_chi2
+from scipy.stats import kurtosis as scipy_kurtosis
 from scipy.stats import norm as scipy_norm
 from scipy.stats import normaltest as scipy_normaltest
+from scipy.stats import shapiro as scipy_shapiro
+from scipy.stats import skew as scipy_skew
+from scipy.stats import spearmanr
 
-from rocci.special import beta_ppf, chi2_ppf, dagostino_k2, ndtr, ndtri
+from rocci.special import (
+    beta_ppf,
+    chi2_ppf,
+    dagostino_k2,
+    ndtr,
+    ndtri,
+    shapiro_francia,
+    skew_kurtosis,
+)
 
 
 class TestNdtri:
@@ -128,6 +144,124 @@ class TestBetaPpf:
         qs = np.linspace(0.001, 0.999, 200)
         vals = np.array([beta_ppf(float(q), 5, 96) for q in qs])
         assert (np.diff(vals) > 0).all()
+
+
+class TestSkewKurtosis:
+    def test_matches_scipy(self):
+        rng = np.random.default_rng(0)
+        for x in (
+            rng.normal(size=500),
+            rng.lognormal(size=200),
+            rng.uniform(size=50),
+            rng.standard_t(3, size=1000),
+        ):
+            g1, g2 = skew_kurtosis(x)
+            assert g1 == pytest.approx(float(scipy_skew(x)), rel=1e-12)
+            assert g2 == pytest.approx(float(scipy_kurtosis(x)), rel=1e-12)
+
+    @settings(max_examples=100, deadline=None)
+    @given(
+        st.lists(
+            st.floats(min_value=-1e6, max_value=1e6, allow_nan=False),
+            min_size=3,
+            max_size=400,
+        ).map(lambda v: np.asarray(v, dtype=np.float64))
+    )
+    def test_hypothesis_invariances(self, x):
+        if np.ptp(x) == 0.0:
+            with pytest.raises(ValueError, match="non-constant"):
+                skew_kurtosis(x)
+            return
+        g1, g2 = skew_kurtosis(x)
+        # excess kurtosis >= -2 (m4 >= m2^2 by Cauchy-Schwarz) and reflection
+        # flips skewness while leaving kurtosis unchanged
+        assert g2 >= -2.0 - 1e-9
+        r1, r2 = skew_kurtosis(-x)
+        assert r1 == pytest.approx(-g1, abs=1e-9)
+        assert r2 == pytest.approx(g2, rel=1e-9, abs=1e-9)
+
+
+class TestShapiroFrancia:
+    def test_null_calibration(self):
+        # Royston's p-approximation is the only correctness claim scipy can't
+        # arbitrate: check the test rejects ~alpha of truly normal samples
+        # across the validated window
+        rng = np.random.default_rng(7)
+        n_sim = 2000
+        for n in (20, 100, 1000):
+            rejections = sum(
+                shapiro_francia(rng.normal(size=n))[1] < 0.05 for _ in range(n_sim)
+            )
+            assert abs(rejections / n_sim - 0.05) < 0.02, f"miscalibrated at {n=}"
+
+    def test_power_against_wh_killers(self):
+        # decisive rejection of the departures that break Working-Hotelling
+        rng = np.random.default_rng(8)
+        for sample in (
+            lambda: rng.standard_t(3, size=200),  # heavy tails
+            lambda: rng.lognormal(0.0, 0.8, size=200),  # skew
+        ):
+            rejected = sum(shapiro_francia(sample())[1] < 0.05 for _ in range(200))
+            assert rejected > 180
+
+    def test_ranks_like_shapiro_wilk(self):
+        # SF and SW should order datasets by non-normality nearly identically
+        rng = np.random.default_rng(9)
+        p_sf, p_sw = [], []
+        for i in range(120):
+            x = (
+                rng.normal(size=150),
+                rng.standard_t(7, size=150),
+                rng.lognormal(0.0, 0.35, size=150),
+                rng.uniform(size=150),
+            )[i % 4]
+            p_sf.append(shapiro_francia(x)[1])
+            p_sw.append(float(scipy_shapiro(x).pvalue))
+        assert float(spearmanr(p_sf, p_sw).statistic) > 0.95
+
+    def test_affine_invariance_and_reflection(self):
+        rng = np.random.default_rng(10)
+        x = rng.normal(size=80)
+        stat, p = shapiro_francia(x)
+        assert (stat, p) == pytest.approx(shapiro_francia(3.5 * x - 2.0), rel=1e-12)
+        # W' correlates against antisymmetric Blom scores, so reflection
+        # preserves it exactly
+        r_stat, r_p = shapiro_francia(-x)
+        assert r_stat == pytest.approx(stat, rel=1e-12)
+        assert r_p == pytest.approx(p, rel=1e-12)
+
+    def test_perfect_qq_line_is_no_evidence(self):
+        # a sample that IS an affine image of the Blom scores has W' = 1 up
+        # to rounding, and must carry no evidence against normality
+        n = 50
+        blom = np.asarray((np.arange(1, n + 1) - 0.375) / (n + 0.25), dtype=np.float64)
+        x = 2.0 * ndtri(blom) + 1.0
+        stat, p = shapiro_francia(x)
+        assert stat > 1.0 - 1e-12
+        assert p > 0.999
+
+    def test_validation(self):
+        with pytest.raises(ValueError, match="5 <= n <= 5000"):
+            shapiro_francia(np.arange(4.0))
+        with pytest.raises(ValueError, match="5 <= n <= 5000"):
+            shapiro_francia(np.zeros(5001))
+        with pytest.raises(ValueError, match="non-constant"):
+            shapiro_francia(np.ones(100))
+
+    @settings(max_examples=100, deadline=None)
+    @given(
+        st.lists(
+            st.floats(min_value=-1e6, max_value=1e6, allow_nan=False),
+            min_size=5,
+            max_size=300,
+        ).map(lambda v: np.asarray(v, dtype=np.float64))
+    )
+    def test_hypothesis_output_domain(self, x):
+        if np.ptp(x) == 0.0:
+            return
+        stat, p = shapiro_francia(x)
+        assert 0.0 < stat <= 1.0
+        assert 0.0 <= p <= 1.0
 
 
 class TestDagostinoK2:

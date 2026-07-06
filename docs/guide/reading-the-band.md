@@ -139,18 +139,26 @@ band:
 
 ```python
 band = roc_band(y, s, normal=True)
-band.normality.neg_pvalue      # per-class normality test p-values
-band.normality.pos_pvalue
+band.normality.neg_pvalue      # smallest per-class check p-value
+band.normality.pos_pvalue      # (Shapiro-Francia and D'Agostino K² each run
+                               #  where valid; *_sf_* / *_k2_* hold the details,
+                               #  *_skew / *_excess_kurtosis the effect sizes)
 band.normality.probit_r2       # OLS R² of the probit-probit ROC interior
 band.normality.suspect         # True => a NormalityWarning was emitted
 band.normality.warning         # the exact text
 ```
 
-`suspect` fires when either class p-value drops below 0.10 or the probit R²
-falls below 0.98. The thresholds are deliberately blunt: Working–Hotelling
-coverage degrades *continuously* with departures from binormality and worsens
-with n, so there is no safe region the diagnostics could certify — they can
-only fail to reject. Heavy ties are flagged in the warning text as
+`suspect` fires when **any** check trips — a class-check p-value below 0.02,
+or the probit R² below 0.98 once both classes reach 1000 samples (below that
+the fixed R² threshold is noise on truly binormal data, so it is reported but
+never triggers). The thresholds sit at the balance point that maximizes the
+gate's agreement (Matthews correlation) with actual Working–Hotelling
+coverage failures across sample sizes and departure families, flagging
+roughly 4–8% of *truly binormal* datasets along the way. Even so, no
+operating point certifies binormality: coverage degrades *continuously* with
+departures and worsens with n, so the diagnostics can only fail to reject. A quiet gate is
+weak evidence: in mildly heavy-tailed regimes a meaningful share of datasets
+pass every check while the parametric band misses the true curve. Heavy ties are flagged in the warning text as
 structurally incompatible with the binormal model (ties have probability zero
 under it).
 

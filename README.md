@@ -31,7 +31,7 @@ print(band.summary())
 - __drop in to your workflow__. It natively integrates with sklearn, torch,
   statsmodels, PyMC/arviz, and pandas/polars data.
 - __be fast__. A rust backend blazes through the algorithm.
-- __make a minimal footprint__. The only hard dependencies are numpy and scipy.
+- __make a minimal footprint__. The only hard dependency is numpy.
 - __clear an unreasonably high bar of rigor__. Method is validated with
   [millions of simulations across diverse data
   sets](https://ndelaneybusch.github.io/rocci/method/simulations/),

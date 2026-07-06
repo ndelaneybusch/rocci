@@ -19,7 +19,7 @@ from numpy.typing import NDArray
 FloatArray = NDArray[np.float64]
 
 #: Below this the kurtosis normal approximation is unreliable (the usual
-#: published guidance); rocci only tests classes far larger.
+#: published guidance); the band diagnostics gate K² on the same minimum.
 _MIN_N = 20
 
 
@@ -64,6 +64,52 @@ def _kurt_z(b2: float, n: int) -> float:
     return (term1 - term2) / math.sqrt(2.0 / (9.0 * a))
 
 
+def skew_kurtosis(x: FloatArray) -> tuple[float, float]:
+    """Biased sample skewness ``g1`` and excess kurtosis ``g2``.
+
+    The population-moment (biased) estimators, matching the defaults of
+    ``scipy.stats.skew`` and ``scipy.stats.kurtosis`` and the inputs the K²
+    transforms expect. Gaussian data has ``g1 ~ 0`` and ``g2 ~ 0``; heavy
+    tails push ``g2`` positive, short tails (including well-separated
+    bimodality) push it negative, with ``g2 >= -2`` always.
+
+    Args:
+        x: Sample of at least 3 non-constant observations.
+
+    Returns:
+        Tuple ``(skewness, excess_kurtosis)``.
+
+    Raises:
+        ValueError: If the sample has fewer than 3 observations or zero
+            variance.
+
+    Examples:
+        >>> import numpy as np
+        >>> from rocci.special import skew_kurtosis
+        >>> g1, g2 = skew_kurtosis(np.arange(10.0))
+        >>> round(g1, 12)  # symmetric sample
+        0.0
+        >>> bool(g2 < 0)  # flat (short-tailed) sample
+        True
+    """
+    x = np.asarray(x, dtype=np.float64).ravel()
+    if x.size < 3:
+        raise ValueError(f"skew_kurtosis requires n >= 3, got {x.size}")
+    # ptp catches exactly-constant samples, which mean-subtraction rounding
+    # would otherwise turn into nonzero noise moments
+    if np.ptp(x) == 0.0:
+        raise ValueError("skew_kurtosis requires a non-constant sample")
+    # both statistics are scale-invariant, so standardize by the largest
+    # absolute deviation: every intermediate then lies in [1/n, 1] and the
+    # powers of m2 cannot underflow no matter how tiny the sample's spread
+    xc = x - x.mean()
+    xc /= np.max(np.abs(xc))
+    m2 = float(np.mean(xc**2))
+    m3 = float(np.mean(xc**3))
+    m4 = float(np.mean(xc**4))
+    return m3 / m2**1.5, m4 / (m2 * m2) - 3.0
+
+
 def dagostino_k2(x: FloatArray) -> tuple[float, float]:
     """D'Agostino K² test, matching ``scipy.stats.normaltest``.
 
@@ -92,14 +138,9 @@ def dagostino_k2(x: FloatArray) -> tuple[float, float]:
     n = x.size
     if n < _MIN_N:
         raise ValueError(f"dagostino_k2 requires n >= {_MIN_N}, got {n}")
-    xc = x - x.mean()
-    m2 = float(np.mean(xc**2))
-    if m2 == 0.0:
-        raise ValueError("dagostino_k2 requires a non-constant sample")
-    m3 = float(np.mean(xc**3))
-    m4 = float(np.mean(xc**4))
+    g1, g2 = skew_kurtosis(x)
 
-    z_s = _skew_z(m3 / m2**1.5, n)
-    z_k = _kurt_z(m4 / (m2 * m2), n)
+    z_s = _skew_z(g1, n)
+    z_k = _kurt_z(g2 + 3.0, n)
     k2 = z_s * z_s + z_k * z_k
     return k2, math.exp(-k2 / 2.0)

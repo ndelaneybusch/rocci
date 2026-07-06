@@ -3,7 +3,7 @@
 Ingestion is the one layer that touches user data before any statistics run, and
 its mistakes are the most dangerous kind: a mis-split ``(neg, pos)`` produces a
 perfectly valid-looking band for the wrong problem. rocci also promises to accept
-whatever array-like a user has with zero hard dependencies (numpy + scipy only),
+whatever array-like a user has with zero hard dependencies beyond numpy,
 so this suite red-teams the coercion and resolution logic across the containers
 and edge cases it claims to support.
 
