@@ -39,7 +39,6 @@ nav:
       - Which band should I use?: guide/which-band.md
       - Using rocci with your data: guide/your-data.md
       - Reading the band: guide/reading-the-band.md
-      - Diagnostics: guide/diagnostics.md
       - Performance: guide/performance.md
   - Method:
       - The envelope method: method/envelope.md

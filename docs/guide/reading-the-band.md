@@ -3,35 +3,33 @@
 ## Simultaneous, not pointwise
 
 `band.confidence = 0.95` means: across repeated datasets, the **entire true
-ROC curve** lies inside the band 95% of the time. Formally, with $R$ the
-population ROC and $[L, U]$ the band,
+ROC curve** lies inside the band 95% of the time. With $R$ the population ROC
+and $[L, U]$ the band,
 
 $$
 \Pr\bigl(L(t) \le R(t) \le U(t)\ \text{for all } t \in [0,1]\bigr) \ge 0.95 .
 $$
 
-This is strictly stronger than 95% *pointwise* intervals. A pointwise
-interval is right about its own FPR 95% of the time — but with hundreds of
-grid points, the chance that *every* pointwise interval simultaneously holds
-is far below 95%; somewhere along the curve, at least one is essentially
-guaranteed to miss. Any claim of the form "the true curve looks like the
-drawn one" is implicitly a claim about the whole curve, and only a
-simultaneous band supports it.
+This is strictly stronger than 95% *pointwise* intervals. Each pointwise
+interval is right about its own FPR 95% of the time, but with hundreds of
+grid points, at least one is almost guaranteed to miss somewhere along the
+curve. Any claim of the form "the true curve looks like the drawn one" is a
+claim about the whole curve, and only a simultaneous band supports it.
 
-Practical consequences you may find surprising at first:
+Two consequences:
 
-- A simultaneous band is **wider** than the pointwise intervals you may be
-  used to. That is not looseness; that is the price of the joint statement.
+- A simultaneous band is **wider** than pointwise intervals. That is the
+  price of the joint statement, not looseness.
 - You may read off **any number of operating points** from the same band —
   `band.at([0.01, 0.05, 0.1])` — with no multiple-comparison correction.
   The correction is already inside.
 
 ## The step convention
 
-`band.lower`, `band.tpr`, `band.upper` live on the FPR grid `band.fpr` and
-are right-continuous step functions. `band.at(x)` evaluates all three at
+`band.lower`, `band.tpr`, and `band.upper` live on the FPR grid `band.fpr`
+as right-continuous step functions. `band.at(x)` evaluates all three at
 arbitrary FPRs with the same convention used to build the band, so what you
-query is exactly what was calibrated. Both `plot()` and `at()` share it.
+query is exactly what was calibrated. `plot()` shares the convention.
 
 ## The vacuous region at tiny FPR
 
@@ -40,31 +38,29 @@ query is exactly what was calibrated. Both `plot()` and `at()` share it.
 > no distribution-free lower bound exists below FPR ≈ 0.0125; increase the
 > number of negatives to certify lower FPRs.
 
-This is a real mathematical limit, not a rocci limitation. At FPR below
-roughly $1/n_\text{neg}$, whether the true curve is high or low there is
-governed by the extreme tail of the negative score distribution — about which
-$n_\text{neg}$ samples carry almost no information. Any distribution-free
-lower bound must therefore be 0 there. rocci sets `band.lower = 0` in that
-region and reports the boundary as `band.vacuous_below` instead of drawing a
-confident-looking curve it cannot justify. The upper arm remains informative.
-
+This is a mathematical limit, not a rocci limitation. At FPR below roughly
+$1/n_\text{neg}$, the true curve is governed by the extreme tail of the
+negative score distribution — about which $n_\text{neg}$ samples carry almost
+no information. Any distribution-free lower bound must therefore be 0 there.
+rocci sets `band.lower = 0` in that region and reports the boundary as
+`band.vacuous_below`. The upper arm remains informative.
 `band.plot(show_vacuous=True)` hatches the region.
 
 ## The floors
 
-The bootstrap resamples your data; where the data are nearly degenerate, the
-bootstrap can be blind to real uncertainty. Two exact mechanisms repair this:
+The bootstrap resamples your data; where the data are nearly degenerate, it
+can be blind to real uncertainty. Two exact mechanisms repair this:
 
 - the **Wilson rectangle floor** widens the band wherever the bootstrap
-  variance collapses below even the binomial noise floor of the empirical
-  rates;
+  variance collapses below the binomial noise floor of the empirical rates;
 - the **Beta order-statistic floor** *lowers* an overconfident lower arm at
   extreme FPR, where the operative uncertainty is horizontal (where the
   threshold's FPR actually sits) and invisible to any variance-based method.
 
-Every grid point of the lower arm records which mechanism produced it in
+Each grid point of the lower arm records which mechanism produced it in
 `band.attribution` (0 = bootstrap envelope, 1 = Beta floor, 2 = Wilson floor,
-3 = pinned endpoint), and [Diagnostics](diagnostics.md) shows how to see it.
+3 = pinned endpoint); [Floor attribution](#floor-attribution) shows how to
+visualize it.
 
 ## The endpoints
 
@@ -76,14 +72,88 @@ at FPR 1 is identically 1 — no uncertainty to represent).
 
 - `band.auc` is the exact Mann–Whitney statistic (ties weighted ½) —
   identical to `sklearn.roc_auc_score`.
-- `band.auc_ci` is a bootstrap percentile CI for the AUC, recentered so it is
-  consistent with `band.auc` even under heavy ties. It is a **pointwise**
+- `band.auc_ci` is a bootstrap percentile CI for the AUC, recentered so it
+  stays consistent with `band.auc` under heavy ties. It is a **pointwise**
   interval for the scalar AUC — separate from, not derived from, the
   simultaneous band.
 
+## Confidence bands as statistical inference
+
+If any part of the diagonal identity line (i.e. a perfectly uninformative
+classifier) lies outside of the confidence band, you may reject the null
+hypothesis (of an uninformative ROC curve) at the chosen alpha.
+
 ## Comparing two models
 
-The honest use of bands for model comparison: if model A's *lower* arm sits
-above model B's *upper* arm over the FPR range you care about, A dominates B
-there at joint confidence. Overlapping bands do **not** prove equivalence —
-absence of evidence, as usual.
+If model A's *lower* arm sits above model B's *upper* arm over the FPR range
+you care about, A dominates B there at joint confidence. Overlapping bands do
+**not** establish equivalence.
+
+You may also compare an empirical ROC to a reference ROC. If any part of the
+reference ROC lies outside of the empirical confidence band, you may reject the
+null hypothesis that they are equivalent at the chosen alpha.
+
+## Diagnostics
+
+Every band can explain itself. `band.plot_diagnostics()` renders the diagnostics
+figure; `roc_band(..., diagnostics=True)` renders it at construction. The
+underlying data (`band.attribution`) is stored on the result whether or not you
+plot.
+
+### Floor attribution
+
+For envelope bands, the figure has two panels:
+
+1. **The band, with the lower arm color-coded by attribution.** Uncolored
+   stretches are the plain bootstrap envelope; yellow marks the Beta
+   order-statistic floor, green the Wilson rectangle floor. Jurisdiction
+   boundaries are marked and the vacuous region is hatched.
+2. **Variance channels vs FPR** (log scale): the raw bootstrap variance
+   against the Wilson variance floor. Wherever the raw variance dips below
+   the binomial floor, the bootstrap is under-representing real uncertainty
+   and the rectangle floor fires; shading shows each floor's active region.
+
+Typical readings:
+
+- **Yellow at the far left** is normal, and grows at small $n_\text{neg}$:
+  the Beta floor owns the extreme-FPR region where the bootstrap cannot see
+  horizontal threshold uncertainty.
+- **Green patches** appear where the empirical curve is locally flat or the
+  data nearly degenerate (heavy ties, tiny classes) — the bootstrap variance
+  collapsed and was floored.
+- **Mostly uncolored** means the bootstrap envelope alone carried the band —
+  the large-sample, well-behaved regime.
+
+The [anatomy vignette](../vignettes/04-anatomy-of-the-band.md) walks the
+attribution across n ∈ {50, 500, 5000} at high AUC.
+
+### Normality diagnostics
+
+For `normal=True` bands the figure shows the band plus the normality
+evidence: a normal QQ plot per class and the probit–probit ROC linearity
+fit. Under binormality, $\Phi^{-1}(\text{TPR})$ vs $\Phi^{-1}(\text{FPR})$
+is a straight line; curvature is exactly the model failing.
+
+The same evidence is available programmatically on every Working–Hotelling
+band:
+
+```python
+band = roc_band(y, s, normal=True)
+band.normality.neg_pvalue      # per-class normality test p-values
+band.normality.pos_pvalue
+band.normality.probit_r2       # OLS R² of the probit-probit ROC interior
+band.normality.suspect         # True => a NormalityWarning was emitted
+band.normality.warning         # the exact text
+```
+
+`suspect` fires when either class p-value drops below 0.10 or the probit R²
+falls below 0.98. The thresholds are deliberately blunt: Working–Hotelling
+coverage degrades *continuously* with departures from binormality and worsens
+with n, so there is no safe region the diagnostics could certify — they can
+only fail to reject. Heavy ties are flagged in the warning text as
+structurally incompatible with the binormal model (ties have probability zero
+under it).
+
+For a worked failure — heavy-tailed logits where the diagnostics fire and the
+parametric band visibly loses the true curve — see the
+[deep-learning vignette](../vignettes/02-deep-learning-scores.md).

@@ -4,10 +4,11 @@
 
 ![Envelope band vs Working-Hotelling band on heavy-tailed scores](assets/hero.png)
 
-A ROC curve computed from finite data is an estimate, and it is common to draw
-it with no uncertainty at all. `rocci` puts a **simultaneous confidence band**
-around it: a region that contains the *entire* true population ROC curve with
-the confidence you ask for — not just each point one at a time.
+`rocci` is a simple interface for adding uncertainty estimates to your ROC
+curve. It draws a **simultaneous confidence band**, which maintains the
+specified confidence of capturing the *entire* true (population) ROC — not
+just each point one at a time. The default is a new nonparametric method
+that works with nearly all common data distributions.
 
 ```python
 from rocci import roc_band
@@ -23,35 +24,44 @@ That is the whole quickstart. See it annotated in
 
 ## Why rocci
 
-- **Correct by default.** The default band is a studentized bootstrap
-  envelope with exact small-sample floors — distribution-free,
-  [validated in a 2.25M-evaluation simulation study](method/simulations.md)
-  across Gaussian, heavy-tailed, skewed, and multimodal score distributions,
-  and honest where no distribution-free bound exists. No normality
-  assumption; heavy ties and discrete scores are safe (conservative, and
-  tested).
-- **Just works.** NumPy arrays, pandas/polars Series, torch/JAX tensors,
-  Python lists, `(n, 2)` probability matrices, posterior draws — ingestion is
-  duck-typed with zero hard dependencies on any of those libraries.
-- **Drop-in.** `from_estimator(clf, X, y)` mirrors scikit-learn's
-  `RocCurveDisplay.from_estimator`; `band.auc` is exactly
-  `sklearn.roc_auc_score`; `band.to_dataframe()` hands the band to pandas.
-- **Fast.** The bootstrap kernel is compiled Rust (a pure-NumPy fallback keeps
-  the package working everywhere): 2 000 bootstrap replicates on 100 000
-  samples in well under half a second.
-- **Lightweight.** Runtime dependencies are `numpy` and `scipy` — nothing
-  else. Plotting is an optional extra (`rocci[plot]`).
+`rocci` is designed to:
 
-If you are comfortable assuming binormal scores, `normal=True` gives the
-tighter parametric **Working–Hotelling** band — and rocci runs normality
-diagnostics and warns loudly when that assumption looks doubtful, as in the
-figure above, where the true curve escapes the parametric band entirely.
+- **Just work.** It does the right thing off the shelf for nearly any data
+  set: no normality assumption, safe under heavy ties and discrete scores,
+  and honest where no distribution-free bound exists.
+- **Drop in to your workflow.** Native integration with scikit-learn, torch,
+  statsmodels, PyMC/arviz, and pandas/polars data — ingestion is duck-typed,
+  with zero hard dependencies on any of those libraries.
+- **Be fast.** The bootstrap kernel is compiled Rust (a pure-NumPy fallback
+  keeps the package working everywhere): 2 000 bootstrap replicates on
+  100 000 samples in well under half a second.
+- **Make a minimal footprint.** The only hard dependencies are numpy and
+  scipy; plotting is an optional extra (`rocci[plot]`).
+- **Clear an unreasonably high bar of rigor.** The method is
+  [validated with millions of simulations across diverse data
+  sets](method/simulations.md); the implementation is
+  [verified with exacting tests](method/verification.md).
+- **Support an open ecosystem.** Permissive MIT license, easy extensibility.
+
+If you are comfortable adding a normality assumption to get a tighter band,
+`normal=True` gives the parametric **Working–Hotelling** band — and rocci
+checks the assumption and warns when it looks doubtful, as in the figure
+above, where the true curve escapes the parametric band entirely.
 [Which band should I use?](guide/which-band.md) explains the trade.
+
+## Installation
+
+```bash
+pip install rocci            # prebuilt wheels (no need for rust toolchain)
+
+# optional plotting support
+pip install 'rocci[plot]'
+```
+
+Details in the [installation guide](getting-started/installation.md).
 
 ## Where to next
 
-- [Installation](getting-started/installation.md) — `pip install rocci`;
-  binary wheels for all mainstream platforms.
 - [Reading the band](guide/reading-the-band.md) — what "simultaneous" buys
   you, and what the vacuous region at tiny FPR means.
 - [The envelope method](method/envelope.md) — how the band is built.

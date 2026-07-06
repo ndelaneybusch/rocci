@@ -10,55 +10,11 @@
 
 **Distribution-free simultaneous confidence bands for ROC curves.**
 
-<!-- Absolute URL so the figure renders on PyPI as well as GitHub. -->
-![rocci envelope band vs Working-Hotelling band on heavy-tailed scores](https://raw.githubusercontent.com/ndelaneybusch/rocci/main/docs/assets/hero.png)
-
 `rocci` is a simple interface to easily add uncertainty estimates to your ROC
-curve that are very likely to be correct in nearly all use cases. It draws a
-simultaneous confidence band, which maintains the specified confidence of
-capturing the _entire_ true (population) ROC.
-
-`rocci` is designed to:
-- __just work__. It should do the right thing off the shelf for nearly any data
-  set.
-- __drop in to your workflow__. It natively integrates with sklearn, torch,
-  statsmodels, PyMC/arviz, and pandas/polars data.
-- __be fast__. Core operations are implemented in rust for speed (invisible to
-  the user).
-- __have a lightweight footprint__. Minimal runtime dependencies (just numpy and
-  scipy).
-- __support an open ecosystem__. Permissive MIT license, easy extensibility.
-
-By default, `rocci` uses a distribution-free method that provides informative
-bands without burdensome assumptions about the data. It maintains nominal
-coverage in a huge variety of contexts and the rare violations tend to be small
-misses — validated in a 2.25M-evaluation simulation study across Gaussian,
-heavy-tailed, skewed, and multimodal score distributions (see
-[the validation repository](https://github.com/ndelaneybusch/studroc_paper) and
-[the docs' walkthrough of its conclusions](https://ndelaneybusch.github.io/rocci/method/simulations/)).
-If you are comfortable adding a normality assumption to get tighter bands,
-`rocci` yields a "Working-Hotelling" band, but also carefully checks the
-normality assumption and warns you when it looks dicey.
-
-## Installation
-
-```bash
-pip install rocci            # prebuilt wheels — no Rust toolchain needed
-pip install 'rocci[plot]'    # + matplotlib for band.plot() and diagnostics
-uv add rocci                 # in uv-managed projects
-```
-
-Wheels cover Linux (glibc x86-64/aarch64 and musl), macOS (Intel and Apple
-silicon), and Windows, for every Python ≥ 3.10; runtime dependencies are
-numpy and scipy only. On any other platform `pip` falls back to the sdist
-(requires a [Rust toolchain](https://rustup.rs)), and if no compiled kernel
-is present at runtime a pure-NumPy backend with identical statistical
-semantics takes over automatically. There is no conda package at present:
-the wheel is lightweight and self-contained, so `pip install rocci` works
-cleanly inside conda environments.
-Details: [installation guide](https://ndelaneybusch.github.io/rocci/getting-started/installation/).
-
-## Quickstart
+curve. It draws a simultaneous confidence band, which maintains the specified
+confidence of capturing the _entire_ true (population) ROC. `rocci` uses a new
+nonparametric method by default that is likely to work with nearly all common
+data distributions.
 
 ```python
 from rocci import roc_band
@@ -67,6 +23,37 @@ band = roc_band(y_true, y_score)
 band.plot()
 print(band.summary())
 ```
+
+## Why rocci
+
+`rocci` is designed to:
+- __just work__. It does the right thing off the shelf for nearly any data set.
+- __drop in to your workflow__. It natively integrates with sklearn, torch,
+  statsmodels, PyMC/arviz, and pandas/polars data.
+- __be fast__. A rust backend blazes through the algorithm.
+- __make a minimal footprint__. The only hard dependencies are numpy and scipy.
+- __clear an unreasonably high bar of rigor__. Method is validated with
+  [millions of simulations across diverse data
+  sets](https://ndelaneybusch.github.io/rocci/method/simulations/),
+  implementation is [verified with exacting
+  tests](https://ndelaneybusch.github.io/rocci/latest/method/verification/).
+- __support an open ecosystem__. Permissive MIT license, easy extensibility.
+
+If you are comfortable adding a normality assumption to get tighter bands,
+`rocci` yields the tighter "Working-Hotelling" band, but also carefully checks
+the normality assumption and warns you when it looks dicey.
+
+## Installation
+
+```bash
+pip install rocci            # prebuilt wheels (no need for rust toolchain)
+
+# optional plotting support
+pip install 'rocci[plot]'
+
+```
+
+Details in the [installation guide](https://ndelaneybusch.github.io/rocci/getting-started/installation/).
 
 Docs: <https://ndelaneybusch.github.io/rocci> ·
 Changelog: [CHANGELOG.md](CHANGELOG.md) ·

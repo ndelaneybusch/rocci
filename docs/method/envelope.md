@@ -93,7 +93,7 @@ The order is load-bearing and fixed:
 
 Each grid point of the lower arm records which stage produced it
 (`band.attribution`), which is what the
-[diagnostics figure](../guide/diagnostics.md) renders.
+[diagnostics figure](../guide/reading-the-band.md#floor-attribution) renders.
 
 The assembled pipeline is locked by **golden-master tests**: committed
 fixtures recorded from the
