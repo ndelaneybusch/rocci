@@ -17,10 +17,9 @@ import math
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.stats import beta as beta_dist
-from scipy.stats import norm
 
 from rocci.band.grids import empirical_roc_on_grid
+from rocci.special import beta_ppf, ndtri
 
 FloatArray = NDArray[np.float64]
 
@@ -105,7 +104,7 @@ def wilson_lower_one_sided(p: FloatArray, n: int, alpha: float) -> FloatArray:
         True
     """
     p = np.asarray(p, dtype=np.float64)
-    z1 = float(norm.ppf(1.0 - alpha))
+    z1 = ndtri(1.0 - alpha)
     denom = 1.0 + z1 * z1 / n
     center = (p + z1 * z1 / (2.0 * n)) / denom
     half = (z1 / denom) * np.sqrt(p * (1.0 - p) / n + z1 * z1 / (4.0 * n * n))
@@ -157,7 +156,7 @@ def wilson_rectangle_band(
         True
     """
     alpha_m = 1.0 - math.sqrt(1.0 - alpha)  # Šidák across 2 margins
-    z = float(norm.ppf(1.0 - alpha_m / 2.0))
+    z = ndtri(1.0 - alpha_m / 2.0)
     n0, n1 = len(neg), len(pos)
 
     grid = np.asarray(grid, dtype=np.float64)
@@ -291,7 +290,7 @@ def beta_orderstat_floor(
         return lower
     a_e = alpha / (2 * j_max)  # Bonferroni over 2*j_max one-sided events
     js = np.arange(1, j_used + 1)
-    q = beta_dist.ppf(1.0 - a_e, js, n0 + 1 - js)  # jurisdiction edges, increasing
+    q = beta_ppf(1.0 - a_e, js, n0 + 1 - js)  # jurisdiction edges, increasing
 
     # empirical TPR at the j-th largest negative, strictly-greater semantics
     neg_desc = np.sort(neg)[::-1][:j_used]
@@ -329,4 +328,4 @@ def beta_floor_vacuous_below(n_neg: int, alpha: float, j_max: int = J_MAX) -> fl
         True
     """
     a_e = alpha / (2 * j_max)
-    return float(beta_dist.ppf(1.0 - a_e, 1, n_neg))
+    return beta_ppf(1.0 - a_e, 1, n_neg)

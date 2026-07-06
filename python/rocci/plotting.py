@@ -16,13 +16,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.stats import norm
 
 from rocci._exceptions import RocciError
 from rocci._result import RocBand, ScoreDiagnostics
 from rocci.band.envelope import ATTR_BETA_FLOOR, ATTR_WILSON_FLOOR, EnvelopeBand
 from rocci.band.grids import empirical_roc_vertices
 from rocci.band.normal import _INTERIOR_HI, _INTERIOR_LO
+from rocci.special import ndtri
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -279,7 +279,7 @@ def _draw_variance_panel(band: RocBand, env: EnvelopeBand, ax: Axes) -> None:
 def _draw_qq_panel(scores: NDArray[np.float64], name: str, ax: Axes) -> None:
     """Normal QQ plot of one class's scores against a moment-matched normal."""
     n = len(scores)
-    theoretical = norm.ppf((np.arange(1, n + 1) - 0.5) / n)
+    theoretical = ndtri((np.arange(1, n + 1) - 0.5) / n)
     ax.plot(
         theoretical,
         scores,
@@ -316,7 +316,7 @@ def _draw_probit_panel(band: RocBand, diag: ScoreDiagnostics, ax: Axes) -> None:
     pts = np.unique(np.column_stack([fpr_v[interior], tpr_v[interior]]), axis=0)
     r2 = band.normality.probit_r2 if band.normality is not None else float("nan")
     if len(pts) >= 2:
-        xi, yi = norm.ppf(pts[:, 0]), norm.ppf(pts[:, 1])
+        xi, yi = ndtri(pts[:, 0]), ndtri(pts[:, 1])
         ax.plot(
             xi,
             yi,
@@ -327,7 +327,7 @@ def _draw_probit_panel(band: RocBand, diag: ScoreDiagnostics, ax: Axes) -> None:
             label="ROC interior vertices",
         )
         slope, intercept = np.polyfit(xi, yi, 1)
-        xx = np.array([xi.min(), xi.max()])
+        xx = np.array([np.min(xi), np.max(xi)])
         ax.plot(
             xx,
             slope * xx + intercept,

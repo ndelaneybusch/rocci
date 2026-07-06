@@ -13,7 +13,6 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.stats import norm
 
 from rocci.band.floors import (
     beta_floor_vacuous_below,
@@ -22,6 +21,7 @@ from rocci.band.floors import (
     wilson_halfwidth_sq,
 )
 from rocci.band.grids import empirical_roc_on_grid, grid_k_indices
+from rocci.special import ndtri
 
 FloatArray = NDArray[np.float64]
 
@@ -103,7 +103,7 @@ def studentized_envelope(
         True
     """
     n_boot = boot_tpr.shape[0]
-    z_alpha = float(norm.ppf(1.0 - alpha / 2.0))
+    z_alpha = ndtri(1.0 - alpha / 2.0)
     var_raw = boot_tpr.var(axis=0, ddof=1)  # kept for variance-ratio gate
     wilson_var = wilson_halfwidth_sq(tpr_hat, n_pos, z_alpha) / z_alpha**2
     sd = np.sqrt(np.maximum(var_raw, wilson_var))
