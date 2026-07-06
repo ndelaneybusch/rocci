@@ -526,10 +526,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-three-families-and-what-goes-wrong" class="md-nav__link">
+  <a href="#the-usual-suspects" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The three families, and what goes wrong
+        The usual suspects
       
     </span>
   </a>
@@ -610,34 +610,6 @@
     
   
     Reading the band
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../diagnostics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagnostics
   
 
     
@@ -1163,10 +1135,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-three-families-and-what-goes-wrong" class="md-nav__link">
+  <a href="#the-usual-suspects" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The three families, and what goes wrong
+        The usual suspects
       
     </span>
   </a>
@@ -1217,45 +1189,45 @@
 
 <h1 id="which-band-should-i-use">Which band should I use?<a class="headerlink" href="#which-band-should-i-use" title="Permanent link">&para;</a></h1>
 <p><strong>Short answer: the default.</strong> <code>roc_band(y_true, y_score)</code> gives the
-distribution-free envelope band. Reach for <code>normal=True</code> only when you have
-good reason to believe both score distributions are Gaussian and you want the
-tighter parametric band — and even then, rocci will check the assumption and
-warn you when it looks doubtful.</p>
-<h2 id="the-three-families-and-what-goes-wrong">The three families, and what goes wrong<a class="headerlink" href="#the-three-families-and-what-goes-wrong" title="Permanent link">&para;</a></h2>
-<p><strong>Parametric (Working–Hotelling).</strong> Assume each class's scores are normal,
-fit means and variances, and propagate the fit uncertainty into a band. When
-binormality holds this is the tightest honest band available. When it fails,
-it fails <em>quietly and increasingly</em>: coverage degrades continuously with the
-departure from normality and <strong>gets worse as n grows</strong>, because the band
-narrows around a systematically wrong curve. With bimodal negatives, coverage
-collapses far below nominal. There is no safe diagnostic region — a passed
-normality test at small n mostly reflects the test's low power. The
-<a href="../../">hero figure</a> shows the failure on heavy-tailed scores.</p>
-<p><strong>Fixed-width nonparametric (KS/DKW).</strong> Apply a Kolmogorov–Smirnov-style
-margin to both empirical CDFs. Assumption-free and simple, but the width is
-constant everywhere, dictated by the hardest part of the curve — so the band
-is far wider than necessary across most of the ROC, and at extreme FPR it is
-<em>vacuous</em> (spanning <code>[0, 1]</code>) without saying so. rocci's calibration gate
-uses the KS band as the width yardstick the envelope must beat.</p>
-<p><strong>Studentized bootstrap envelope (rocci's default).</strong> Bootstrap the ROC,
-score each replicate curve by its worst studentized deviation, keep the most
-typical <code>(1 − α)</code> fraction, and take their pointwise envelope. Studentization
-lets the band be narrow where the curve is stable and wide where it is not.
-Two exact small-sample repairs handle the places the bootstrap is blind
-(see <a href="../../method/envelope/">The envelope method</a>), and the result is
-calibrated across score distributions with <strong>no assumptions on the score
-distribution at all</strong>.</p>
+distribution-free envelope band. Use <code>normal=True</code> only when both score
+distributions are credibly Gaussian and you want the tighter parametric
+band (rocci still checks the assumption and warns when it looks
+doubtful).</p>
+<h2 id="the-usual-suspects">The usual suspects<a class="headerlink" href="#the-usual-suspects" title="Permanent link">&para;</a></h2>
+<p><strong>Parametric (Working–Hotelling).</strong> Assume each class's scores are normal, fit
+means and variances, and propagate the fit uncertainty into a band. When
+binormality holds this is the tightest honest band available. When it fails, it
+fails <em>quietly and increasingly</em>: coverage degrades continuously with the
+departure from normality and <strong>gets worse as n grows</strong>, because the band narrows
+around a systematically wrong curve. With bimodal negatives, coverage collapses
+far below nominal. There is no safe diagnostic region — a passed normality test
+at small n mostly reflects the test's low power. The <a href="../../">hero figure</a>
+shows the failure on heavy-tailed scores.</p>
+<p><strong>Fixed-width nonparametric (KS/DKW).</strong> Apply a Kolmogorov–Smirnov-style margin
+to both empirical CDFs. Assumption-free and simple, but the width is constant
+everywhere, dictated by the hardest part of the curve — so the band is far wider
+than necessary across most of the ROC, and at extreme FPR it is <em>vacuous</em>
+(spanning <code>[0, 1]</code>) without saying so. rocci's calibration gate uses the KS band
+as the width yardstick the envelope must beat.</p>
+<p><strong>rocci's default: Studentized bootstrap envelope.</strong> Bootstrap the ROC, score
+each replicate curve by its worst studentized deviation, keep the most typical
+<code>(1 − α)</code> fraction, and take their pointwise envelope. Studentization lets the
+band be narrow where the curve is stable and wide where it is not. Two exact
+small-sample repairs handle the places the bootstrap is blind (see <a href="../../method/envelope/">The envelope
+method</a>), and the result is calibrated across score
+distributions with <strong>no assumptions on the score distribution at all</strong>.</p>
 <p>The numbers behind all three verdicts — coverage heatmaps, joint
 coverage-vs-width comparisons, and component ablations from a
-2.25-million-evaluation simulation study — are in
-<a href="../../method/simulations/">Simulations and validation</a>.</p>
+2.25-million-evaluation simulation study — are in <a href="../../method/simulations/">Simulations and
+validation</a>.</p>
 <h2 id="properties-worth-knowing">Properties worth knowing<a class="headerlink" href="#properties-worth-knowing" title="Permanent link">&para;</a></h2>
-<p><strong>Rank invariance.</strong> The envelope band depends on the scores only through
-their ranks. Logits, sigmoid probabilities, or any strictly monotone
-transform of the same scores give the <em>identical</em> band. The WH band changes
-under the same transforms — the parametric fit lives in score space. The
-<a href="../../vignettes/02-deep-learning-scores/">deep-learning vignette</a> demonstrates
-both facts on the same data.</p>
+<p><strong>Rank invariance.</strong> The distribution-free rocci method only cares about ranks.
+Logits, sigmoid probabilities, or any strictly monotone transform of the same
+scores give the <em>identical</em> band. </p>
+<p>In contrast, the WH band changes under the same transforms — the parametric fit
+lives in score space. The <a href="../../vignettes/02-deep-learning-scores/">deep-learning
+vignette</a> demonstrates both facts on
+the same data.</p>
 <p><strong>Multiclass composition.</strong> For one-vs-rest multiclass bands
 (<code>roc_band_ovr</code>), the envelope <em>composes</em>: it is distribution-free per curve,
 so a Bonferroni split of α across the m classes yields an exact (conservative)
@@ -1273,7 +1245,8 @@ explicitly.</p>
 <ul>
 <li>Scores are well-modeled as Gaussian per class (e.g. calibrated continuous
   biomarkers), and</li>
-<li>the <a href="../diagnostics/">normality diagnostics</a> come back clean, and</li>
+<li>the <a href="../reading-the-band/#normality-diagnostics">normality diagnostics</a>
+  come back clean, and</li>
 <li>you accept that the diagnostics can only fail to reject — they cannot
   certify.</li>
 </ul>

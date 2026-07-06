@@ -16,7 +16,7 @@
         <link rel="prev" href="../your-data/">
       
       
-        <link rel="next" href="../diagnostics/">
+        <link rel="next" href="../performance/">
       
       
         
@@ -648,6 +648,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#confidence-bands-as-statistical-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence bands as statistical inference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#comparing-two-models" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -658,38 +669,49 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnostics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Diagnostics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#floor-attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Floor attribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normality-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normality diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../diagnostics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagnostics
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1273,6 +1295,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#confidence-bands-as-statistical-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence bands as statistical inference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#comparing-two-models" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1280,6 +1313,45 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnostics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Diagnostics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#floor-attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Floor attribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normality-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normality diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1306,59 +1378,56 @@
 <h1 id="reading-the-band">Reading the band<a class="headerlink" href="#reading-the-band" title="Permanent link">&para;</a></h1>
 <h2 id="simultaneous-not-pointwise">Simultaneous, not pointwise<a class="headerlink" href="#simultaneous-not-pointwise" title="Permanent link">&para;</a></h2>
 <p><code>band.confidence = 0.95</code> means: across repeated datasets, the <strong>entire true
-ROC curve</strong> lies inside the band 95% of the time. Formally, with <span class="arithmatex">\(R\)</span> the
-population ROC and <span class="arithmatex">\([L, U]\)</span> the band,</p>
+ROC curve</strong> lies inside the band 95% of the time. With <span class="arithmatex">\(R\)</span> the population ROC
+and <span class="arithmatex">\([L, U]\)</span> the band,</p>
 <div class="arithmatex">\[
 \Pr\bigl(L(t) \le R(t) \le U(t)\ \text{for all } t \in [0,1]\bigr) \ge 0.95 .
 \]</div>
-<p>This is strictly stronger than 95% <em>pointwise</em> intervals. A pointwise
-interval is right about its own FPR 95% of the time — but with hundreds of
-grid points, the chance that <em>every</em> pointwise interval simultaneously holds
-is far below 95%; somewhere along the curve, at least one is essentially
-guaranteed to miss. Any claim of the form "the true curve looks like the
-drawn one" is implicitly a claim about the whole curve, and only a
-simultaneous band supports it.</p>
-<p>Practical consequences you may find surprising at first:</p>
+<p>This is strictly stronger than 95% <em>pointwise</em> intervals. Each pointwise
+interval is right about its own FPR 95% of the time, but with hundreds of
+grid points, at least one is almost guaranteed to miss somewhere along the
+curve. Any claim of the form "the true curve looks like the drawn one" is a
+claim about the whole curve, and only a simultaneous band supports it.</p>
+<p>Two consequences:</p>
 <ul>
-<li>A simultaneous band is <strong>wider</strong> than the pointwise intervals you may be
-  used to. That is not looseness; that is the price of the joint statement.</li>
+<li>A simultaneous band is <strong>wider</strong> than pointwise intervals. That is the
+  price of the joint statement, not looseness.</li>
 <li>You may read off <strong>any number of operating points</strong> from the same band —
   <code>band.at([0.01, 0.05, 0.1])</code> — with no multiple-comparison correction.
   The correction is already inside.</li>
 </ul>
 <h2 id="the-step-convention">The step convention<a class="headerlink" href="#the-step-convention" title="Permanent link">&para;</a></h2>
-<p><code>band.lower</code>, <code>band.tpr</code>, <code>band.upper</code> live on the FPR grid <code>band.fpr</code> and
-are right-continuous step functions. <code>band.at(x)</code> evaluates all three at
+<p><code>band.lower</code>, <code>band.tpr</code>, and <code>band.upper</code> live on the FPR grid <code>band.fpr</code>
+as right-continuous step functions. <code>band.at(x)</code> evaluates all three at
 arbitrary FPRs with the same convention used to build the band, so what you
-query is exactly what was calibrated. Both <code>plot()</code> and <code>at()</code> share it.</p>
+query is exactly what was calibrated. <code>plot()</code> shares the convention.</p>
 <h2 id="the-vacuous-region-at-tiny-fpr">The vacuous region at tiny FPR<a class="headerlink" href="#the-vacuous-region-at-tiny-fpr" title="Permanent link">&para;</a></h2>
 <p><code>band.summary()</code> may say:</p>
 <blockquote>
 <p>no distribution-free lower bound exists below FPR ≈ 0.0125; increase the
 number of negatives to certify lower FPRs.</p>
 </blockquote>
-<p>This is a real mathematical limit, not a rocci limitation. At FPR below
-roughly <span class="arithmatex">\(1/n_\text{neg}\)</span>, whether the true curve is high or low there is
-governed by the extreme tail of the negative score distribution — about which
-<span class="arithmatex">\(n_\text{neg}\)</span> samples carry almost no information. Any distribution-free
-lower bound must therefore be 0 there. rocci sets <code>band.lower = 0</code> in that
-region and reports the boundary as <code>band.vacuous_below</code> instead of drawing a
-confident-looking curve it cannot justify. The upper arm remains informative.</p>
-<p><code>band.plot(show_vacuous=True)</code> hatches the region.</p>
+<p>This is a mathematical limit, not a rocci limitation. At FPR below roughly
+<span class="arithmatex">\(1/n_\text{neg}\)</span>, the true curve is governed by the extreme tail of the
+negative score distribution — about which <span class="arithmatex">\(n_\text{neg}\)</span> samples carry almost
+no information. Any distribution-free lower bound must therefore be 0 there.
+rocci sets <code>band.lower = 0</code> in that region and reports the boundary as
+<code>band.vacuous_below</code>. The upper arm remains informative.
+<code>band.plot(show_vacuous=True)</code> hatches the region.</p>
 <h2 id="the-floors">The floors<a class="headerlink" href="#the-floors" title="Permanent link">&para;</a></h2>
-<p>The bootstrap resamples your data; where the data are nearly degenerate, the
-bootstrap can be blind to real uncertainty. Two exact mechanisms repair this:</p>
+<p>The bootstrap resamples your data; where the data are nearly degenerate, it
+can be blind to real uncertainty. Two exact mechanisms repair this:</p>
 <ul>
 <li>the <strong>Wilson rectangle floor</strong> widens the band wherever the bootstrap
-  variance collapses below even the binomial noise floor of the empirical
-  rates;</li>
+  variance collapses below the binomial noise floor of the empirical rates;</li>
 <li>the <strong>Beta order-statistic floor</strong> <em>lowers</em> an overconfident lower arm at
   extreme FPR, where the operative uncertainty is horizontal (where the
   threshold's FPR actually sits) and invisible to any variance-based method.</li>
 </ul>
-<p>Every grid point of the lower arm records which mechanism produced it in
+<p>Each grid point of the lower arm records which mechanism produced it in
 <code>band.attribution</code> (0 = bootstrap envelope, 1 = Beta floor, 2 = Wilson floor,
-3 = pinned endpoint), and <a href="../diagnostics/">Diagnostics</a> shows how to see it.</p>
+3 = pinned endpoint); <a href="#floor-attribution">Floor attribution</a> shows how to
+visualize it.</p>
 <h2 id="the-endpoints">The endpoints<a class="headerlink" href="#the-endpoints" title="Permanent link">&para;</a></h2>
 <p><code>(0, 0)</code> and <code>(1, 1)</code> are on every ROC curve by definition, so the band is
 pinned there: <code>lower[0] = 0</code>, and at FPR = 1 both arms equal 1 (the true TPR
@@ -1367,16 +1436,76 @@ at FPR 1 is identically 1 — no uncertainty to represent).</p>
 <ul>
 <li><code>band.auc</code> is the exact Mann–Whitney statistic (ties weighted ½) —
   identical to <code>sklearn.roc_auc_score</code>.</li>
-<li><code>band.auc_ci</code> is a bootstrap percentile CI for the AUC, recentered so it is
-  consistent with <code>band.auc</code> even under heavy ties. It is a <strong>pointwise</strong>
+<li><code>band.auc_ci</code> is a bootstrap percentile CI for the AUC, recentered so it
+  stays consistent with <code>band.auc</code> under heavy ties. It is a <strong>pointwise</strong>
   interval for the scalar AUC — separate from, not derived from, the
   simultaneous band.</li>
 </ul>
+<h2 id="confidence-bands-as-statistical-inference">Confidence bands as statistical inference<a class="headerlink" href="#confidence-bands-as-statistical-inference" title="Permanent link">&para;</a></h2>
+<p>If any part of the diagonal identity line (i.e. a perfectly uninformative
+classifier) lies outside of the confidence band, you may reject the null
+hypothesis (of an uninformative ROC curve) at the chosen alpha.</p>
 <h2 id="comparing-two-models">Comparing two models<a class="headerlink" href="#comparing-two-models" title="Permanent link">&para;</a></h2>
-<p>The honest use of bands for model comparison: if model A's <em>lower</em> arm sits
-above model B's <em>upper</em> arm over the FPR range you care about, A dominates B
-there at joint confidence. Overlapping bands do <strong>not</strong> prove equivalence —
-absence of evidence, as usual.</p>
+<p>If model A's <em>lower</em> arm sits above model B's <em>upper</em> arm over the FPR range
+you care about, A dominates B there at joint confidence. Overlapping bands do
+<strong>not</strong> establish equivalence.</p>
+<p>You may also compare an empirical ROC to a reference ROC. If any part of the
+reference ROC lies outside of the empirical confidence band, you may reject the
+null hypothesis that they are equivalent at the chosen alpha.</p>
+<h2 id="diagnostics">Diagnostics<a class="headerlink" href="#diagnostics" title="Permanent link">&para;</a></h2>
+<p>Every band can explain itself. <code>band.plot_diagnostics()</code> renders the diagnostics
+figure; <code>roc_band(..., diagnostics=True)</code> renders it at construction. The
+underlying data (<code>band.attribution</code>) is stored on the result whether or not you
+plot.</p>
+<h3 id="floor-attribution">Floor attribution<a class="headerlink" href="#floor-attribution" title="Permanent link">&para;</a></h3>
+<p>For envelope bands, the figure has two panels:</p>
+<ol>
+<li><strong>The band, with the lower arm color-coded by attribution.</strong> Uncolored
+   stretches are the plain bootstrap envelope; yellow marks the Beta
+   order-statistic floor, green the Wilson rectangle floor. Jurisdiction
+   boundaries are marked and the vacuous region is hatched.</li>
+<li><strong>Variance channels vs FPR</strong> (log scale): the raw bootstrap variance
+   against the Wilson variance floor. Wherever the raw variance dips below
+   the binomial floor, the bootstrap is under-representing real uncertainty
+   and the rectangle floor fires; shading shows each floor's active region.</li>
+</ol>
+<p>Typical readings:</p>
+<ul>
+<li><strong>Yellow at the far left</strong> is normal, and grows at small <span class="arithmatex">\(n_\text{neg}\)</span>:
+  the Beta floor owns the extreme-FPR region where the bootstrap cannot see
+  horizontal threshold uncertainty.</li>
+<li><strong>Green patches</strong> appear where the empirical curve is locally flat or the
+  data nearly degenerate (heavy ties, tiny classes) — the bootstrap variance
+  collapsed and was floored.</li>
+<li><strong>Mostly uncolored</strong> means the bootstrap envelope alone carried the band —
+  the large-sample, well-behaved regime.</li>
+</ul>
+<p>The <a href="../../vignettes/04-anatomy-of-the-band/">anatomy vignette</a> walks the
+attribution across n ∈ {50, 500, 5000} at high AUC.</p>
+<h3 id="normality-diagnostics">Normality diagnostics<a class="headerlink" href="#normality-diagnostics" title="Permanent link">&para;</a></h3>
+<p>For <code>normal=True</code> bands the figure shows the band plus the normality
+evidence: a normal QQ plot per class and the probit–probit ROC linearity
+fit. Under binormality, <span class="arithmatex">\(\Phi^{-1}(\text{TPR})\)</span> vs <span class="arithmatex">\(\Phi^{-1}(\text{FPR})\)</span>
+is a straight line; curvature is exactly the model failing.</p>
+<p>The same evidence is available programmatically on every Working–Hotelling
+band:</p>
+<div class="highlight"><pre><span></span><code><span class="n">band</span> <span class="o">=</span> <span class="n">roc_band</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">neg_pvalue</span>      <span class="c1"># per-class normality test p-values</span>
+<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">pos_pvalue</span>
+<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">probit_r2</span>       <span class="c1"># OLS R² of the probit-probit ROC interior</span>
+<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">suspect</span>         <span class="c1"># True =&gt; a NormalityWarning was emitted</span>
+<span class="n">band</span><span class="o">.</span><span class="n">normality</span><span class="o">.</span><span class="n">warning</span>         <span class="c1"># the exact text</span>
+</code></pre></div>
+<p><code>suspect</code> fires when either class p-value drops below 0.10 or the probit R²
+falls below 0.98. The thresholds are deliberately blunt: Working–Hotelling
+coverage degrades <em>continuously</em> with departures from binormality and worsens
+with n, so there is no safe region the diagnostics could certify — they can
+only fail to reject. Heavy ties are flagged in the warning text as
+structurally incompatible with the binormal model (ties have probability zero
+under it).</p>
+<p>For a worked failure — heavy-tailed logits where the diagnostics fire and the
+parametric band visibly loses the true curve — see the
+<a href="../../vignettes/02-deep-learning-scores/">deep-learning vignette</a>.</p>
 
 
 
@@ -1429,13 +1558,13 @@ absence of evidence, as usual.</p>
         
         
           
-          <a href="../diagnostics/" class="md-footer__link md-footer__link--next" aria-label="Next: Diagnostics">
+          <a href="../performance/" class="md-footer__link md-footer__link--next" aria-label="Next: Performance">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Diagnostics
+                Performance
               </div>
             </div>
             <div class="md-footer__button md-icon">

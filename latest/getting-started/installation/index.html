@@ -411,10 +411,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#by-tool" class="md-nav__link">
+  <a href="#supported-install-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        By tool
+        Supported install methods
       
     </span>
   </a>
@@ -621,34 +621,6 @@
     
   
     Reading the band
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../guide/diagnostics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagnostics
   
 
     
@@ -1174,10 +1146,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#by-tool" class="md-nav__link">
+  <a href="#supported-install-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        By tool
+        Supported install methods
       
     </span>
   </a>
@@ -1239,25 +1211,22 @@
 
 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>rocci<span class="w">            </span><span class="c1"># core: numpy + scipy only</span>
-pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rocci[plot]&#39;</span><span class="w">    </span><span class="c1"># + matplotlib for band.plot() / diagnostics</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rocci[plot]&#39;</span><span class="w">    </span><span class="c1"># optional plotting support</span>
 </code></pre></div>
 <p>Binary wheels ship for Linux (x86-64, aarch64, musl), macOS (Intel and Apple
-silicon), and Windows, for every Python ≥ 3.10 — <code>pip install rocci</code> never
-compiles Rust on a supported platform. Every wheel is smoke-tested on its own
-platform in a clean environment before it can be published, and each release
-is re-verified from the live index on all three OSes minutes after it goes
-up.</p>
-<h2 id="by-tool">By tool<a class="headerlink" href="#by-tool" title="Permanent link">&para;</a></h2>
+silicon), and Windows, for every Python ≥ 3.10. This means that a <code>pip install
+rocci</code> never needs to compile the rust components on a supported platform. </p>
+<h2 id="supported-install-methods">Supported install methods<a class="headerlink" href="#supported-install-methods" title="Permanent link">&para;</a></h2>
 <p>=== "pip"</p>
 <pre><code>```bash
 pip install 'rocci[plot]'
-pip install rocci==0.1.0        # pin for reproducible environments
+pip install rocci==0.2.0        # pin for reproducible environments
 ```
 </code></pre>
 <p>=== "uv"</p>
 <pre><code>```bash
-uv add rocci                    # add to a uv-managed project
-uv pip install 'rocci[plot]'    # or into the active environment
+uv add rocci                    # core: numpy + scipy only
+uv pip install 'rocci[plot]'    # optional plotting support
 ```
 </code></pre>
 <p>=== "conda"</p>
@@ -1266,15 +1235,13 @@ conda activate myenv
 pip install rocci
 ```
 
-rocci is not on conda-forge at present, deliberately: the usual reason
-to want a conda build — coordinating shared native libraries across
-packages — does not apply here. The wheel is lightweight and
+rocci is not on conda-forge at present. The usual reason
+to want a conda build is to coordinate shared native libraries across
+packages. That does not apply here. The wheel is lightweight and
 self-contained (the Rust kernel is statically linked; the only
-dependencies are numpy and scipy), so pip-inside-conda is safe and is
-the supported path: pip reuses the conda-managed numpy/scipy when they
-satisfy the requirements and touches nothing else in the environment.
-If a conda-forge package would matter for your setup, open an issue —
-demand is what would change the decision.
+dependencies are numpy and scipy). Calling pip-inside-conda should suffice
+ for most users. If a conda-forge package would matter for your setup, 
+ open an issue — demand is what would change the decision.
 </code></pre>
 <p>=== "from source"</p>
 <pre><code>```bash
@@ -1284,16 +1251,15 @@ pip install git+https://github.com/ndelaneybusch/rocci
 
 Installing from a git ref (or from the sdist on a platform with no
 wheel) compiles the Rust kernel locally via maturin. Build time is a
-couple of minutes; the result is identical to a released wheel.
+couple of minutes.
 </code></pre>
 <h2 id="the-fallback-backend">The fallback backend<a class="headerlink" href="#the-fallback-backend" title="Permanent link">&para;</a></h2>
 <p>rocci's bootstrap kernel is compiled Rust. On a platform with no wheel and no
 Rust toolchain, the package still works: a pure-NumPy kernel with identical
 statistical semantics takes over automatically, and rocci emits a
 <code>FallbackBackendWarning</code> once per process so you know you are on the slow
-path (10–30× slower — usually still well under a second). Which backend is
-active is recorded on every result as <code>band.backend</code> and printed by
-<code>rocci.show_versions()</code>.</p>
+path (10–30× slower). Which backend is active is recorded on every result as
+<code>band.backend</code> and printed by <code>rocci.show_versions()</code>.</p>
 <p>There is nothing to configure: backend selection is automatic and does not
 change any statistical output contract. Same seed + same backend + same
 version ⇒ bit-identical bands; across backends, results agree statistically

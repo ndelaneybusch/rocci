@@ -630,34 +630,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/diagnostics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagnostics
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../guide/performance/" class="md-nav__link">
         
   
@@ -1250,10 +1222,8 @@ provenance:</p>
 </code></pre></div>
 <p>Two lines deserve a first-time explanation:</p>
 <ul>
-<li><strong>"95% simultaneous"</strong> means the <em>whole</em> true curve stays inside the band
-  in 95% of datasets — strictly stronger than 95% pointwise intervals, which
-  are individually right but jointly almost surely wrong somewhere.
-  <a href="../../guide/reading-the-band/">Reading the band</a> unpacks this.</li>
+<li><strong>"95% simultaneous"</strong> means the <em>whole</em> true curve stays inside the band in
+  95% of datasets. See <a href="../../guide/reading-the-band/">Reading the band</a>.</li>
 <li><strong>The vacuous-region line</strong> is rocci being honest: below an FPR of about
   <code>1/n_neg</code>-ish, <em>no method</em> can certify a distribution-free lower bound, so
   the lower band is 0 there rather than pretending otherwise.</li>

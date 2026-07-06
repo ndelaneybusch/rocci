@@ -548,34 +548,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../guide/diagnostics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagnostics
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../guide/performance/" class="md-nav__link">
         
   
@@ -1106,10 +1078,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#is-the-band-reproducible" class="md-nav__link">
+  <a href="#is-the-band-reproducible-if-i-allow-multi-threading" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Is the band reproducible?
+        Is the band reproducible if I allow multi-threading?
       
     </span>
   </a>
@@ -1117,10 +1089,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#can-i-compare-two-classifiers-with-these-bands" class="md-nav__link">
+  <a href="#can-i-use-these-bands-for-statistical-inference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Can I compare two classifiers with these bands?
+        Can I use these bands for statistical inference?
       
     </span>
   </a>
@@ -1293,10 +1265,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#is-the-band-reproducible" class="md-nav__link">
+  <a href="#is-the-band-reproducible-if-i-allow-multi-threading" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Is the band reproducible?
+        Is the band reproducible if I allow multi-threading?
       
     </span>
   </a>
@@ -1304,10 +1276,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#can-i-compare-two-classifiers-with-these-bands" class="md-nav__link">
+  <a href="#can-i-use-these-bands-for-statistical-inference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Can I compare two classifiers with these bands?
+        Can I use these bands for statistical inference?
       
     </span>
   </a>
@@ -1347,11 +1319,15 @@
 
 <h1 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">&para;</a></h1>
 <h2 id="should-i-pass-logits-or-probabilities">Should I pass logits or probabilities?<a class="headerlink" href="#should-i-pass-logits-or-probabilities" title="Permanent link">&para;</a></h2>
-<p>Either — the envelope band is invariant to strictly monotone transforms of
-the scores, so logits and their sigmoid give the <em>identical</em> band. Don't
-calibrate first on rocci's account. (This does not hold for <code>normal=True</code>:
-the binormal fit lives in score space, so the WH band changes under monotone
-transforms — one more reason the envelope is the default.)</p>
+<p>Either, whichever is easiest. The envelope band is invariant to strictly
+monotone transforms of the scores, so logits and their sigmoid give the
+<em>identical</em> band. Don't calibrate first on rocci's account. </p>
+<p>This does not hold for <code>normal=True</code>. Binormal fits use the scores
+themselves. Typically the logits are the normally distributed piece, and
+probabilities will give the wrong thing. This may surprise, since logits and
+probabilities yield identical ROC curves — it's only the parametric band
+around that ROC that cares about normality. Gotchas of this sort are a big
+part of the motivation for rocci's distribution-free default.</p>
 <h2 id="why-is-my-lower-band-0-at-small-fpr">Why is my lower band 0 at small FPR?<a class="headerlink" href="#why-is-my-lower-band-0-at-small-fpr" title="Permanent link">&para;</a></h2>
 <p>Because no distribution-free lower bound exists there. Below FPR ≈
 <code>band.vacuous_below</code> (roughly <span class="arithmatex">\(\log(1/\alpha_e)/n_\text{neg}\)</span>), the truth is
@@ -1361,47 +1337,38 @@ assuming a tail shape. rocci reports the boundary honestly instead. More
 negatives shrink the region; see
 <a href="../guide/reading-the-band/">Reading the band</a>.</p>
 <h2 id="my-scores-have-lots-of-ties-are-discrete-is-the-band-still-valid">My scores have lots of ties / are discrete. Is the band still valid?<a class="headerlink" href="#my-scores-have-lots-of-ties-are-discrete-is-the-band-still-valid" title="Permanent link">&para;</a></h2>
-<p>Yes. Every layer of the envelope is either tie-indifferent or conservative
-under ties (the Beta floor's exceedance law errs safe), so discreteness
-widens the band rather than breaking it — this is verified empirically by a
-dedicated calibration cell, not just argued. You'll get a <code>TiesWarning</code>
-stating exactly this when fewer than half the pooled scores are distinct.
-Heavy ties <em>are</em> strong evidence against <code>normal=True</code>, though: ties have
+<p>Yes. Every layer of the envelope is either tie-indifferent or conservative under
+ties. Discreteness widens the band but doesn't break it. You'll get a
+<code>TiesWarning</code> when fewer than half the pooled scores are distinct. </p>
+<p>Heavy ties <em>are</em> strong evidence against <code>normal=True</code>, though: ties have
 probability zero under a binormal model.</p>
 <h2 id="why-does-roc_band-refuse-my-multiclass-problem">Why does <code>roc_band</code> refuse my multiclass problem?<a class="headerlink" href="#why-does-roc_band-refuse-my-multiclass-problem" title="Permanent link">&para;</a></h2>
-<p>There is no single ROC curve for m &gt; 2 classes — any single curve would hide
-an arbitrary choice of reduction. Use
-<a class="autorefs autorefs-internal" title="            roc_band_ovr" href="../api/#rocci.roc_band_ovr"><code>roc_band_ovr</code></a>: one-vs-rest bands for every class at a
+<p>Use <a class="autorefs autorefs-internal" title="            roc_band_ovr" href="../api/#rocci.roc_band_ovr"><code>roc_band_ovr</code></a>: one-vs-rest bands for every class at a
 Bonferroni-split level, which gives an exact (conservative) family-wise
-guarantee — all m curves covered jointly at your requested confidence, no
-independence assumptions. And why does <code>roc_band_ovr</code> refuse <code>normal=True</code>?
-Because every one-vs-rest "rest" class is a mixture of the remaining classes,
-which is structurally the regime where the binormal band's coverage
-collapses; rocci won't automate its proven worst case.</p>
+guarantee: all m curves are covered jointly at your requested confidence. </p>
+<p>And why does <code>roc_band_ovr</code> refuse <code>normal=True</code>? Because every one-vs-rest
+"rest" class is a mixture of the remaining classes, which is structurally the
+regime where the binormal band's coverage collapses. We know the parametric
+assumption is dangerous here, so we don't provide the option.</p>
 <h2 id="why-is-the-band-wider-than-the-pointwise-intervals-im-used-to">Why is the band wider than the pointwise intervals I'm used to?<a class="headerlink" href="#why-is-the-band-wider-than-the-pointwise-intervals-im-used-to" title="Permanent link">&para;</a></h2>
-<p>Because it makes a stronger statement: the <em>whole</em> curve is inside with the
-stated probability, so you can read off any number of operating points with
-no multiplicity correction. Pointwise intervals are individually right and
-jointly almost surely wrong somewhere along the curve.</p>
+<p>Because it makes a stronger statement: the <em>whole</em> true (population) curve is
+inside with the stated probability. This carries the implication that you can
+read off any number of operating points from the rocci band <em>with no
+multiplicity correction</em> and each will maintain coverage at the desired alpha.</p>
 <h2 id="why-doesnt-bandauc-match-the-trapezoid-of-bandtpr">Why doesn't <code>band.auc</code> match the trapezoid of <code>band.tpr</code>?<a class="headerlink" href="#why-doesnt-bandauc-match-the-trapezoid-of-bandtpr" title="Permanent link">&para;</a></h2>
 <p><code>band.auc</code> is the exact Mann–Whitney statistic on the full data (identical to
 <code>sklearn.roc_auc_score</code>), not an integral of the K-point grid curve — the
 grid is an evaluation mesh for the band, not the AUC estimator.</p>
-<h2 id="is-the-band-reproducible">Is the band reproducible?<a class="headerlink" href="#is-the-band-reproducible" title="Permanent link">&para;</a></h2>
-<p><code>random_state=seed</code> gives a bit-identical band for the same backend and rocci
-version, independent of thread count. Across backends (Rust vs the NumPy
-fallback) results agree statistically but not bit-for-bit — different RNG
-streams by design.</p>
-<h2 id="can-i-compare-two-classifiers-with-these-bands">Can I compare two classifiers with these bands?<a class="headerlink" href="#can-i-compare-two-classifiers-with-these-bands" title="Permanent link">&para;</a></h2>
-<p>If A's lower arm sits above B's upper arm over the FPR range you care about,
-A dominates there at joint confidence. Overlap does not prove equivalence.
-For a sharper paired comparison a dedicated two-sample procedure would be
-needed; rocci does not currently ship one.</p>
+<h2 id="is-the-band-reproducible-if-i-allow-multi-threading">Is the band reproducible if I allow multi-threading?<a class="headerlink" href="#is-the-band-reproducible-if-i-allow-multi-threading" title="Permanent link">&para;</a></h2>
+<p><code>random_state=seed</code> gives a bit-identical band for the same rocci version,
+independent of thread count. Across backends (Rust vs the NumPy fallback)
+results agree statistically but not bit-for-bit (they have different RNG
+streams).</p>
+<h2 id="can-i-use-these-bands-for-statistical-inference">Can I use these bands for statistical inference?<a class="headerlink" href="#can-i-use-these-bands-for-statistical-inference" title="Permanent link">&para;</a></h2>
+<p>Yes. See <a href="../guide/reading-the-band/">Reading the band</a>.</p>
 <h2 id="confidence08-gave-me-a-band-wider-than-i-expected-why-the-warning"><code>confidence=0.8</code> gave me a band wider than I expected. Why the warning?<a class="headerlink" href="#confidence08-gave-me-a-band-wider-than-i-expected-why-the-warning" title="Permanent link">&para;</a></h2>
-<p>Sup-norm simultaneous bands intentionally over-cover at low confidence
-levels — the envelope's calibration target is the high-confidence regime.
-Below 0.90 rocci warns (<code>LowConfidenceWarning</code>) that the nominal level
-understates the width you'll get.</p>
+<p>Sup-norm simultaneous bands over-cover at low confidence levels. Below 0.90
+rocci warns (<code>LowConfidenceWarning</code>) that the band is likely to be conservative.</p>
 
 
 

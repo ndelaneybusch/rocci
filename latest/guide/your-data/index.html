@@ -680,34 +680,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../diagnostics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagnostics
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../performance/" class="md-nav__link">
         
   
@@ -1317,9 +1289,10 @@
 
 <h1 id="using-rocci-with-your-data">Using rocci with your data<a class="headerlink" href="#using-rocci-with-your-data" title="Permanent link">&para;</a></h1>
 <p>Ingestion is duck-typed: rocci accepts what the ecosystem produces without
-importing any of the producing libraries. If it quacks like an array, it
-works; if something is ambiguous, rocci raises a <code>RocciError</code> that names the
-fix rather than guessing.</p>
+importing any of the producing libraries. That means it works with all the usual
+scientific computing libraries, but also with custom types - just include an
+<code>__array__</code> or <code>.to_numpy()</code> method. Anything array-like works; anything
+ambiguous raises a <code>RocciError</code> that names the fix.</p>
 <h2 id="containers">Containers<a class="headerlink" href="#containers" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

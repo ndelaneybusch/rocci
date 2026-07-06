@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://ndelaneybusch.github.io/rocci/latest/guide/performance/">
       
       
-        <link rel="prev" href="../diagnostics/">
+        <link rel="prev" href="../reading-the-band/">
       
       
         <link rel="next" href="../../method/envelope/">
@@ -530,34 +530,6 @@
     
   
     Reading the band
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../diagnostics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagnostics
   
 
     
@@ -1260,10 +1232,9 @@
 
 
 <h1 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h1>
-<p>rocci is fast enough that you should never have to think about it. The
-bootstrap kernel — the only heavy part — is compiled Rust, parallelized with
-replicate-indexed RNG streams so results are bit-identical regardless of
-thread count.</p>
+<p>The bootstrap kernel — the only computationally heavy part of a band — is
+compiled Rust, parallelized with replicate-indexed RNG streams so results are
+bit-identical regardless of thread count.</p>
 <h2 id="expected-timings">Expected timings<a class="headerlink" href="#expected-timings" title="Permanent link">&para;</a></h2>
 <p>End-to-end <code>roc_band</code> at the defaults (<code>n_boot=2000</code>, <code>K=512</code>), desktop-class
 12-core hardware:</p>
@@ -1298,9 +1269,9 @@ n = 100 000.</p>
 <span class="arithmatex">\(B \times K\)</span> output matrix (8 bytes/entry; ~8 MB at the defaults) plus
 <span class="arithmatex">\(O(n)\)</span> per thread.</p>
 <h2 id="n_threads"><code>n_threads</code><a class="headerlink" href="#n_threads" title="Permanent link">&para;</a></h2>
-<p><code>None</code> (default) uses all cores; <code>-1</code> also means all cores (sklearn <code>n_jobs</code>
-muscle memory); any positive integer pins the pool size. Thread count never
-changes results, only wall-clock:</p>
+<p><code>None</code> (default) uses all cores; <code>-1</code> also means all cores (matching
+sklearn's <code>n_jobs</code> convention); any positive integer pins the pool size.
+Thread count never changes results, only wall-clock time:</p>
 <div class="highlight"><pre><span></span><code><span class="n">roc_band</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">n_threads</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="n_boot-and-grid_size"><code>n_boot</code> and <code>grid_size</code><a class="headerlink" href="#n_boot-and-grid_size" title="Permanent link">&para;</a></h2>
@@ -1335,8 +1306,9 @@ changes results, only wall-clock:</p>
 </tbody>
 </table>
 <p>The fallback is 10–30× slower than Rust — still far faster than naive
-sort-based bootstrapping, and fine for interactive n up to ~10⁵. Check
-<code>band.backend</code> or <code>rocci.show_versions()</code> if a run feels slow.</p>
+sort-based bootstrapping, and adequate for interactive use up to n ≈ 10⁵.
+If a run is unexpectedly slow, check <code>band.backend</code> or
+<code>rocci.show_versions()</code>.</p>
 <h2 id="reproducibility-contract">Reproducibility contract<a class="headerlink" href="#reproducibility-contract" title="Permanent link">&para;</a></h2>
 <p><code>random_state=seed</code> ⇒ bit-identical band for the same backend and rocci
 version, independent of <code>n_threads</code> and scheduling. Across backends (rust vs
@@ -1378,7 +1350,7 @@ distributional agreement.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../diagnostics/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Diagnostics">
+          <a href="../reading-the-band/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Reading the band">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1388,7 +1360,7 @@ distributional agreement.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Diagnostics
+                Reading the band
               </div>
             </div>
           </a>
