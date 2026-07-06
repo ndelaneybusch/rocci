@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "N. Delaney-Busch", email = "ndelaneybusch@gmail.com" }]
 requires-python = ">=3.10"
-dependencies = ["numpy>=1.24", "scipy>=1.10"]
+dependencies = ["numpy>=1.24"]
 keywords = ["roc", "confidence-band", "bootstrap", "auc", "classification"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -39,6 +39,7 @@ plot = ["matplotlib>=3.7"]
 [dependency-groups]
 dev = [
     "pytest>=8",
+    "scipy>=1.10",  # test oracle for rocci.special; not a runtime dependency
     "pytest-cov>=5",
     "hypothesis>=6",
     "ruff>=0.8",

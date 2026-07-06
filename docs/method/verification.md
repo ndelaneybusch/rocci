@@ -96,7 +96,7 @@ regardless of thread count or repeated runs.
   (`tests/test_properties.py`, `tests/test_fallback_kernel.py`)
 - **The package boundary.** Ingestion is exercised across every container
   and label/score edge case it accepts; a clean-subprocess test confirms the
-  runtime dependencies really are numpy and scipy only, with every
+  only runtime dependency really is numpy, with every
   optional-feature path failing as an actionable `RocciError` rather than a
   raw import traceback.
   (`tests/test_api.py`, `tests/test_ingest.py`, `tests/test_optional_deps.py`)

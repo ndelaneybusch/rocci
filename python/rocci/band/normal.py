@@ -142,10 +142,7 @@ def _class_checks(x: FloatArray) -> _ClassChecks:
     n = len(x)
     if n < 3 or np.ptp(x) == 0.0:
         return _NO_CHECKS
-    try:
-        skew, excess_kurtosis = skew_kurtosis(x)
-    except ValueError:  # variance underflowed to zero: numerically constant
-        return _NO_CHECKS
+    skew, excess_kurtosis = skew_kurtosis(x)
     sf_stat = sf_pvalue = math.nan
     if _SF_MIN_N <= n <= _SF_MAX_N:
         sf_stat, sf_pvalue = shapiro_francia(x)

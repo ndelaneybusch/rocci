@@ -1,26 +1,30 @@
-"""Optional-dependency contract: runtime deps are numpy + scipy only.
+"""Optional-dependency contract: numpy is the only runtime dependency.
 
 The failure this guards is uniquely invisible: a single top-level ``import
-matplotlib`` or ``import pandas`` added anywhere in rocci passes the entire suite
-in the dev environment (both are installed) while breaking every user who
-installed plain ``rocci``. The in-process block in ``test_plotting.py`` can't
-catch it either, because it runs after rocci is already imported. The only honest
-test is a clean subprocess where the optional packages are made unimportable
-*before* rocci loads — which is what a meta-path blocker does here.
+scipy``, ``import matplotlib``, or ``import pandas`` added anywhere in rocci
+passes the entire suite in the dev environment (all three are installed) while
+breaking every user who installed plain ``rocci``. The in-process block in
+``test_plotting.py`` can't catch it either, because it runs after rocci is
+already imported. The only honest test is a clean subprocess where the packages
+are made unimportable *before* rocci loads — which is what a meta-path blocker
+does here.
 
-Guaranteed. With matplotlib and pandas blocked, the full non-plotting pipeline
-works — envelope band, Working-Hotelling band, OvR, ``summary()``, ``at()``,
-``band_area``, and a ``show_versions()`` that degrades to "not installed" rather
-than crashing. Every entry point that genuinely needs an optional package
-(``plot``, ``plot_diagnostics``, ``diagnostics=True``, ``to_dataframe``) fails as
-a ``RocciError`` naming the exact fix (``rocci[plot]`` or ``pandas``), never as a
-raw ``ImportError`` traceback. And the mechanism those guarantees rely on —
-laziness — is verified directly: with the packages available, importing rocci and
-building a band still leaves them out of ``sys.modules``.
+Guaranteed. With scipy, matplotlib, and pandas blocked, the full non-plotting
+pipeline works — envelope band, Working-Hotelling band (including its normality
+diagnostics, which run entirely on ``rocci.special``), OvR, ``summary()``,
+``at()``, ``band_area``, and a ``show_versions()`` that degrades to "not
+installed" rather than crashing. Every entry point that genuinely needs an
+optional package (``plot``, ``plot_diagnostics``, ``diagnostics=True``,
+``to_dataframe``) fails as a ``RocciError`` naming the exact fix
+(``rocci[plot]`` or ``pandas``), never as a raw ``ImportError`` traceback. And
+the mechanism those guarantees rely on — laziness — is verified directly: with
+the packages available, importing rocci and building a band still leaves them
+out of ``sys.modules``.
 
-Limitations. Only matplotlib and pandas are blocked (the declared optional deps);
-this is a contract on import structure and error messaging, not on the plots
-those packages produce (that is ``test_plotting.py``).
+Limitations. Only scipy, matplotlib, and pandas are blocked (the packages a dev
+environment always carries); this is a contract on import structure and error
+messaging, not on the plots those packages produce (that is
+``test_plotting.py``).
 """
 
 from __future__ import annotations
@@ -29,13 +33,13 @@ import subprocess
 import sys
 import textwrap
 
-#: Installed before anything else: makes matplotlib/pandas unimportable, the
-#: moral equivalent of an environment where they were never installed.
+#: Installed before anything else: makes scipy/matplotlib/pandas unimportable,
+#: the moral equivalent of an environment where they were never installed.
 _BLOCKER = """
 import sys
 
 class _BlockOptionalDeps:
-    _blocked = ("matplotlib", "pandas")
+    _blocked = ("scipy", "matplotlib", "pandas")
 
     def find_spec(self, name, path=None, target=None):
         if name.split(".")[0] in self._blocked:
@@ -47,12 +51,12 @@ sys.meta_path.insert(0, _BlockOptionalDeps())
 
 
 def run_blocked(body: str) -> subprocess.CompletedProcess:
-    """Run ``body`` in a clean interpreter with matplotlib/pandas blocked."""
+    """Run ``body`` in a clean interpreter with scipy/matplotlib/pandas blocked."""
     code = _BLOCKER + textwrap.dedent(body)
     return subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
 
 
-def test_full_pipeline_works_without_matplotlib_or_pandas():
+def test_full_pipeline_works_with_numpy_alone():
     # everything a non-plotting user touches must work: envelope path, WH
     # path, OvR, summary, at(), band_area, show_versions
     proc = run_blocked("""
@@ -90,6 +94,7 @@ def test_full_pipeline_works_without_matplotlib_or_pandas():
     assert proc.returncode == 0, proc.stderr
     assert "PIPELINE-OK" in proc.stdout
     # show_versions must degrade gracefully, not crash
+    assert "scipy: not installed" in proc.stdout
     assert "matplotlib: not installed" in proc.stdout
 
 
@@ -160,7 +165,9 @@ def test_import_and_band_construction_stay_lazy():
         band.summary()
         band.at([0.5])
 
-        leaked = [m for m in ("matplotlib", "pandas") if m in sys.modules]
+        leaked = [
+            m for m in ("scipy", "matplotlib", "pandas") if m in sys.modules
+        ]
         assert not leaked, f"eagerly imported: {leaked}"
         print("LAZY-OK")
     """)

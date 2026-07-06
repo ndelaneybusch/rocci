@@ -95,15 +95,16 @@ def skew_kurtosis(x: FloatArray) -> tuple[float, float]:
     x = np.asarray(x, dtype=np.float64).ravel()
     if x.size < 3:
         raise ValueError(f"skew_kurtosis requires n >= 3, got {x.size}")
-    # ptp catches exactly-constant samples that mean-subtraction rounding
-    # would otherwise turn into nonzero noise moments; the m2 check catches
-    # spreads so small the variance underflows to zero.
+    # ptp catches exactly-constant samples, which mean-subtraction rounding
+    # would otherwise turn into nonzero noise moments
     if np.ptp(x) == 0.0:
         raise ValueError("skew_kurtosis requires a non-constant sample")
+    # both statistics are scale-invariant, so standardize by the largest
+    # absolute deviation: every intermediate then lies in [1/n, 1] and the
+    # powers of m2 cannot underflow no matter how tiny the sample's spread
     xc = x - x.mean()
+    xc /= np.max(np.abs(xc))
     m2 = float(np.mean(xc**2))
-    if m2 == 0.0:
-        raise ValueError("skew_kurtosis requires a non-constant sample")
     m3 = float(np.mean(xc**3))
     m4 = float(np.mean(xc**4))
     return m3 / m2**1.5, m4 / (m2 * m2) - 3.0

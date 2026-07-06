@@ -168,7 +168,7 @@ class TestSkewKurtosis:
         ).map(lambda v: np.asarray(v, dtype=np.float64))
     )
     def test_hypothesis_invariances(self, x):
-        if np.ptp(x) == 0.0 or float(np.mean((x - x.mean()) ** 2)) == 0.0:
+        if np.ptp(x) == 0.0:
             with pytest.raises(ValueError, match="non-constant"):
                 skew_kurtosis(x)
             return
@@ -257,7 +257,7 @@ class TestShapiroFrancia:
         ).map(lambda v: np.asarray(v, dtype=np.float64))
     )
     def test_hypothesis_output_domain(self, x):
-        if np.ptp(x) == 0.0 or float(np.mean((x - x.mean()) ** 2)) == 0.0:
+        if np.ptp(x) == 0.0:
             return
         stat, p = shapiro_francia(x)
         assert 0.0 < stat <= 1.0

@@ -354,18 +354,24 @@ def from_estimator(
 def show_versions() -> None:
     """Print an environment report for bug reports.
 
-    Reports the rocci version, active backend, core dependency versions, OS,
-    and CPU count. matplotlib is optional and shown as ``not installed`` when
-    absent.
+    Reports the rocci version, active backend, dependency versions, OS, and
+    CPU count. scipy and matplotlib are not rocci dependencies but are
+    relevant to bug reports (test oracle and plotting extra); each is shown
+    as ``not installed`` when absent.
 
     Examples:
         >>> from rocci import show_versions
         >>> show_versions()  # doctest: +ELLIPSIS
         rocci...
     """
-    import scipy
-
     from rocci import __version__
+
+    try:
+        import scipy
+
+        scipy_version = scipy.__version__
+    except ImportError:
+        scipy_version = "not installed"
 
     try:
         import matplotlib
@@ -378,7 +384,7 @@ def show_versions() -> None:
         f"rocci: {__version__}",
         f"backend: {_backend.BACKEND}",
         f"numpy: {np.__version__}",
-        f"scipy: {scipy.__version__}",
+        f"scipy: {scipy_version}",
         f"matplotlib: {mpl_version}",
         f"platform: {platform.platform()}",
         f"cpu_count: {os.cpu_count()}",

@@ -35,8 +35,8 @@ That is the whole quickstart. See it annotated in
 - **Be fast.** The bootstrap kernel is compiled Rust (a pure-NumPy fallback
   keeps the package working everywhere): 2 000 bootstrap replicates on
   100 000 samples in well under half a second.
-- **Make a minimal footprint.** The only hard dependencies are numpy and
-  scipy; plotting is an optional extra (`rocci[plot]`).
+- **Make a minimal footprint.** The only hard dependency is numpy;
+  plotting is an optional extra (`rocci[plot]`).
 - **Clear an unreasonably high bar of rigor.** The method is
   [validated with millions of simulations across diverse data
   sets](method/simulations.md); the implementation is

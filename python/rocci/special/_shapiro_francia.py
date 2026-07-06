@@ -65,12 +65,13 @@ def shapiro_francia(x: FloatArray) -> tuple[float, float]:
     xs = np.sort(x)
     blom = np.asarray((np.arange(1, n + 1) - 0.375) / (n + 0.25), dtype=np.float64)
     m = ndtri(blom)  # Blom expected normal order statistics
+    # the correlation is scale-invariant, so standardize by the largest
+    # absolute deviation: the dot products below then stay O(n) and cannot
+    # underflow no matter how tiny the sample's spread
     xc = xs - xs.mean()
+    xc /= np.max(np.abs(xc))
     mc = m - m.mean()
-    denom = float(xc @ xc) * float(mc @ mc)
-    if denom == 0.0:  # sample variance underflowed: numerically constant
-        raise ValueError("shapiro_francia requires a non-constant sample")
-    w = float((xc @ mc) ** 2) / denom
+    w = float((xc @ mc) ** 2) / (float(xc @ xc) * float(mc @ mc))
     # An affine image of the Blom scores gives W' = 1 exactly (up to rounding,
     # which can push the ratio a hair past 1); the QQ plot is perfectly
     # straight and the test carries no evidence against normality.

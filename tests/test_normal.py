@@ -403,7 +403,7 @@ class TestReportInvariants:
             (neg, report.neg_sf_pvalue, report.neg_k2_pvalue),
             (pos, report.pos_sf_pvalue, report.pos_k2_pvalue),
         ):
-            testable = len(x) >= 3 and np.ptp(x) > 0 and np.std(x) > 0
+            testable = len(x) >= 3 and np.ptp(x) > 0
             assert math.isnan(sf_p) == (not (testable and 5 <= len(x) <= 5000))
             assert math.isnan(k2_p) == (not (testable and len(x) >= 20))
 
