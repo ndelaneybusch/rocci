@@ -266,6 +266,133 @@ class RocBand:
             step_lookup(self.fpr, self.upper, query),
         )
 
+    def sens_at_spec(
+        self, spec: ArrayLike
+    ) -> tuple[FloatArray, FloatArray, FloatArray]:
+        """Read the sensitivity (TPR) band at given specificities.
+
+        A vertical read of the band, re-parameterized onto the specificity axis:
+        specificity is ``1 - fpr``, so this queries the band at ``fpr = 1 - spec``
+        and returns the sensitivity there. Because the band is simultaneous, you
+        may read as many specificities as you like from one band with no
+        multiple-comparison correction — the joint coverage already covers them.
+        Shares the same right-continuous step convention as :meth:`at`.
+
+        Args:
+            spec: Query specificity value(s) in ``[0, 1]``.
+
+        Returns:
+            Tuple ``(lower, sens, upper)`` at the query specificities, where
+            ``sens`` is the empirical sensitivity and ``[lower, upper]`` its
+            simultaneous interval.
+
+        Raises:
+            RocciError: If any query is outside ``[0, 1]``.
+
+        Examples:
+            >>> import numpy as np
+            >>> from rocci import roc_band
+            >>> rng = np.random.default_rng(2)
+            >>> y_true = np.r_[np.zeros(60), np.ones(60)]
+            >>> y_score = np.r_[rng.normal(0, 1, 60), rng.normal(1.4, 1, 60)]
+            >>> band = roc_band(y_true, y_score, random_state=0)
+            >>> lo, se, up = band.sens_at_spec([0.9, 0.5])
+            >>> bool((lo <= se).all() and (se <= up).all())
+            True
+            >>> bool(np.array_equal(band.sens_at_spec(0.9), band.at(1 - 0.9)))
+            True
+        """
+        query = np.asarray(spec, dtype=np.float64)
+        # NaN fails every comparison, so check containment as a negation.
+        if query.size and not ((query >= 0.0) & (query <= 1.0)).all():
+            raise RocciError(
+                "sens_at_spec() queries must lie in [0, 1] (the specificity "
+                "axis); got a value outside that range or NaN."
+            )
+        # fpr = 1 - spec; the TPR band there is the sensitivity band. A valid
+        # spec keeps 1 - spec in [0, 1], so at()'s own check never fires here.
+        return self.at(1.0 - query)
+
+    def spec_at_sens(
+        self, sens: ArrayLike
+    ) -> tuple[FloatArray, FloatArray, FloatArray]:
+        """Read the specificity (1 - FPR) band at given sensitivities.
+
+        A horizontal read of the band: the true ROC attains sensitivity ``s`` at
+        some FPR, and the band's grid columns whose interval ``[lower, upper]``
+        brackets ``s`` are exactly the FPRs consistent with that sensitivity. The
+        specificity interval is the ``1 - fpr`` image of that set. This is a
+        projection of the same simultaneous region as :meth:`at`, so it inherits
+        the joint coverage with no multiple-comparison correction.
+
+        Two behaviors worth knowing:
+
+        - **Vacuous region.** For a low sensitivity target the lower arm is 0
+          across the vacuous FPR region (below ``vacuous_below``), so the
+          specificity interval is deliberately wide — there is no
+          distribution-free bound to report there, not a bug.
+        - **No consistent FPR.** If a tall step in the empirical ROC leaves ``s``
+          bracketed by no grid column, the interval is ``nan`` (the query is
+          still in-domain, so this is reported rather than raised). On the
+          ``normal=True`` path, where the arms are not forced monotone, the
+          interval is the conservative outer hull of a possibly-disconnected set.
+
+        Args:
+            sens: Query sensitivity value(s) in ``[0, 1]``.
+
+        Returns:
+            Tuple ``(lower, spec, upper)`` at the query sensitivities, where
+            ``spec`` is the empirical specificity and ``[lower, upper]`` its
+            simultaneous interval.
+
+        Raises:
+            RocciError: If any query is outside ``[0, 1]``.
+
+        Examples:
+            >>> import numpy as np
+            >>> from rocci import roc_band
+            >>> rng = np.random.default_rng(2)
+            >>> y_true = np.r_[np.zeros(60), np.ones(60)]
+            >>> y_score = np.r_[rng.normal(0, 1, 60), rng.normal(1.4, 1, 60)]
+            >>> band = roc_band(y_true, y_score, random_state=0)
+            >>> lo, sp, up = band.spec_at_sens([0.8, 0.5])
+            >>> bool((lo <= sp).all() and (sp <= up).all())
+            True
+        """
+        s = np.asarray(sens, dtype=np.float64)
+        # NaN fails every comparison, so check containment as a negation.
+        if s.size and not ((s >= 0.0) & (s <= 1.0)).all():
+            raise RocciError(
+                "spec_at_sens() queries must lie in [0, 1] (the sensitivity "
+                "axis); got a value outside that range or NaN."
+            )
+        s2 = np.atleast_1d(s)
+        # Grid columns whose band interval [lower, upper] brackets each query s.
+        # For monotone (envelope) arms this is a contiguous run so min/max are
+        # exact; for non-monotone (Working-Hotelling) arms they give the outer
+        # hull of a possibly-disconnected set, a conservative (wider) interval.
+        member = (self.lower[None, :] <= s2[:, None]) & (
+            s2[:, None] <= self.upper[None, :]
+        )
+        has = member.any(axis=1)
+        f_lo = np.where(member, self.fpr[None, :], np.inf).min(axis=1)
+        f_hi = np.where(member, self.fpr[None, :], -np.inf).max(axis=1)
+        # Empty rows leave f_lo=+inf, f_hi=-inf; report nan rather than garbage.
+        spec_lo = np.where(has, 1.0 - f_hi, np.nan)
+        spec_hi = np.where(has, 1.0 - f_lo, np.nan)
+        # Point estimate: invert the empirical ROC, which is right-continuous
+        # non-decreasing, so its quantile inverse takes side="left" (the dual of
+        # the side="right" value lookup). The empirical inverse ignores the lower
+        # arm, so at a tall step it can exceed spec_hi by up to one grid step;
+        # clip to keep lower <= estimate <= upper (nan-safe, so empty rows pass).
+        idx = np.clip(np.searchsorted(self.tpr, s2, side="left"), 0, self.tpr.size - 1)
+        spec_hat = np.clip(1.0 - self.fpr[idx], spec_lo, spec_hi)
+        return (
+            spec_lo.reshape(s.shape),
+            spec_hat.reshape(s.shape),
+            spec_hi.reshape(s.shape),
+        )
+
     def plot(
         self, ax: matplotlib.axes.Axes | None = None, **style: Any
     ) -> matplotlib.axes.Axes:
