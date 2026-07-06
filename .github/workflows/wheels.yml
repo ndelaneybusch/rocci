@@ -110,11 +110,71 @@ jobs:
           name: sdist
           path: dist
 
+  release-reports:
+    # Human-legible artifacts that certify a tagged release: a coverage report
+    # (HTML + Cobertura XML), a full pytest report, and a performance report.
+    # ci.yml never runs on tags, so this is also the release's own test gate —
+    # `publish` waits on it, so a red suite here stops the release before any
+    # package reaches an index. The perf run is report-only: hosted runners are
+    # slower than the reference hardware the absolute gates target, so a FAIL on
+    # the largest sizes is runner noise, not a regression.
+    needs: release-guard
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - uses: Swatinem/rust-cache@v2
+      - run: uv sync --all-groups
+      - run: uv run maturin develop --release
+      - name: Test suite → coverage + pytest reports
+        run: |
+          mkdir -p reports
+          uv run pytest -q -m "not slow" \
+            --cov=python/rocci \
+            --cov-report=xml:reports/coverage.xml \
+            --cov-report=html:reports/htmlcov \
+            --cov-report=term \
+            --html=reports/pytest-report.html --self-contained-html
+      - name: Performance report
+        run: |
+          uv run python benchmarks/run_benchmarks.py --repeats 5 --json reports/perf.json \
+            | tee reports/perf-stdout.txt
+          {
+            echo "# rocci performance report — ${GITHUB_REF_NAME}"
+            echo
+            echo "Measured on a GitHub-hosted runner, which is **not** the 12-core"
+            echo "desktop the absolute gates target; treat a FAIL on the largest"
+            echo "sizes as runner noise. The authoritative perf gate is"
+            echo "\`just bench\` on reference hardware at release-prep."
+            echo
+            echo '```'
+            cat reports/perf-stdout.txt
+            echo '```'
+          } > reports/performance-report.md
+      - name: Bundle the coverage HTML into a single asset
+        run: (cd reports && zip -qr coverage-html.zip htmlcov)
+      - name: Upload the reports
+        # `always()` so a red suite still publishes the reports that explain it.
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-reports
+          path: |
+            reports/coverage.xml
+            reports/coverage-html.zip
+            reports/pytest-report.html
+            reports/perf.json
+            reports/performance-report.md
+
   publish:
     # Trusted publishing (OIDC); the human "go" is the environment protection
     # rule on `release`. rc tags -> TestPyPI, final tags -> PyPI.
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build, sdist]
+    needs: [build, sdist, release-reports]
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -202,12 +262,17 @@ jobs:
     # triggers the Zenodo DOI webhook — created only after the published
     # package has been verified installable on all three OSes.
     if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref_name, 'rc')
-    needs: post-publish-verify
+    needs: [post-publish-verify, release-reports]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Download the release reports
+        uses: actions/download-artifact@v8
+        with:
+          name: release-reports
+          path: reports
       - name: Extract this version's changelog section
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
@@ -218,10 +283,18 @@ jobs:
           ' CHANGELOG.md > release-notes.md
           [ -s release-notes.md ] || { echo "no CHANGELOG.md section for $VERSION"; exit 1; }
       - name: Create the GitHub Release
+        # The reports ride along as release assets, so the changelog, the
+        # coverage/pytest reports, and the perf numbers for this version all live
+        # on one page.
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
+            reports/coverage-html.zip \
+            reports/coverage.xml \
+            reports/pytest-report.html \
+            reports/performance-report.md \
+            reports/perf.json \
             --title "rocci $GITHUB_REF_NAME" \
             --notes-file release-notes.md \
             --verify-tag

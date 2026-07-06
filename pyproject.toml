@@ -41,6 +41,7 @@ dev = [
     "pytest>=8",
     "scipy>=1.10",  # test oracle for rocci.special; not a runtime dependency
     "pytest-cov>=5",
+    "pytest-html>=4",  # self-contained HTML test report, attached to releases
     "hypothesis>=6",
     "ruff>=0.8",
     "ty",
