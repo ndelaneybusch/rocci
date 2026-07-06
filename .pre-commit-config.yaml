@@ -15,6 +15,13 @@ repos:
         # Blocks accidental fixture bloat; golden masters are added
         # deliberately via `git add -f` paths documented in CONTRIBUTING.
         args: [--maxkb=600]
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      # Statically checks .github/workflows/: expression types, action
+      # inputs, job refs, plus shellcheck over run: blocks. Cheap insurance
+      # for wheels.yml, whose jobs otherwise only execute on a tag push.
+      - id: actionlint
   - repo: local
     hooks:
       - id: cargo-fmt

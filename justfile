@@ -25,6 +25,8 @@ lint:
     uv run ruff format --check .
     cargo fmt --all --check
     cargo clippy --all-targets -- -D warnings
+    # Workflow lint; version pinned once, in .pre-commit-config.yaml
+    uv run pre-commit run actionlint --all-files
 
 fix:
     uv run ruff check --fix .
