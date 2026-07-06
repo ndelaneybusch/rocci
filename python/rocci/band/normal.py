@@ -36,10 +36,19 @@ _K2_MIN_N = 20
 _INTERIOR_LO, _INTERIOR_HI = 0.05, 0.95
 #: Minimum interior vertices required to estimate the probit-linearity R².
 _MIN_INTERIOR_VERTICES = 10
-#: A class p-value below this marks the binormal fit suspect.
-_SUSPECT_P = 0.10
-#: A probit-linearity R² below this marks the binormal fit suspect.
+#: A class-check p-value below this marks the binormal fit suspect. Four
+#: checks are OR-composed, and SF and K² on one class are positively
+#: correlated, so the false-alarm rate on truly binormal data is ~15%, not
+#: 4 x 5% (locked by the false-positive characterization test).
+_SUSPECT_P = 0.05
+#: A probit-linearity R² below this marks the binormal fit suspect...
 _SUSPECT_R2 = 0.98
+#: ...but only when both classes have at least this many samples. Below it
+#: the empirical ROC's step granularity makes R² < 0.98 routine on truly
+#: binormal data (50-97% of clean datasets at n <= 100), so the fixed
+#: threshold only discriminates at large n. R² is still *reported* at every
+#: n; only its suspect trigger is gated.
+_R2_TRIGGER_MIN_N = 1000
 #: Floor on class standard deviations, guarding degenerate (constant) classes.
 _STD_EPS = 1e-8
 #: Clip applied to grid FPRs before the probit transform (avoids +-inf).
@@ -223,10 +232,14 @@ def normality_report(
     Runs every applicable per-class check (Shapiro-Francia and D'Agostino K²)
     plus the probit-linearity R² of the empirical ROC, and flags the fit
     ``suspect`` when **any one** of them trips — any check p-value below
-    :data:`_SUSPECT_P` or the R² below :data:`_SUSPECT_R2`. The OR-composition
-    is deliberately sensitive: Working-Hotelling pays for every departure
-    from binormality, so a false alarm costs a warning while a miss costs
-    coverage. The warning text is populated only when suspect.
+    :data:`_SUSPECT_P`, or R² below :data:`_SUSPECT_R2` when both classes
+    reach :data:`_R2_TRIGGER_MIN_N` (below that the fixed R² threshold is
+    noise on truly binormal data). The OR-composition is deliberately
+    sensitive: Working-Hotelling pays for every departure from binormality,
+    so a false alarm costs a warning while a miss costs coverage. The
+    calibration point is a ~15% false-alarm rate on truly binormal data,
+    roughly flat across class sizes and AUC (locked by the false-positive
+    characterization test). The warning text is populated only when suspect.
 
     Args:
         neg: Negative-class scores.
@@ -261,8 +274,9 @@ def normality_report(
         pos_checks.sf_pvalue,
         pos_checks.k2_pvalue,
     )
+    r2_trigger_applies = min(len(neg), len(pos)) >= _R2_TRIGGER_MIN_N
     suspect = any(p < _SUSPECT_P for p in pvalues) or (
-        not math.isnan(r2) and r2 < _SUSPECT_R2
+        r2_trigger_applies and not math.isnan(r2) and r2 < _SUSPECT_R2
     )
     warning = (
         _warning_text(neg_checks, pos_checks, r2, heavy_ties=heavy_ties)

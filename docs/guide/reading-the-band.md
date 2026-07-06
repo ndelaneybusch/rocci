@@ -148,11 +148,16 @@ band.normality.suspect         # True => a NormalityWarning was emitted
 band.normality.warning         # the exact text
 ```
 
-`suspect` fires when **any** check trips — a class-check p-value below 0.10
-or the probit R² below 0.98. The thresholds are deliberately blunt: Working–Hotelling
-coverage degrades *continuously* with departures from binormality and worsens
-with n, so there is no safe region the diagnostics could certify — they can
-only fail to reject. Heavy ties are flagged in the warning text as
+`suspect` fires when **any** check trips — a class-check p-value below 0.05,
+or the probit R² below 0.98 once both classes reach 1000 samples (below that
+the fixed R² threshold is noise on truly binormal data, so it is reported but
+never triggers). The operating point is calibrated to flag roughly 15% of
+*truly binormal* datasets, flat across class sizes — deliberately sensitive,
+because Working–Hotelling coverage degrades *continuously* with departures
+from binormality and worsens with n, so there is no safe region the
+diagnostics could certify — they can only fail to reject. A quiet gate is
+weak evidence: in mildly heavy-tailed regimes a meaningful share of datasets
+pass every check while the parametric band misses the true curve. Heavy ties are flagged in the warning text as
 structurally incompatible with the binormal model (ties have probability zero
 under it).
 

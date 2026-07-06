@@ -50,6 +50,7 @@ from rocci import roc_band
 from rocci._warnings import NormalityWarning
 from rocci.band.grids import empirical_roc_vertices
 from rocci.band.normal import (
+    _R2_TRIGGER_MIN_N,
     _SUSPECT_P,
     _SUSPECT_R2,
     _probit_r2,
@@ -387,8 +388,11 @@ class TestReportInvariants:
             report.pos_sf_pvalue,
             report.pos_k2_pvalue,
         )
+        r2_applies = min(len(neg), len(pos)) >= _R2_TRIGGER_MIN_N
         expected = any(p < _SUSPECT_P for p in pvalues) or (
-            not math.isnan(report.probit_r2) and report.probit_r2 < _SUSPECT_R2
+            r2_applies
+            and not math.isnan(report.probit_r2)
+            and report.probit_r2 < _SUSPECT_R2
         )
         assert report.suspect == expected
         assert (report.warning != "") == report.suspect
@@ -417,6 +421,53 @@ class TestReportInvariants:
             assert math.isnan(report.neg_pvalue)
 
 
+@pytest.mark.slow
+class TestFalsePositiveRate:
+    """The gate's false-alarm rate on truly binormal data stays under 20%.
+
+    The operating point: with four class checks OR-composed at p < 0.05 (SF
+    and K² are positively correlated within a class) and the R² trigger
+    gated on both classes reaching 1000 samples, the false-positive rate
+    measures ~0.11-0.15 across every class size and AUC — comfortably under
+    the 0.20 budget, with no sample-size domain excepted. If a cell here
+    crosses the budget, either a trigger was re-tuned (recalibrate against
+    the budget) or a new check was added without accounting for the OR
+    composition. The seeded sweeps are deterministic; the gap between
+    measured rates and the asserted bound absorbs numpy stream changes, not
+    sampling noise.
+    """
+
+    #: The spec: at most this fraction of truly binormal datasets may be
+    #: flagged suspect, at every class size.
+    BUDGET = 0.20
+
+    @pytest.mark.parametrize("d", [0.6, 1.2, 2.0])  # AUC ~ 0.66 / 0.80 / 0.92
+    @pytest.mark.parametrize("n", [30, 100, 300, 1000, 3000, 10000])
+    def test_binormal_false_positive_rate_within_budget(self, n, d):
+        n_rep = 300
+        rng = np.random.default_rng(123)
+        false_positives = 0
+        for _ in range(n_rep):
+            neg, pos = rng.normal(0.0, 1.0, n), rng.normal(d, 1.0, n)
+            fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+            report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+            false_positives += report.suspect
+        assert false_positives / n_rep < self.BUDGET
+
+    def test_unequal_classes_within_budget(self):
+        # imbalanced designs straddle the R² trigger's class-size gate: the
+        # smaller class controls, so the trigger stays off here
+        n_rep = 300
+        rng = np.random.default_rng(123)
+        false_positives = 0
+        for _ in range(n_rep):
+            neg, pos = rng.normal(0.0, 1.0, 100), rng.normal(1.2, 1.0, 2000)
+            fpr_v, tpr_v = empirical_roc_vertices(neg, pos)
+            report = normality_report(neg, pos, fpr_v, tpr_v, heavy_ties=False)
+            false_positives += report.suspect
+        assert false_positives / n_rep < self.BUDGET
+
+
 def _true_roc_t_shift(grid: np.ndarray, df: float, delta: float) -> np.ndarray:
     """Population ROC of a location-shifted Student-t pair."""
     g = np.clip(grid, 1e-12, 1.0 - 1e-12)
@@ -441,9 +492,9 @@ class TestSilentFailures:
     eliminating the silent failures, the "no safe diagnostic region" warning
     language should be revisited; if it makes the pass rate collapse to ~0,
     the gate has become so trigger-happy the WH path is effectively dead.
-    Thresholds sit at a third to a half of the measured values (pass
-    ~0.14/0.22, miss-given-pass ~0.39/0.21 at these seeds) so they fail on
-    real regime change, not Monte-Carlo wiggle.
+    Thresholds sit far below the measured values (pass ~0.38/0.39,
+    miss-given-pass ~0.42/0.19 at these seeds) so they fail on real regime
+    change, not Monte-Carlo wiggle.
     """
 
     GRID = np.linspace(0.01, 0.99, 99)
