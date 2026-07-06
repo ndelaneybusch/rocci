@@ -1,12 +1,11 @@
 # Theoretical behavior
 
-What can be *guaranteed*, what is *calibrated*, and where the honest edges
-are. (Condensed from the theory reports in the
+What is *proven*, what is *calibrated*, and where the guarantees stop —
+condensed from the theory reports in the
 [method validation study](https://github.com/ndelaneybusch/studroc_paper).
 [The envelope method](envelope.md) describes what is computed;
 [Simulations and validation](simulations.md) is the empirical evidence;
-[How rocci is verified](verification.md) shows how the implementation is
-held to it.)
+[How rocci is verified](verification.md) holds the implementation to both.
 
 ## Exact, distribution-free ingredients
 
@@ -45,9 +44,9 @@ The envelope itself (studentize, retain by sup-deviation, take the envelope)
 is a bootstrap procedure: its simultaneous coverage is asymptotically correct
 and, at finite n, *calibrated* rather than proven — which is why the method
 ships with a calibration gate rather than a theorem alone. The gate runs the
-assembled band across score distributions chosen to be unkind — binormal,
-heavy-tailed (t₃), bimodal negatives, and discretized (heavy-ties) scores —
-at n as small as 30 per class, and requires coverage near nominal (from
+assembled band across binormal, heavy-tailed (t₃), bimodal-negative, and
+discretized heavy-tie scores at n as small as 30 per class, and requires
+coverage near nominal (from
 above, within Monte-Carlo tolerance) with mean width strictly below the
 KS/DKW reference band. Coverage *near* nominal is the target: closer is
 better, not higher — an over-wide band is a quieter failure than an
@@ -75,7 +74,7 @@ proof for calibrated, locally-adaptive width plus exact repairs where
 adaptivity is impossible; the gate enforces that this trade is won (mean
 width strictly below KS) while holding coverage.
 
-## The vacuous region is a theorem, not a choice
+## The vacuous region
 
 For any procedure that is valid for **all** continuous score distributions,
 the lower band below $t \approx q_1 = \text{Beta}(1, n_0)^{-1}(1 - \alpha_e)$
@@ -102,7 +101,7 @@ characteristic failure mode, which is why `roc_band_ovr` refuses
 The WH band's coverage is exact under binormality and degrades
 *continuously* with departure from it; because width shrinks as
 $O(n^{-1/2})$ while the parametric bias is fixed, coverage **worsens as n
-grows** — more data makes the wrong band more confidently wrong (bimodal
-negatives drive coverage far below half). This is the structural reason the
+grows**; bimodal negatives drive it far below half. This is the structural
+reason the
 diagnostics carry a warning rather than a certificate, and the reason the
 distribution-free band is the default.

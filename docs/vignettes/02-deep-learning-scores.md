@@ -89,12 +89,27 @@ ax.plot(grid, true_roc, color="black", lw=1.2, label="true ROC")
 ax.legend(loc="lower right", fontsize="small")
 ```
 
-The true curve runs *outside* the Working-Hotelling band over a wide FPR
-range, while staying inside the envelope. This failure is quiet — the WH band
-looks perfectly plausible on its own — and it worsens with more data, because
-the parametric band narrows around a systematically wrong curve. That is why
-the diagnostics warn rather than certify, and why the envelope is the
-default.
+The failure is worth reading closely, because it is not the one people
+usually expect. Misspecification does not merely make a parametric band too
+narrow — it biases the band's *center*. The Working-Hotelling band is a
+simultaneous band around the best-fitting **binormal** curve, and no binormal
+curve has the shape of a t₃ ROC. A t₃ standard deviation (√3 ≈ 1.73) is
+mostly tail — the central bulk of the distribution is only about as wide as a
+normal with σ ≈ 1.1 — so matching means and standard deviations fits a
+binormal model for classes far blurrier, through the mid-range, than these
+actually are. The fitted curve lands below the truth exactly where it
+matters: the true ROC escapes above the band from FPR ≈ 0.05 to 0.5, and
+exits below it at high FPR, while staying inside the envelope at every grid
+point. The empirical ROC tracks the truth and escapes the same way. If the
+plot looks like the WH band is covering some *other* curve than the one you
+computed, that is precisely what is happening: it faithfully covers the
+binormal ROC — a curve the data refute.
+
+More data makes this worse, not better: the center bias is a property of the
+model, not the sample, so the band narrows as 1/√n around a curve that stays
+wrong. And the failure is quiet — on its own, the WH band looks perfectly
+plausible. That is why the diagnostics warn rather than certify, and why the
+envelope is the default.
 
 ## Rank invariance: logits vs probabilities
 
