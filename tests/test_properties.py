@@ -25,11 +25,14 @@ exhaust it.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from rocci import roc_band
 from rocci.backend._fallback import bootstrap_tpr_matrix_numpy
 from rocci.band.envelope import ATTR_PINNED, assemble_envelope_band
 from rocci.band.floors import beta_floor_vacuous_below
@@ -112,6 +115,33 @@ def test_wide_alpha_rejects_nothing_weird():
     boot = bootstrap_tpr_matrix_numpy(neg, pos, grid_k_indices(grid, 30), 100, seed=1)
     band = assemble_envelope_band(boot, grid, neg, pos, 0.5)
     assert (band.lower <= band.upper + 1e-12).all()
+
+
+@given(score_samples(), st.floats(min_value=0.0, max_value=1.0))
+@settings(max_examples=25, deadline=None)
+def test_sens_spec_query_invariants(sample, q):
+    # the sensitivity/specificity readouts must hold their invariants on inputs
+    # no one chose: sens_at_spec is exactly the reflected at() read, and both
+    # readouts keep lower <= estimate <= upper at every query point.
+    neg, pos, _seed = sample
+    y_true = np.r_[np.zeros(len(neg)), np.ones(len(pos))]
+    y_score = np.r_[neg, pos]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # small samples / ties may warn
+        band = roc_band(y_true, y_score, random_state=0)
+
+    query = np.array([q, 1.0 - q, 0.0, 1.0])
+    for got, want in zip(band.sens_at_spec(query), band.at(1.0 - query), strict=True):
+        np.testing.assert_array_equal(got, want)
+
+    lo, se, up = band.sens_at_spec(query)
+    assert (lo <= se + 1e-12).all()
+    assert (se <= up + 1e-12).all()
+
+    lo, sp, up = band.spec_at_sens(query)
+    finite = ~np.isnan(sp)
+    assert (lo[finite] <= sp[finite] + 1e-12).all()
+    assert (sp[finite] <= up[finite] + 1e-12).all()
 
 
 @pytest.mark.parametrize("n_boot", [100, 250])

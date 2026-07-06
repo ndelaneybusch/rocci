@@ -85,8 +85,27 @@ print(f"at FPR = 10%:  TPR = {float(tpr):.3f},  "
       f"simultaneous bounds [{float(lower):.3f}, {float(upper):.3f}]")
 ```
 
-Because the band is simultaneous, querying ten thresholds instead of one
-costs nothing in validity.
+A 10% false-positive tolerance is 90% specificity, and TPR is sensitivity, so
+the same question reads more naturally as `sens_at_spec` — it returns exactly
+the values above:
+
+```python
+lower, sens, upper = band.sens_at_spec(0.90)
+print(f"at 90% specificity:  sensitivity = {float(sens):.3f},  "
+      f"simultaneous bounds [{float(lower):.3f}, {float(upper):.3f}]")
+```
+
+You can also invert the question — *at what specificity does the model reach a
+target sensitivity?* — with `spec_at_sens`:
+
+```python
+lower, spec, upper = band.spec_at_sens(0.80)
+print(f"to reach 80% sensitivity:  specificity = {float(spec):.3f},  "
+      f"simultaneous bounds [{float(lower):.3f}, {float(upper):.3f}]")
+```
+
+Because the band is simultaneous, querying ten operating points instead of one
+— in either direction — costs nothing in validity.
 
 ## The band as data
 

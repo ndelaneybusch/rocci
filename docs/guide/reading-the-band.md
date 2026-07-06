@@ -31,6 +31,35 @@ as right-continuous step functions. `band.at(x)` evaluates all three at
 arbitrary FPRs with the same convention used to build the band, so what you
 query is exactly what was calibrated. `plot()` shares the convention.
 
+## Reading in sensitivity / specificity terms
+
+The band lives on the FPR axis, but you often think in **sensitivity** (= TPR,
+the y-axis) and **specificity** (= 1 − FPR). Two methods speak that vocabulary
+directly, and — being reads of the *same* simultaneous band — they need no
+multiplicity correction, just like `band.at`:
+
+- `band.sens_at_spec(spec)` — the sensitivity band at given specificities. A
+  vertical read: since `fpr = 1 − spec`, this is exactly `band.at(1 − spec)`,
+  returning `(lower, sens, upper)`. "What sensitivity can I claim at 90%
+  specificity?" is `band.sens_at_spec(0.90)`.
+- `band.spec_at_sens(sens)` — the specificity band at given sensitivities. A
+  *horizontal* read: it reports the specificities `1 − f` for every FPR `f`
+  whose band interval `[lower(f), upper(f)]` brackets the target sensitivity,
+  returning `(lower, spec, upper)`. "At what specificity does my model reach 80%
+  sensitivity?" is `band.spec_at_sens(0.80)`.
+
+Both accept an array of query points and share the right-continuous step
+convention. Two things to know about the horizontal read:
+
+- In the [vacuous region](#the-vacuous-region-at-tiny-fpr) the lower arm is 0,
+  so a low sensitivity target returns a deliberately wide specificity interval
+  (up to `spec = 1`) — the honest statement that no distribution-free bound
+  exists there, not a bug.
+- If a tall step in the empirical ROC leaves a sensitivity bracketed by no grid
+  FPR, `spec_at_sens` returns `nan` for that query. On the `normal=True` path,
+  where the arms are not forced monotone, the interval is the conservative outer
+  hull of the consistent FPRs.
+
 ## The vacuous region at tiny FPR
 
 `band.summary()` may say:

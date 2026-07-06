@@ -249,6 +249,157 @@ class TestResultMethods:
         with pytest.raises(RocciError, match="NaN"):
             band.at([0.5, np.nan])
 
+    def test_sens_at_spec_reflects_at_across_the_axis(self):
+        # sens_at_spec(spec) is by construction at(1 - spec) — the same
+        # right-continuous read, re-parameterized onto the specificity axis.
+        band = self._band()
+        spec = np.linspace(0.0, 1.0, 37)
+        for got, want in zip(band.sens_at_spec(spec), band.at(1.0 - spec), strict=True):
+            np.testing.assert_array_equal(got, want)
+
+    def test_sens_at_spec_order_invariant(self):
+        band = self._band()
+        lo, se, up = band.sens_at_spec(np.linspace(0.0, 1.0, 50))
+        assert (lo <= se + 1e-12).all()
+        assert (se <= up + 1e-12).all()
+
+    def test_sens_at_spec_endpoints(self):
+        # spec = 1 reads fpr = 0 (pinned lower arm); spec = 0 reads fpr = 1.
+        band = self._band()
+        lo, _se, _up = band.sens_at_spec(1.0)
+        assert lo == band.lower[0] == 0.0
+        lo, _se, up = band.sens_at_spec(0.0)
+        assert lo == up == 1.0
+
+    def test_spec_at_sens_order_invariant(self):
+        band = self._band()
+        lo, sp, up = band.spec_at_sens(np.linspace(0.0, 1.0, 50))
+        finite = ~np.isnan(sp)
+        assert (lo[finite] <= sp[finite] + 1e-12).all()
+        assert (sp[finite] <= up[finite] + 1e-12).all()
+
+    def test_spec_at_sens_endpoints(self):
+        band = self._band()
+        lo, sp, _up = band.spec_at_sens(1.0)  # top of the curve -> spec can be 0
+        assert lo == 0.0
+        _lo, sp, up = band.spec_at_sens(0.0)  # bottom -> spec pinned at 1
+        assert sp == up == 1.0
+
+    def test_spec_at_sens_roundtrip_contains_reflected_fpr(self):
+        # reading the sensitivity attained at grid FPR f_k, then asking which
+        # specificities back that sensitivity, must bracket 1 - f_k. Equality
+        # fails at empirical-ROC risers, so this is a containment check.
+        band = self._band()
+        interior = (band.fpr > 0.0) & (band.fpr < 1.0)
+        f = band.fpr[interior]
+        tpr_k = band.tpr[interior]
+        lo, _sp, up = band.spec_at_sens(tpr_k)
+        assert (lo <= (1.0 - f) + 1e-12).all()
+        assert ((1.0 - f) <= up + 1e-12).all()
+
+    def test_spec_at_sens_consistent_with_at_between_grid_points(self):
+        # the horizontal read inverts the same step function at() exposes: any
+        # FPR — grid point or not — whose at() interval brackets s must have
+        # its specificity inside spec_at_sens(s), and a nan interval must mean
+        # no FPR at all is consistent.
+        band = self._band()
+        f = np.linspace(0.0, 1.0, 401)
+        lo_f, _tp, up_f = band.at(f)
+        for s in (0.02, 0.3, 0.5, 0.8, 0.95):
+            slo, _sp, sup = band.spec_at_sens(s)
+            consistent = (lo_f <= s) & (s <= up_f)
+            if np.isnan(slo):
+                assert not consistent.any()
+                continue
+            spec = 1.0 - f[consistent]
+            assert (slo <= spec + 1e-12).all()
+            assert (spec <= sup + 1e-12).all()
+
+    def test_query_shape_parity(self):
+        # scalar -> 0-d, (M,) -> (M,), [] -> (0,), mirroring at()
+        band = self._band()
+        for method in (band.sens_at_spec, band.spec_at_sens):
+            assert all(x.shape == () for x in method(0.5))
+            assert all(x.shape == (3,) for x in method([0.2, 0.5, 0.8]))
+            assert all(x.shape == (0,) for x in method([]))
+
+    @pytest.mark.parametrize("bad", [1.5, -0.1])
+    def test_sens_spec_queries_out_of_range_raise(self, bad):
+        band = self._band()
+        with pytest.raises(RocciError, match=r"\[0, 1\]"):
+            band.sens_at_spec([bad])
+        with pytest.raises(RocciError, match=r"\[0, 1\]"):
+            band.spec_at_sens([bad])
+
+    def test_sens_spec_queries_nan_raise(self):
+        band = self._band()
+        with pytest.raises(RocciError, match="NaN"):
+            band.sens_at_spec([0.5, np.nan])
+        with pytest.raises(RocciError, match="NaN"):
+            band.spec_at_sens([0.5, np.nan])
+
+    def test_spec_at_sens_vacuous_region_widens_the_interval(self):
+        # a low sensitivity target lands in the vacuous FPR region, where the
+        # lower arm is 0, so no distribution-free specificity bound exists and
+        # the interval must run all the way up to spec = 1.
+        band = self._band()
+        assert band.vacuous_below is not None
+        assert band.vacuous_below > 0.0
+        lo, _sp, up = band.spec_at_sens(0.02)
+        # spec_hi reaches 1 (perfect specificity cannot be ruled out) and the
+        # interval spans at least the whole vacuous FPR region (f_hi = 1 - lo).
+        last_vacuous_fpr = band.fpr[band.fpr < band.vacuous_below].max()
+        assert up == 1.0
+        assert (1.0 - lo) >= last_vacuous_fpr - 1e-12
+
+    def test_spec_at_sens_is_nan_when_no_fpr_is_consistent(self):
+        # a tall step in the band (lower[k+1] > upper[k]) leaves a sensitivity
+        # bracketed by no grid column; that in-domain query returns nan, not inf.
+        band = dataclasses.replace(
+            self._band(),
+            fpr=np.array([0.0, 0.5, 1.0]),
+            tpr=np.array([0.0, 0.62, 1.0]),
+            lower=np.array([0.0, 0.6, 1.0]),
+            upper=np.array([0.0, 0.65, 1.0]),
+            attribution=np.zeros(3, dtype=np.int8),
+        )
+        lo, sp, up = band.spec_at_sens(0.4)  # in the (0.0, 0.6) gap
+        assert np.isnan(lo)
+        assert np.isnan(sp)
+        assert np.isnan(up)
+
+    def test_spec_at_sens_clips_estimate_into_interval(self):
+        # on a non-monotone (Working-Hotelling-style) lower arm, the empirical
+        # inverse can point at an FPR outside the membership hull; the estimate
+        # must be clipped back so lower <= estimate <= upper still holds.
+        band = dataclasses.replace(
+            self._band(),
+            fpr=np.array([0.0, 0.25, 0.5, 1.0]),
+            tpr=np.array([0.0, 0.9, 0.95, 1.0]),
+            lower=np.array([0.0, 0.85, 0.5, 1.0]),  # dips at the third column
+            upper=np.array([0.0, 0.92, 0.97, 1.0]),
+            attribution=np.zeros(4, dtype=np.int8),
+        )
+        lo, sp, up = band.spec_at_sens(0.8)
+        # only the third column brackets 0.8; its step runs to fpr = 1, so the
+        # consistent FPRs are [0.5, 1) and the specificity interval [0, 0.5].
+        assert lo == 0.0
+        assert up == 0.5
+        assert sp == 0.5  # un-clipped empirical inverse would give 0.75
+
+    def test_queries_on_working_hotelling_path(self):
+        # both methods run unbranched on the non-monotone WH arms and stay valid
+        y_true, y_score = binormal_dataset(300, 300, seed=21)
+        band = roc_band(y_true, y_score, normal=True, random_state=0)
+        assert band.method == "working_hotelling"
+        lo, se, up = band.sens_at_spec([0.9, 0.5])
+        assert (lo <= se + 1e-12).all()
+        assert (se <= up + 1e-12).all()
+        lo, sp, up = band.spec_at_sens([0.8, 0.5])
+        finite = ~np.isnan(sp)
+        assert (lo[finite] <= sp[finite] + 1e-12).all()
+        assert (sp[finite] <= up[finite] + 1e-12).all()
+
     def test_band_area_matches_mean_width(self):
         band = self._band()
         assert band.band_area == pytest.approx(np.mean(band.upper - band.lower))
