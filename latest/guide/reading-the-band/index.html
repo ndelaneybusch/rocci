@@ -604,6 +604,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reading-in-sensitivity-specificity-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading in sensitivity / specificity terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-vacuous-region-at-tiny-fpr" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1251,6 +1262,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reading-in-sensitivity-specificity-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading in sensitivity / specificity terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-vacuous-region-at-tiny-fpr" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1401,6 +1423,34 @@ claim about the whole curve, and only a simultaneous band supports it.</p>
 as right-continuous step functions. <code>band.at(x)</code> evaluates all three at
 arbitrary FPRs with the same convention used to build the band, so what you
 query is exactly what was calibrated. <code>plot()</code> shares the convention.</p>
+<h2 id="reading-in-sensitivity-specificity-terms">Reading in sensitivity / specificity terms<a class="headerlink" href="#reading-in-sensitivity-specificity-terms" title="Permanent link">&para;</a></h2>
+<p>The band lives on the FPR axis, but you often think in <strong>sensitivity</strong> (= TPR,
+the y-axis) and <strong>specificity</strong> (= 1 − FPR). Two methods speak that vocabulary
+directly, and — being reads of the <em>same</em> simultaneous band — they need no
+multiplicity correction, just like <code>band.at</code>:</p>
+<ul>
+<li><code>band.sens_at_spec(spec)</code> — the sensitivity band at given specificities. A
+  vertical read: since <code>fpr = 1 − spec</code>, this is exactly <code>band.at(1 − spec)</code>,
+  returning <code>(lower, sens, upper)</code>. "What sensitivity can I claim at 90%
+  specificity?" is <code>band.sens_at_spec(0.90)</code>.</li>
+<li><code>band.spec_at_sens(sens)</code> — the specificity band at given sensitivities. A
+  <em>horizontal</em> read: it reports the specificities <code>1 − f</code> for every FPR <code>f</code>
+  whose band interval <code>[lower(f), upper(f)]</code> brackets the target sensitivity,
+  returning <code>(lower, spec, upper)</code>. "At what specificity does my model reach 80%
+  sensitivity?" is <code>band.spec_at_sens(0.80)</code>.</li>
+</ul>
+<p>Both accept an array of query points and share the right-continuous step
+convention. Two things to know about the horizontal read:</p>
+<ul>
+<li>In the <a href="#the-vacuous-region-at-tiny-fpr">vacuous region</a> the lower arm is 0,
+  so a low sensitivity target returns a deliberately wide specificity interval
+  (up to <code>spec = 1</code>) — the honest statement that no distribution-free bound
+  exists there, not a bug.</li>
+<li>If a tall step in the empirical ROC leaves a sensitivity bracketed by no grid
+  FPR, <code>spec_at_sens</code> returns <code>nan</code> for that query. On the <code>normal=True</code> path,
+  where the arms are not forced monotone, the interval is the conservative outer
+  hull of the consistent FPRs.</li>
+</ul>
 <h2 id="the-vacuous-region-at-tiny-fpr">The vacuous region at tiny FPR<a class="headerlink" href="#the-vacuous-region-at-tiny-fpr" title="Permanent link">&para;</a></h2>
 <p><code>band.summary()</code> may say:</p>
 <blockquote>
