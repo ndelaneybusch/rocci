@@ -32,6 +32,7 @@ checked on Rust only. Coverage and width quality are out of scope for this file.
 from __future__ import annotations
 
 import dataclasses
+import sys
 import warnings
 
 import numpy as np
@@ -101,6 +102,61 @@ class TestBandStructure:
         assert band.lower.tolist() == [0.0, 1.0]
         assert band.upper[-1] == 1.0
         assert band.attribution.tolist() == [3, 3]
+
+
+class TestSeedResolution:
+    """The ``random_state=None`` (fresh-entropy) path. Every other test pins a
+    seed, and ``normal=True`` never bootstraps, so this branch is otherwise
+    unreached."""
+
+    def test_unseeded_band_runs_and_records_none(self):
+        y_true, y_score = binormal_dataset(60, 60, seed=1)
+        band = roc_band(y_true, y_score, n_boot=200)
+        assert band.method == "envelope"
+        # The stored provenance is the original argument, not the drawn seed.
+        assert band.random_state is None
+
+    def test_resolve_seed_none_is_a_valid_kernel_seed(self):
+        from rocci._validation import resolve_seed
+
+        seed = resolve_seed(None)
+        assert isinstance(seed, int)
+        assert 0 <= seed < 2**64
+
+
+class TestOptionalDependencyRouting:
+    """Optional-import fall-throughs, exercised in-process by blanking the module
+    in ``sys.modules`` so ``import X`` raises ImportError. ``test_optional_deps``
+    proves the same contract against a genuinely uninstalled package in a
+    subprocess; these fast twins keep the routing lines covered and pin the exact
+    user-facing messages."""
+
+    def test_show_versions_reports_absent_optional_deps(self, monkeypatch, capsys):
+        monkeypatch.setitem(sys.modules, "scipy", None)
+        monkeypatch.setitem(sys.modules, "matplotlib", None)
+        show_versions()
+        out = capsys.readouterr().out
+        assert "scipy: not installed" in out
+        assert "matplotlib: not installed" in out
+
+    def test_to_dataframe_without_pandas_raises(self, monkeypatch):
+        y_true, y_score = binormal_dataset(40, 40, seed=2)
+        band = roc_band(y_true, y_score, n_boot=200, random_state=0)
+        monkeypatch.setitem(sys.modules, "pandas", None)
+        with pytest.raises(RocciError, match="pandas"):
+            band.to_dataframe()
+
+    def test_from_estimator_names_the_requested_response_method(self):
+        # response_method is explicit and unavailable: the error must name it,
+        # not the generic "predict_proba or decision_function" pair.
+        class NoScores:
+            pass
+
+        y_true, y_score = binormal_dataset(30, 30, seed=3)
+        with pytest.raises(RocciError, match="predict_proba"):
+            from_estimator(
+                NoScores(), y_score[:, None], y_true, response_method="predict_proba"
+            )
 
 
 class TestReproducibility:
