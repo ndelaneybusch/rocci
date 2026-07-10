@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
       - uses: Swatinem/rust-cache@v2
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v4
       - run: uv sync --all-groups --no-install-project
       - run: just lint
       - name: Conventional Commit PR title
@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v4
       - run: uv sync --all-groups --no-install-project
       - run: just typecheck
 
@@ -150,6 +150,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
       - uses: Swatinem/rust-cache@v2
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v4
       - run: uv sync --all-groups
       - run: just docs-build
