@@ -49,7 +49,7 @@ jobs:
     # the timeout is a hang backstop, not headroom.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.13"
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: pr
       - uses: astral-sh/setup-uv@v7
@@ -84,7 +84,7 @@ jobs:
           uv run maturin develop --release
           uv run python benchmarks/run_benchmarks.py --repeats 5 --json perf-pr.json
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: github.event_name == 'pull_request'
         with:
           # Pin to the SHA recorded on the event, not the branch name: if main
