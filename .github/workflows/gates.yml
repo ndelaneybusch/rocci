@@ -54,7 +54,7 @@ jobs:
         with:
           python-version: "3.13"
       - uses: Swatinem/rust-cache@v2
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v4
       - run: uv sync --all-groups
       - run: uv run maturin develop --release
       - run: just calibration
