@@ -1,13 +1,14 @@
 # Fast, format-level only — heavy checks (ty, clippy, tests) belong to CI.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    # Keep in step with ruff in uv.lock, which is what CI's `just lint` runs.
+    rev: v0.15.20
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
       - id: ruff-format
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
