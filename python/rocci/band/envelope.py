@@ -26,9 +26,9 @@ from rocci.special import ndtri
 FloatArray = NDArray[np.float64]
 
 # np.trapz was removed in favor of np.trapezoid in NumPy 2.0; support both
-# because the runtime floor is numpy>=1.24.
+# because the runtime floor is numpy>=1.26.
 _trapezoid: Any = getattr(np, "trapezoid", getattr(np, "trapz", None))
-if _trapezoid is None:  # pragma: no cover — unreachable on numpy >= 1.24
+if _trapezoid is None:  # pragma: no cover — unreachable on numpy >= 1.26
     raise ImportError("numpy provides neither trapezoid nor trapz")
 
 #: Attribution codes for the lower band.

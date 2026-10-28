@@ -70,7 +70,7 @@ but not bit-for-bit (different RNG streams — documented, tested).
 | | |
 |---|---|
 | Python | ≥ 3.11 |
-| Hard dependencies | `numpy >= 1.24` |
+| Hard dependencies | `numpy >= 1.26` |
 | Optional | `matplotlib >= 3.7` (`rocci[plot]`), `pandas` (only for `to_dataframe()`) |
 
 ## For bug reports

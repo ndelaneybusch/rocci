@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "N. Delaney-Busch", email = "ndelaneybusch@gmail.com" }]
 requires-python = ">=3.11"
-dependencies = ["numpy>=1.24"]
+dependencies = ["numpy>=1.26"]
 keywords = ["roc", "confidence-band", "bootstrap", "auc", "classification"]
 classifiers = [
     "Development Status :: 3 - Alpha",
