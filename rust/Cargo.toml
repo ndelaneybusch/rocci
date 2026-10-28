@@ -4,7 +4,7 @@ name = "rocci-core"
 # package is [project] version in pyproject.toml.
 version = "0.0.0"
 edition = "2021"
-rust-version = "1.94"
+rust-version = "1.97"
 publish = false
 license = "MIT"
 description = "Rust bootstrap kernel for the rocci Python package"

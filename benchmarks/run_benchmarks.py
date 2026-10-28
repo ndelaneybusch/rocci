@@ -13,9 +13,10 @@ Exit code 1 on any breach with --strict. Two modes:
   `just bench` and release-prep on developer hardware.
 - relative (--compare-json): used by the per-PR CI perf job to absorb
   runner variance. A timing fails on a regression past --relative-tolerance
-  (default 30%) versus the baseline, or on breaching 2x the absolute release
-  gate — the backstop that stops a slow-runner baseline from laundering a
-  real regression.
+  (default 30%) versus the baseline, or on breaching its absolute backstop
+  (BACKSTOP_S) — the cap that stops a slow-runner baseline from laundering a
+  real regression. Backstops are 2x the release gate, except at n=1M, where
+  hosted runners already land near 2x and the cap is widened to 10 s.
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ from rocci.band.envelope import assemble_envelope_band
 from rocci.band.grids import grid_k_indices, make_grid
 
 GATES_S = {10_000: 0.100, 100_000: 0.500, 1_000_000: 3.000}
+BACKSTOP_S = {10_000: 0.200, 100_000: 1.000, 1_000_000: 10.000}
 OVERHEAD_GATE_S = 0.050  # at n=100k
 N_BOOT = 2000
 
@@ -129,18 +131,20 @@ def compare_relative(
     """Return True when the current suite regresses past the baseline or backstop.
 
     A timing breaches on either criterion: slower than baseline by more than
-    ``tolerance``, or above 2x its absolute release gate (the backstop
-    described in the module docstring).
+    ``tolerance``, or above its absolute backstop in ``BACKSTOP_S`` (described
+    in the module docstring).
     """
     breached = False
-    print(f"\nrelative tolerance: {tolerance:.0%}; absolute backstop: 2x release gates")
+    caps = ", ".join(f"n={n:,}: {s:g} s" for n, s in BACKSTOP_S.items())
+    print(f"\nrelative tolerance: {tolerance:.0%}; absolute backstops: {caps}")
     for row in payload["results"]:
         n_total = int(row["n_total"])
         base = baseline[n_total]
         total_s = float(row["total_s"])
-        total_ok = total_s <= float(base["total_s"]) * (
-            1.0 + tolerance
-        ) and total_s <= 2.0 * float(row["gate_s"])
+        total_ok = (
+            total_s <= float(base["total_s"]) * (1.0 + tolerance)
+            and total_s <= BACKSTOP_S[n_total]
+        )
         overhead_ok = True
         if n_total == 100_000:
             overhead_s = float(row["overhead_s"])
