@@ -140,7 +140,10 @@ jobs:
           python-version: "3.11"
       - uses: Swatinem/rust-cache@v2
       - run: uv sync --all-groups
-      - run: uv pip install "numpy==1.24.*" "scipy==1.10.*"
+      # The locked matplotlib and pandas need numpy>=1.25, so step them back to
+      # the newest lines that still support numpy 1.24, as a user on the floor
+      # would get.
+      - run: uv pip install "numpy==1.24.*" "scipy==1.10.*" "matplotlib==3.10.*" "pandas==2.*"
       - run: uv run --no-sync pytest -q -m "not slow"
 
   docs-build:
