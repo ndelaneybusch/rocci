@@ -6,7 +6,7 @@ pip install 'rocci[plot]'    # optional plotting support
 ```
 
 Binary wheels ship for Linux (x86-64, aarch64, musl), macOS (Intel and Apple
-silicon), and Windows, for every Python ≥ 3.10. This means that a `pip install
+silicon), and Windows, for every Python ≥ 3.11. This means that a `pip install
 rocci` never needs to compile the rust components on a supported platform.
 
 ## Supported install methods
@@ -69,8 +69,8 @@ but not bit-for-bit (different RNG streams — documented, tested).
 
 | | |
 |---|---|
-| Python | ≥ 3.10 |
-| Hard dependencies | `numpy >= 1.24` |
+| Python | ≥ 3.11 |
+| Hard dependencies | `numpy >= 1.26` |
 | Optional | `matplotlib >= 3.7` (`rocci[plot]`), `pandas` (only for `to_dataframe()`) |
 
 ## For bug reports

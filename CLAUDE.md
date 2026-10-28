@@ -59,7 +59,7 @@ Concurrent agents (or tasks) must never share a checkout — simultaneous edits 
 
 - Trunk-based, squash merge; PR titles follow Conventional Commits (CI-enforced — the PR title becomes the commit message). `CHANGELOG.md` is git-cliff-generated at release; don't hand-edit.
 - Google docstrings on every public object, each with a runnable `Examples:` block — doctests run in CI.
-- Type checking is `ty` against the 3.10 floor, not the dev interpreter. `unused-ignore-comment` is an error: suppressions must stay honest.
+- Type checking is `ty` against the 3.11 floor, not the dev interpreter. `unused-ignore-comment` is an error: suppressions must stay honest.
 - Rust: clippy pedantic with `-D warnings`; the allow-list is documented in `rust/Cargo.toml`. `unsafe` only at the FFI boundary with `// SAFETY:` comments.
 - Comments are evergreen; no commented-out code; no TODOs without a linked issue number. DO provide context and insights in docs and comments that let an interested and informed reader understand the purpose and implementation quickly. DO NOT reference design documents, external documents, prior code states, alternative implementations that the current implementation does not use etc.
 - Vignettes are jupytext `.md` files in `docs/vignettes/`, executed at docs build time (`just docs-build` catches breakage).
