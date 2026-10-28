@@ -9,7 +9,7 @@ description = "Distribution-free simultaneous confidence bands for ROC curves"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "N. Delaney-Busch", email = "ndelaneybusch@gmail.com" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = ["numpy>=1.24"]
 keywords = ["roc", "confidence-band", "bootstrap", "auc", "classification"]
 classifiers = [
@@ -18,7 +18,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -85,7 +84,7 @@ exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
@@ -93,7 +92,7 @@ select = [
     "F",         # pyflakes
     "I",         # isort-style import sorting
     "B",         # bugbear (likely bugs)
-    "UP",        # pyupgrade (keep idioms current for the 3.10 floor)
+    "UP",        # pyupgrade (keep idioms current for the 3.11 floor)
     "D",         # pydocstyle — Google convention
     "N",         # pep8-naming
     "NPY",       # numpy-specific rules (legacy RNG ban, deprecated aliases)
@@ -133,7 +132,7 @@ docstring-code-format = true
 skip-magic-trailing-comma = true
 
 [tool.ty.environment]
-python-version = "3.10"          # check against the floor, not the dev interpreter
+python-version = "3.11"          # check against the floor, not the dev interpreter
 
 [tool.ty.src]
 include = ["python/rocci", "tests"]
