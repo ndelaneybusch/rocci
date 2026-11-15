@@ -50,14 +50,18 @@ dev = [
     "pre-commit>=3",
     "git-cliff>=2.7",
 ]
+# The docs toolchain is only installable on Python >= 3.11.5: soupsieve (pulled
+# in via mkdocs-jupyter -> nbconvert -> beautifulsoup4) has no security-patched
+# release for older 3.11 patch versions, so the whole group is gated rather than
+# locking a vulnerable soupsieve for them. Runtime and test deps are unaffected.
 docs = [
-    "mkdocs-material>=9.5",
-    "mkdocstrings[python]>=0.26",
-    "mkdocs-jupyter>=0.25",
-    "jupytext>=1.16",
-    "ipykernel>=6",
-    "mike>=2.1",
-    "scikit-learn>=1.4",   # vignette 1 (breast-cancer quickstart); docs build only
+    "mkdocs-material>=9.5; python_full_version >= '3.11.5'",
+    "mkdocstrings[python]>=0.26; python_full_version >= '3.11.5'",
+    "mkdocs-jupyter>=0.25; python_full_version >= '3.11.5'",
+    "jupytext>=1.16; python_full_version >= '3.11.5'",
+    "ipykernel>=6; python_full_version >= '3.11.5'",
+    "mike>=2.1; python_full_version >= '3.11.5'",
+    "scikit-learn>=1.4; python_full_version >= '3.11.5'",  # vignette 1 (breast-cancer quickstart)
 ]
 
 [tool.maturin]
